@@ -1,10 +1,12 @@
 import React from "react";
 import '../assets/styles/styles.css';
 import naatImage from '../assets/image/naat.jpg';
+import { Link } from 'react-router-dom';
 
 export default function Home() {
     return (
-        <>
+        <> 
+        
             <header>
                 <nav className="navbar">
                     <div className="logo">
