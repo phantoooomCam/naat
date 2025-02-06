@@ -1,9 +1,10 @@
 import React from "react";
-import '../../assets/styles/styles.css';
+import '../assets/styles/styles.css';
 
 export default function Home(){
     return(
         <>
+        <body>
             <header>
                 <nav className="navbar">
                     <div className="logo">
@@ -46,6 +47,7 @@ export default function Home(){
                     </form>
                 </div>
             </section>
+            </body>
         </>
     )
 }
