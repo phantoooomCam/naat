@@ -1,5 +1,6 @@
 import React from "react";
 import '../assets/styles/styles.css';
+import naatImage from '../assets/image/naat.jpg';
 
 export default function Home(){
     return(
@@ -9,7 +10,7 @@ export default function Home(){
                 <nav className="navbar">
                     <div className="logo">
                         <a href="index.html">
-                         <img src="NAAT_1.png" alt="Logo" className="logo-img" />
+                        <img src={naatImage} alt="Logo" className="logo-img" />
                         </a>
                     </div>
                     <div className="auth-buttons">
