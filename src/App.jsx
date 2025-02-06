@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "./paginas/Home";
+import Home from "./paginas/Home/Home";
 import Login from "./paginas/Login"
-import Registro from './paginas/Registro';
+import Registro from './paginas/Registro/Registro';
 
 function App() {
   return (

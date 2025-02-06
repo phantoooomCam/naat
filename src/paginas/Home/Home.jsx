@@ -1,5 +1,5 @@
 import React from "react";
-import '../assets/styles/styles.css';
+import 'styles.css';
 import naatImage from '../assets/image/naat.jpg';
 
 export default function Home() {
