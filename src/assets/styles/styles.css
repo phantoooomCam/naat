@@ -1,0 +1,408 @@
+/* Estilos generales */
+body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right, #222A35,  #000000);
+}
+
+/* Barra de navegación */
+header {
+    padding: 10px 20px 10px 20px;
+    background: #ffffff; /* Fondo gris claro */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra suave */
+}
+
+
+.navbar {
+    display: flex;
+    justify-content: space-between; /* Coloca los elementos en las esquinas opuestas */
+    align-items: center;
+    max-width: 1200px;
+    margin: auto; /* Quitar los márgenes laterales adicionales */
+    width: 100%; /* Asegura que ocupe todo el ancho disponible */
+    padding: 0 20px; /* Agrega un pequeño padding para alejar los elementos de los bordes */
+}
+
+
+.logo {
+    color: white;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.nav-links, .auth-links {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.nav-links li a, .auth-links li a {
+    color: #222A35;
+    text-decoration: none;
+    font-size: 1.2em;
+    transition: color 0.3s ease-in-out;
+    font-weight: bold;
+}
+
+.nav-links li a:hover, .auth-links li a:hover {
+    color: #9aaec5;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 30px;
+}
+
+.btn {
+    background-color: #222A35; 
+    color: white;
+    text-decoration: none;
+    padding: 12px 20px;  /* Aumentar el tamaño del botón */
+    border-radius: 20px;
+    font-weight: bold;
+    transition: background 0.3s ease-in-out;
+    font-size: 1em; /* Aumentar el tamaño de la fuente */
+}
+
+.btn:hover {
+    background-color: #9aaec5;
+}
+
+/* Estilo del botón de Contacto */
+.btn-contact {
+    background-color: white;
+    color: #021a37; /* Color de texto azul */
+    display: flex;
+    align-items: center;
+    gap:5px;
+}
+
+.btn-contact:hover {
+    background-color: #e5eaf0;
+    color: #021a37;
+}
+
+/* Estilos para la sección principal */
+.main-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 30px auto; 
+    padding: 20px;
+}
+
+.left-side {
+    width: 60%;
+    padding-right: 20px;
+}
+
+.left-side h2 {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 2.5em;
+    color: white;
+    margin-bottom: 20px;
+    margin-left: -1px;
+    padding-left: 90px;
+}
+
+
+.hero-image {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.right-side {
+    width: 35%; /* Reducir el ancho del formulario */
+    padding-left: 20px;
+    background-color: #12181e;
+    padding: 40px; /* Aumentar padding para mayor largo */
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.right-side h3 {
+    text-align:center;
+    color: white;
+    margin-bottom: 30px;
+    font-size: 1.5em;
+}
+
+.right-side form {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Espacio entre los campos */
+}
+
+.right-side input {
+    padding: 15px; /* Aumentar el padding para hacerlo más largo */
+    width: 80%; /* Hacerlo más delgado */
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 20px;
+    font-size: 1em;
+}
+
+.right-side button {
+    background-color: #59626b;
+    color: white;
+    padding: 10px 20px 10px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    transition: background 0.3s ease-in-out;
+    cursor: pointer;
+    border: none;
+}
+
+.right-side button:hover {
+    background-color: #9aaec5;
+}
+
+.large-animation {
+    margin: none;
+    width: 500px;
+    height: 500px;
+    padding-left: 45px;
+    
+}
+
+h2 {
+    margin-left: 90px;
+}
+
+.info-buttons {
+    margin-left: 150px;
+    display: flex;
+    gap: 50px;
+}
+
+
+/* Media Queries para Responsive */
+@media (max-width: 768px) {
+    /* Ajustes de navegación */
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px;
+    }
+
+    .nav-links, .auth-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .btn {
+        padding: 12px 25px;
+        font-size: 1em;
+    }
+
+    /* Ajustes de contenido principal */
+    .main-content {
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .left-side, .right-side {
+        width: 100% !important; /* Fuerza el ancho completo */
+        padding: 0 !important;
+    }
+
+    .right-side {
+        margin-top: 30px;
+    }
+
+    /* Ajustes de texto y botones */
+    h2 {
+        margin-left: 0;
+        text-align: center;
+        font-size: 2em !important;
+    }
+
+    .info-buttons {
+        margin-left: 0;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Formulario responsive */
+    .right-side input {
+        width: 100% !important;
+    }
+    /* Corrección del gradiente en móvil */
+body {
+    background: linear-gradient(to bottom, #000000, #021a37);
+}
+
+/* Ajustes específicos para el formulario */
+.right-side {
+    padding: 25px !important; /* Reducción del padding */
+    box-sizing: border-box;
+}
+
+.right-side h3 {
+    font-size: 1.3em; /* Tamaño de texto más adecuado para móvil */
+    margin-bottom: 15px;
+}
+
+.right-side input {
+    padding: 12px !important; /* Padding reducido */
+    font-size: 0.9em !important; /* Tamaño de fuente ajustado */
+    margin-bottom: 10px !important;
+}
+
+.right-side button {
+    padding: 8px 15px !important;
+    font-size: 0.95em !important;
+}
+
+/* Añade esto dentro del media query (max-width: 480px) */
+.right-side {
+    padding: 20px !important;
+}
+
+.right-side h3 {
+    font-size: 1.2em !important;
+}
+
+.right-side input::placeholder {
+    font-size: 0.85em; /* Placeholder más pequeño */
+}
+
+}
+
+/* Media Queries */
+@media (max-width: 1200px) {
+    .navbar {
+        padding: 0 0px;
+    }
+    
+    .main-content {
+        padding: 20px 15px;
+    }
+}
+
+@media (max-width: 992px) {
+    .left-side {
+        width: 55%;
+    }
+    
+    .right-side {
+        width: 40%;
+    }
+    
+    .left-side h2 {
+        font-size: 3em;
+    }
+    
+    .large-animation {
+        width: 400px;
+        height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    header {
+        padding: 10px;
+    }
+    
+    .navbar {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .nav-links {
+        display: none;
+    }
+    
+    .auth-buttons {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .main-content {
+        flex-direction: column;
+        gap: 30px;
+    }
+    
+    .left-side, .right-side {
+        width: 100%;
+        padding: 0;
+    }
+    
+    .large-animation {
+        width: 100%;
+        height: auto;
+        padding-left: 0;
+    }
+    
+    .info-buttons {
+        margin-left: 0;
+        justify-content: center;
+    }
+}
+@media (max-width: 1200px) {
+    header {
+        padding: 5px 10px;
+    }
+ }
+
+@media (max-width: 480px) {
+    .logo-img {
+        width: 60px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        font-size: 1em;
+    }
+    
+    .left-side h2 {
+        font-size: 2em;
+        text-align: center;
+        margin-left: 0;
+    }
+    
+    .right-side {
+        padding: 20px !important;
+    }
+    
+    .info-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 360px) {
+    .auth-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .left-side h2 {
+        font-size: 1.8em;
+    }
+}
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo-img {
+    width: 80px; /* Ajusta el tamaño de la imagen según lo necesites */
+    height: auto;
+    margin-right: 10px; /* Espacio entre la imagen y el texto */
+}
+
+
+
+
+
+
