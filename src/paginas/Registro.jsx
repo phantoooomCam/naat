@@ -45,7 +45,7 @@ const Registro = () => {
       <div className="right">
         <div className="form-container">
           <a href="index.html">
-            <img src="NAAT_1.png" alt="Logo de NA'AT" />
+            <img src={naatImage}alt="Logo de NA'AT" />
           </a>
           <h2>Registro</h2>
           <form action="#" method="POST">
