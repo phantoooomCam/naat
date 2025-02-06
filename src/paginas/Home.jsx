@@ -8,13 +8,9 @@ export default function Home() {
             <header>
                 <nav className="navbar">
                     <div className="logo">
-<<<<<<< Updated upstream
                         <a href="index.html">
                         <img src={naatImage} alt="Logo" className="logo-img" />
-=======
-                        <a href="/">
-                            <img src={naatImage} alt="Logo" className="logo-img" />
->>>>>>> Stashed changes
+
                         </a>
                     </div>
                     <div className="auth-buttons">
