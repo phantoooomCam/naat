@@ -2,7 +2,7 @@ import React from "react";
 import '../assets/styles/registro.css';
 import naatImage from '../assets/image/naat.jpg';
 
-const Registro = () => {
+export default function Registro  () {
   const typeRef = useRef(null);
 
   useEffect(() => {
@@ -107,4 +107,4 @@ const Registro = () => {
   );
 };
 
-export default Registro;
+
