@@ -44,7 +44,7 @@
 
     transition: background 0.3s ease-in-out;
     font-size: 1em; /* Aumentar el tamaño de la fuente */
-    font-family: Arial, sans-serif;
+    font-family:  'Poppins', sans-serif;
 }
 .btn-home:hover {
     background-color: #9aaec5;
@@ -66,7 +66,7 @@
     left: -180px;  /* Ajusta el valor para moverlo más a la izquierda */
 }
 .h2-home {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family:  'Poppins', sans-serif;
     font-size: 2.5em;
     color: #222A35;;
     margin-bottom: 20px;
@@ -92,7 +92,7 @@
     font-weight: bold;
     transition: background 0.3s ease-in-out;
     font-size: 1em; /* Aumentar el tamaño de la fuente */
-    font-family: Arial, sans-serif;
+    font-family:  'Poppins', sans-serif;
 }
 
 .btn-contact-home:hover {
@@ -115,7 +115,7 @@
     color: #222A35;
     margin-bottom: 50px;
     font-size: 1.5em;
-    font-family: Arial, sans-serif;
+    font-family:  'Poppins', sans-serif;
 }
 
 .form-home {
@@ -143,7 +143,7 @@
     cursor: pointer;
     border: none;
     font-size: 1em;
-    font-family: Arial, sans-serif;
+    font-family:  'Poppins', sans-serif;
     
 }
 .btnr-home:hover {
@@ -157,7 +157,7 @@
     gap: 20px;
     padding: 0;
     position: relative;
-    left: -350px;
+    left: -400px;
 }
 
 .listas-home li {
@@ -167,11 +167,11 @@
 .listas-home a {
     color: #222A35;
     text-decoration: none;
-    font-size: 21px;
+    font-size: 19px;
     font-weight: 500;
     padding: 5px 10px;
     transition: color 0.3s ease, border-bottom 0.3s ease;
-    font-family: Arial, sans-serif;
+    font-family:  'Poppins', sans-serif;
 }
 
 .listas-home :hover{

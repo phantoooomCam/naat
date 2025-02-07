@@ -1,27 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import "./styles.css";
 import NAAT_image from '../../assets/naat.jpg';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 export default function Home() {
-  const fullText = "¡Tu seguridad importa!";
-  const [displayText, setDisplayText] = useState(""); 
-
-  useEffect(() => {
-    let index = 0;
-    const interval = setInterval(() => {
-      if (index < fullText.length) {
-        setDisplayText(prev => fullText.slice(0, index + 1)); // Usamos slice para evitar "undefined"
-        index++;
-      } else {
-        clearInterval(interval);
-      }
-    }, 100); 
-
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <>
       <header className='header-home'>
@@ -45,15 +28,14 @@ export default function Home() {
 
       <section className="main-content-home">
         <div className="left-side-home">
-          {/* Texto con efecto de escritura */}
-          <h2 className='h2-home'>{displayText}</h2>
+          <h2 className='h2-home'>¡Tu seguridad importa!</h2>
           
-          {/* Animación Lottie */}
+          {/* Aquí añades la animación Lottie */}
           <DotLottieReact
             src="https://lottie.host/c37c2d86-b787-4fb4-8c32-c68ce369cd71/FhkPOM1Yo6.lottie"
             loop
             autoplay
-            style={{ width: '700px', height: '700px' }} 
+            style={{ width: '700px', height: '700px' }} // Ajusta el tamaño aquí
           />
         </div>
 
@@ -69,3 +51,4 @@ export default function Home() {
     </>
   );
 }
+

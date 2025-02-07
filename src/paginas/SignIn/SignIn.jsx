@@ -34,8 +34,8 @@ export default function SignIn() {
                         <p className="signin-subtitle">¡Bienvenido de nuevo! Todo listo para ti.</p>
                         <DotLottieReact
                             src="https://lottie.host/02867c13-6f60-48eb-9529-c29eb94f2d0b/YffA0B8UhL.lottie"
-                            loop
                             autoplay
+                            loop
                             className="signin-lottie-animation"
                         />
                     </div>

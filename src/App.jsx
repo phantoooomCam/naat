@@ -4,6 +4,7 @@ import Home from "./paginas/Principal/Home";
 import Registro from "./paginas/Registrarse/Registro"
 import SignIn from './paginas/SignIn/SignIn';
 
+
 function App() {
   return (
     <Routes>
