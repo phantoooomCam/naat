@@ -4,6 +4,7 @@
 
 body{
     background-color: rgb(255, 255, 255);
+    
 }
 
 h1{
@@ -13,10 +14,12 @@ h1{
 
 /*Aqui inicia el css del home*/
 .header-home {
-    padding: 10px 20px 10px 20px;
+    width: 100%; /* Asegura que ocupe todo el ancho */
+    padding: 10px 20px;
     background: #ffffff; /* Fondo gris claro */
-     /* Sombra suave */
+    box-shadow: 0px 4px 6px rgba(218, 227, 243, 0.7); /* Sombra suave de color #DAE3F3 */
 }
+
 
 .navbar-home {
     display: flex;
@@ -45,12 +48,12 @@ h1{
     gap: 30px;
 }
 .btn-home {
-    background-color: #222A35; 
-    color: white;
+    background-color: #222A35;; 
+    color: #ffffff;
     text-decoration: none;
     padding: 12px 20px;  /* Aumentar el tamaño del botón */
     border-radius: 20px;
-    font-weight: bold;
+
     transition: background 0.3s ease-in-out;
     font-size: 1em; /* Aumentar el tamaño de la fuente */
     font-family: Arial, sans-serif;
@@ -122,7 +125,7 @@ h1{
 .h3-home {
     text-align:center;
     color: #222A35;
-    margin-bottom: 30px;
+    margin-bottom: 50px;
     font-size: 1.5em;
     font-family: Arial, sans-serif;
 }
@@ -139,17 +142,15 @@ h1{
     padding: 15px; /* Aumentar el padding para hacerlo más largo */
     width: 80%; /* Hacerlo más delgado */
     margin-bottom: 15px;
-    border: none;
     border-radius: 20px;
     font-size: 1em;
 }
 
 .btnr-home{
-    background-color: #59626b;
+    background-color: #222A35;
     color: white;
-    padding: 10px 20px 10px 20px;
+    padding: 15px 25px 15px 25px;
     border-radius: 20px;
-    font-weight: bold;
     transition: background 0.3s ease-in-out;
     cursor: pointer;
     border: none;
@@ -163,36 +164,39 @@ h1{
 
 
 .listas-home {
-    list-style-type: none;
-    margin: 0;
+    list-style: none;
+    display: flex;
+    gap: 20px;
     padding: 0;
-    text-align: center;
     position: relative;
     left: -350px;
-
-  }
-  
-  .listas-home li {
-    display: inline-block; 
-    margin: 0 20px; /
-  }
-  
-  .listas-home a {
-    color: #000000;
-    text-decoration: none;
-    font-size: 1.2rem;
-  }
-  
-  .listas-home a:hover {
-    text-decoration: underline;
-  }
-
-.a-home{
-    font-family: Arial, sans-serif;
-    font-weight:500;
 }
-  
 
+.listas-home li {
+    display: inline-block;
+}
+
+.listas-home a {
+    color: #222A35;
+    text-decoration: none;
+    font-size: 21px;
+    font-weight: 500;
+    padding: 5px 10px;
+    transition: color 0.3s ease, border-bottom 0.3s ease;
+    font-family: Arial, sans-serif;
+}
+
+.listas-home :hover{
+    text-decoration:overline;
+}
+
+.listas-home a.active {
+    color: #222A35; /* Rojo cuando es la página activa */
+    font-weight: bold;
+    
+}
+
+  
 /* Media Queries para Responsive */
 @media (max-width: 768px) {
     /* Ajustes de navegación */
@@ -202,15 +206,28 @@ h1{
         padding: 20px;
     }
 
-    .nav-links, .auth-links {
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 15px;
+    .logo-home {
+        text-align: center;
     }
 
-    .btn-home {
-        padding: 12px 25px;
-        font-size: 1em;
+    .logo-img-home {
+        left: 0; /* Centrar la imagen del logo */
+        margin-right: 0;
+    }
+
+    .listas-home {
+        left: 0; /* Centrar la lista de enlaces */
+        text-align: center;
+    }
+
+    .listas-home li {
+        display: block; /* Cambiar a bloque para apilar los elementos */
+        margin: 10px 0;
+    }
+
+    .auth-buttons-home {
+        justify-content: center;
+        gap: 15px;
     }
 
     /* Ajustes de contenido principal */
@@ -222,6 +239,7 @@ h1{
     .left-side-home, .right-side-home {
         width: 100% !important; /* Fuerza el ancho completo */
         padding: 0 !important;
+        left: 0; /* Eliminar el desplazamiento lateral */
     }
 
     .right-side-home {
@@ -230,9 +248,11 @@ h1{
 
     /* Ajustes de texto y botones */
     .h2-home {
-        margin-left: -60px;
+        margin-left: 0;
         text-align: center;
         font-size: 2em !important;
+        padding-left: 0;
+        right: 0;
     }
 
     .info-buttons-home {
@@ -246,40 +266,61 @@ h1{
         width: 100% !important;
     }
 
-/* Ajustes específicos para el formulario */
-.right-side-home {
-    padding: 25px !important; /* Reducción del padding */
-    box-sizing: border-box;
+    .right-side-home {
+        padding: 25px !important; /* Reducción del padding */
+        box-sizing: border-box;
+    }
+
+    .h3-home {
+        font-size: 1.3em; /* Tamaño de texto más adecuado para móvil */
+        margin-bottom: 15px;
+    }
+
+    .input-home {
+        padding: 12px !important; /* Padding reducido */
+        font-size: 0.9em !important; /* Tamaño de fuente ajustado */
+        margin-bottom: 10px !important;
+    }
+
+    .btnr-home {
+        padding: 8px 15px !important;
+        font-size: 0.95em !important;
+    }
 }
 
-.h3-home {
-    font-size: 1.3em; /* Tamaño de texto más adecuado para móvil */
-    margin-bottom: 15px;
-}
+@media (max-width: 480px) {
+    /* Ajustes adicionales para pantallas muy pequeñas */
+    .navbar-home {
+        padding: 10px;
+    }
 
-.input-home {
-    padding: 12px !important; /* Padding reducido */
-    font-size: 0.9em !important; /* Tamaño de fuente ajustado */
-    margin-bottom: 10px !important;
-}
+    .logo-img-home {
+        width: 60px; /* Reducir el tamaño del logo */
+    }
 
-.btnr-home {
-    padding: 8px 15px !important;
-    font-size: 0.95em !important;
-}
+    .btn-home {
+        padding: 10px 20px; /* Reducir el tamaño de los botones */
+        font-size: 0.9em;
+    }
 
-/* Añade esto dentro del media query (max-width: 480px) */
-.right-side-home {
-    padding: 20px !important;
-}
+    .h2-home {
+        font-size: 1.8em !important; /* Reducir el tamaño del título */
+    }
 
-.h3-home {
-    font-size: 1.2em !important;
-}
+    .right-side-home {
+        padding: 15px !important;
+    }
 
-.input-home::placeholder {
-    font-size: 0.85em; /* Placeholder más pequeño */
-}
+    .h3-home {
+        font-size: 1.1em !important;
+    }
 
-}
+    .input-home::placeholder {
+        font-size: 0.85em; /* Placeholder más pequeño */
+    }
 
+    .btnr-home {
+        padding: 8px 12px !important;
+        font-size: 0.9em !important;
+    }
+}
