@@ -1,7 +1,6 @@
 /* Estilos base */
 .registro-container {
     display: flex;
-    flex-direction: row;
     width: 100%;
     max-width: 1600px;
     min-height: 900px;
@@ -10,7 +9,7 @@
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
     overflow: hidden;
     margin: 20px auto;
-    font-family: Arial, sans-serif;
+    font-family: Arial, sans-serif; /* Cambiado el tipo de letra */
 }
 
 .registro-left {
@@ -21,7 +20,7 @@
     padding: 40px;
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, #000000, #1a1a1a);
+    background: #222A35; /* Cambiado el color del fondo izquierdo */
 }
 
 .registro-right {
@@ -32,7 +31,19 @@
     padding: 40px;
     position: relative;
     overflow: hidden;
-    background: #222A35;
+    background: #fff; /* Cambiado el color del fondo derecho */
+}
+
+/* Efecto binario */
+.registro-binary-rain {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.7;
+    overflow: hidden;
 }
 
 /* Texto decorativo */
@@ -70,14 +81,14 @@
 .registro-h2 {
     font-size: 1.8rem;
     margin-bottom: 1.5rem;
-    color: #fff;
+    color: #fff; /* Cambiado a blanco para mejor contraste */
     font-weight: 700;
 }
 
 .registro-button {
     width: 100%;
     padding: 12px;
-    background: #222A35;
+    background: #222A35; /* Cambiado el color del botón */
     color: #fff;
     border: none;
     border-radius: 20px;
@@ -90,12 +101,12 @@
 }
 
 .registro-button:hover {
-    background: #1b202a;
+    background: #1b202a; /* Color más oscuro para hover */
     transform: translateY(-1px);
 }
 
-/* Full Responsive */
-@media (max-width: 1024px) {
+/* Responsive */
+@media (max-width: 768px) {
     .registro-container {
         flex-direction: column;
         min-height: auto;
@@ -107,9 +118,7 @@
         padding: 30px 20px;
         min-height: 400px;
     }
-}
-
-@media (max-width: 768px) {
+    
     .registro-h1 {
         font-size: 2rem;
     }
@@ -117,11 +126,9 @@
     .registro-subtitle {
         font-size: 1rem;
     }
-    
-    .registro-form-container {
-        max-width: 350px;
-    }
-    
+}
+
+@media (max-width: 480px) {
     .registro-input {
         padding: 10px 12px;
         font-size: 0.9rem;
@@ -130,25 +137,5 @@
     .registro-button {
         padding: 12px;
         font-size: 0.9rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .registro-h1 {
-        font-size: 1.8rem;
-    }
-    
-    .registro-subtitle {
-        font-size: 0.9rem;
-    }
-    
-    .registro-input {
-        padding: 8px 10px;
-        font-size: 0.85rem;
-    }
-    
-    .registro-button {
-        padding: 10px;
-        font-size: 0.85rem;
     }
 }
