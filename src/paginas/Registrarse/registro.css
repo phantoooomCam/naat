@@ -88,6 +88,14 @@
     padding: 20px;
 }
 
+.registro-logo {
+    display: block; /* Asegura que sea un bloque centrado */
+    width: 140px; /* Cambia el ancho del logo */
+    margin: 0 auto 20px; /* Centrado y con un margen inferior */
+    transition: transform 0.3s ease; /* Efecto de transición (opcional) */
+}
+
+
 .registro-h2 {
     font-size: 1.8rem;
     margin-bottom: 1.5rem;

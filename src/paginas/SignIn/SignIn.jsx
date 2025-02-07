@@ -1,7 +1,7 @@
 import React from 'react';
 import './SignIn.css';
 import { Link } from 'react-router-dom';
-import NAAT_1 from '../../assets/naat.jpg';
+import NAAT from '../../assets/naat_name.png';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 export default function SignIn() {
@@ -11,7 +11,7 @@ export default function SignIn() {
                 <div className="signin-left">
                     <div className="signin-form-container">
                         <Link to="/">
-                            <img src={NAAT_1} alt="Logo de NA'AT" className="signin-logo" />
+                            <img src={NAAT} alt="Logo de NA'AT" className="signin-logo" />
                         </Link>
                         <h2 className="signin-h2">Inicio de Sesión</h2>
                         <form className="signin-form" action="#" method="POST">

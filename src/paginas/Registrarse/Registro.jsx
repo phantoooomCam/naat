@@ -1,7 +1,7 @@
 import React from 'react';
 import './Registro.css';
 import { Link } from 'react-router-dom';
-import NAAT_1 from '../../assets/naat.jpg';
+import NAAT from '../../assets/naat_name.png';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 export default function Registro() {
@@ -24,7 +24,7 @@ export default function Registro() {
                 <div className="registro-right">
                     <div className="registro-form-container">
                         <Link to="/">
-                            <img src={NAAT_1} alt="Logo de NA'AT" className="registro-logo" />
+                            <img src={NAAT} alt="Logo de NA'AT" className="registro-logo" />
                         </Link>
                         <h2 className="registro-h2">Registro</h2>
                         <form className="registro-form" action="#" method="POST">
