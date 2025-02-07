@@ -1,17 +1,26 @@
-/* Estilos base */
+/* Body de la página */
+.registro-body {
+    background: #DAE3F3; /* Fondo de la página */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+/* Contenedor principal */
 .registro-container {
     display: flex;
-    width: 100%;
-    max-width: 1600px;
-    min-height: 900px;
+    width: 1600px; /* Dimensión fija */
+    height: 800px; /* Dimensión fija */
     background: #fff;
     border-radius: 20px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
     overflow: hidden;
-    margin: 20px auto;
-    font-family: Arial, sans-serif; /* Cambiado el tipo de letra */
 }
 
+/* Sección Izquierda */
 .registro-left {
     flex: 1.5;
     display: flex;
@@ -20,30 +29,8 @@
     padding: 40px;
     position: relative;
     overflow: hidden;
-    background: #222A35; /* Cambiado el color del fondo izquierdo */
-}
-
-.registro-right {
-    flex: 0.5;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 40px;
-    position: relative;
-    overflow: hidden;
-    background: #fff; /* Cambiado el color del fondo derecho */
-}
-
-/* Efecto binario */
-.registro-binary-rain {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    opacity: 0.7;
-    overflow: hidden;
+    background: #222A35;
+    flex-direction: column;
 }
 
 /* Texto decorativo */
@@ -52,13 +39,17 @@
     z-index: 2;
     text-align: center;
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .registro-h1 {
     font-size: 2.5rem;
     margin-bottom: 1rem;
     font-weight: 700;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     color: #fff;
 }
 
@@ -71,6 +62,25 @@
     opacity: 0.9;
 }
 
+/* Animación Lottie */
+.registro-lottie-animation {
+    width: 600px; /* Tamaño más grande */
+    height: 600px; /* Mantener proporción */
+    margin-top: 50px; /* Espaciado adecuado debajo del texto */
+    max-width: 100%; /* Ajustar al contenedor */
+    object-fit: contain; /* Asegurar proporción correcta */
+}
+
+/* Sección Derecha */
+.registro-right {
+    flex: 0.5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    background: #fff;
+}
+
 /* Formulario */
 .registro-form-container {
     width: 100%;
@@ -81,14 +91,14 @@
 .registro-h2 {
     font-size: 1.8rem;
     margin-bottom: 1.5rem;
-    color: #fff; /* Cambiado a blanco para mejor contraste */
+    color: #222A35;
     font-weight: 700;
 }
 
 .registro-button {
     width: 100%;
     padding: 12px;
-    background: #222A35; /* Cambiado el color del botón */
+    background: #222A35;
     color: #fff;
     border: none;
     border-radius: 20px;
@@ -101,7 +111,7 @@
 }
 
 .registro-button:hover {
-    background: #1b202a; /* Color más oscuro para hover */
+    background: #1b202a;
     transform: translateY(-1px);
 }
 
@@ -109,33 +119,50 @@
 @media (max-width: 768px) {
     .registro-container {
         flex-direction: column;
-        min-height: auto;
+        max-width: 90%;
+        height: auto;
     }
-    
+
     .registro-left, .registro-right {
-        flex: none;
         width: 100%;
         padding: 30px 20px;
-        min-height: 400px;
     }
-    
+
+    .lottie-animation {
+        width: 400px;
+        height: 400px;
+    }
+
     .registro-h1 {
         font-size: 2rem;
     }
-    
+
     .registro-subtitle {
         font-size: 1rem;
     }
 }
 
 @media (max-width: 480px) {
-    .registro-input {
-        padding: 10px 12px;
+    .registro-h1 {
+        font-size: 1.8rem;
+    }
+
+    .registro-subtitle {
         font-size: 0.9rem;
     }
-    
+
+    .registro-input {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+    }
+
     .registro-button {
-        padding: 12px;
-        font-size: 0.9rem;
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+
+    .lottie-animation {
+        width: 300px;
+        height: 300px;
     }
 }
