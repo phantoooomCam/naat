@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaEnvelope, FaLock } from 'react-icons/fa'; // Importamos los iconos
+import { FaEnvelope, FaLock, FaGoogle } from 'react-icons/fa'; // Importamos el icono de Google
 import "./styles.css";
 import NAAT_image from '../../assets/naat.jpg';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -39,25 +39,31 @@ export default function Home() {
           />
         </div>
 
-        <div className="right-side-home">
-          <h3 className='h3-home'>Ingresa a NA´AT</h3>
-          <form action="#" method="POST" className='form-home'>
-            
-            {/* Input de correo con icono */}
-            <div className="input-container">
-              <FaEnvelope className="input-icon" />
-              <input type="email" className='input-home' id="email" name="email" placeholder="Ingresa tu correo" required />
-            </div>
+            <div className="right-side-home">
+            <h3 className='h3-home'>Ingresa a NA´AT</h3>
+            <form action="#" method="POST" className='form-home'>
+                
+                {/* Input de correo con icono */}
+                <div className="input-container">
+                <FaEnvelope className="input-icon" />
+                <input type="email" className='input-home' id="email" name="email" placeholder="Ingresa tu correo" required />
+                </div>
 
-            {/* Input de contraseña con icono */}
-            <div className="input-container">
-              <FaLock className="input-icon" />
-              <input type="password" className='input-home' id="password" name="password" placeholder="Ingresa tu contraseña" required />
-            </div>
+                {/* Input de contraseña con icono */}
+                <div className="input-container">
+                <FaLock className="input-icon" />
+                <input type="password" className='input-home' id="password" name="password" placeholder="Ingresa tu contraseña" required />
+                </div>
 
-            <button type="submit" className="btnr-home">Iniciar Sesión</button>
-          </form>
-        </div>
+                {/* Botón de Iniciar Sesión */}
+                <button type="submit" className="btnr-home">Iniciar Sesión</button>
+
+                {/* Botón de Iniciar Sesión con Google */}
+                <button type="button" className="btn-google">
+                <FaGoogle className="google-icon" /> Iniciar Sesión con Google
+                </button>
+            </form>
+            </div>
       </section>
     </>
   );

@@ -135,19 +135,24 @@
 }
 
 .btnr-home{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     background-color: #222A35;
     color: white;
-    padding: 15px 25px 15px 25px;
+    border: 1px solid #ccc;
     border-radius: 20px;
-    transition: background 0.3s ease-in-out;
-    cursor: pointer;
-    border: none;
+    padding: 10px;
+    width: 80%;
     font-size: 1em;
-    font-family:  'Poppins', sans-serif;
+    cursor: pointer;
+    transition: background 0.3s ease;
     
 }
 .btnr-home:hover {
-    background-color: #9aaec5;
+    background-color: #f0f0f0;
+    color:#222A35 ;
 }
 
 
@@ -207,6 +212,30 @@
     top: 15px;
     font-size: 1.2em;
     color: #222A35 /* Color negro */
+  }
+  
+  .btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background-color: white;
+    color: #222A35;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 10px;
+    width: 80%;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .btn-google:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .google-icon {
+    font-size: 1.2em;
   }
   
 
