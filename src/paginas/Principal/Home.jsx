@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { FaEnvelope, FaLock } from 'react-icons/fa'; // Importamos los iconos
 import "./styles.css";
 import NAAT_image from '../../assets/naat.jpg';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
@@ -30,20 +31,30 @@ export default function Home() {
         <div className="left-side-home">
           <h2 className='h2-home'>¡Tu seguridad importa!</h2>
           
-          {/* Aquí añades la animación Lottie */}
           <DotLottieReact
             src="https://lottie.host/c37c2d86-b787-4fb4-8c32-c68ce369cd71/FhkPOM1Yo6.lottie"
             loop
             autoplay
-            style={{ width: '700px', height: '700px' }} // Ajusta el tamaño aquí
+            style={{ width: '700px', height: '700px' }}
           />
         </div>
 
         <div className="right-side-home">
           <h3 className='h3-home'>Ingresa a NA´AT</h3>
           <form action="#" method="POST" className='form-home'>
-            <input type="email" className='input-home' id="email" name="email" placeholder="Ingresa tu correo" required />
-            <input type="password" className='input-home' id="password" name="password" placeholder="Ingresa tu contraseña" required />
+            
+            {/* Input de correo con icono */}
+            <div className="input-container">
+              <FaEnvelope className="input-icon" />
+              <input type="email" className='input-home' id="email" name="email" placeholder="Ingresa tu correo" required />
+            </div>
+
+            {/* Input de contraseña con icono */}
+            <div className="input-container">
+              <FaLock className="input-icon" />
+              <input type="password" className='input-home' id="password" name="password" placeholder="Ingresa tu contraseña" required />
+            </div>
+
             <button type="submit" className="btnr-home">Iniciar Sesión</button>
           </form>
         </div>
@@ -51,4 +62,3 @@ export default function Home() {
     </>
   );
 }
-
