@@ -37,6 +37,8 @@ h1{
     width: 80px; /* Ajusta el tamaño de la imagen según lo necesites */
     height: auto;
     margin-right: 10px; /* Espacio entre la imagen y el texto */
+    position: relative;
+    left: -210px;
 }
 .auth-buttons-home {
     display: flex;
@@ -69,9 +71,9 @@ h1{
 
 .left-side-home {
     width: 60%;
-    padding-right: 20px;
+    position: relative;
+    left: -180px;  /* Ajusta el valor para moverlo más a la izquierda */
 }
-
 .h2-home {
     font-family: Arial, Helvetica, sans-serif;
     font-size: 2.5em;
@@ -79,6 +81,8 @@ h1{
     margin-bottom: 20px;
     margin-left: -1px;
     padding-left: 90px;
+    position: relative;
+    right: -90px;
 }
 
 
@@ -106,17 +110,18 @@ h1{
 }
 
 .right-side-home {
-    width: 35%; /* Reducir el ancho del formulario */
+    width:350px; 
+    height:450px;
     padding-left: 20px;
-    background-color: #12181e;
-    padding: 40px; /* Aumentar padding para mayor largo */
+    background-color: #ffffff;
+    padding: 40px; 
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .h3-home {
     text-align:center;
-    color: white;
+    color: #222A35;
     margin-bottom: 30px;
     font-size: 1.5em;
     font-family: Arial, sans-serif;
@@ -156,14 +161,37 @@ h1{
     background-color: #9aaec5;
 }
 
-.large-animation-home {
-    margin: none;
-    width: 100%;
-    height: 100%;
-    
+
+.listas-home {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    position: relative;
+    left: -350px;
+
+  }
+  
+  .listas-home li {
+    display: inline-block; 
+    margin: 0 20px; /
+  }
+  
+  .listas-home a {
+    color: #000000;
+    text-decoration: none;
+    font-size: 1.2rem;
+  }
+  
+  .listas-home a:hover {
+    text-decoration: underline;
+  }
+
+.a-home{
+    font-family: Arial, sans-serif;
+    font-weight:500;
 }
-
-
+  
 
 /* Media Queries para Responsive */
 @media (max-width: 768px) {
@@ -255,117 +283,3 @@ h1{
 
 }
 
-/* Media Queries */
-@media (max-width: 1200px) {
-    .navbar-home {
-        padding: 0 0px;
-    }
-    
-    .main-content-home {
-        padding: 20px 15px;
-    }
-}
-
-@media (max-width: 992px) {
-    .left-side-home {
-        width: 55%;
-    }
-    
-    .right-side-home {
-        width: 40%;
-    }
-    
-    .h2-home {
-        font-size: 3em;
-    }
-    
-    .large-animation-home {
-        width: 500px;
-        height: 500px;
-    }
-}
-
-@media (max-width: 768px) {
-    .header-home {
-        padding: 10px;
-    }
-    
-    .navbar-home {
-        flex-direction: column;
-        text-align: center;
-        gap: 15px;
-    }
-    
-    .nav-links {
-        display: none;
-    }
-    
-    .auth-buttons-home {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .main-content-home {
-        flex-direction: column;
-        gap: 30px;
-    }
-    
-    .left-side-home, .right-side-home {
-        width: 100%;
-        padding: 0;
-    }
-    
-    .large-animation-home {
-        width: 100%;
-        height: 100%;
-        padding-left: 0;
-    }
-    
-    .info-buttons-home {
-        margin-left: 0;
-        justify-content: center;
-    }
-}
-@media (max-width: 1200px) {
-    .header-home {
-        padding: 5px 10px;
-    }
- }
-
-@media (max-width: 480px) {
-    .logo-img-home {
-        width: 60px;
-    }
-    
-    .btn-home {
-        padding: 10px 20px;
-        font-size: 1em;
-    }
-    
-    .h2-home {
-        font-size: 3em;
-        text-align: center;
-        margin-left: 0;
-    }
-    
-    .right-side-home {
-        padding: 20px !important;
-    }
-    
-    .info-buttons-home {
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-    }
-}
-
-@media (max-width: 360px) {
-    .auth-buttons-home {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .h2-home {
-        font-size: 1.8em;
-    }
-}
