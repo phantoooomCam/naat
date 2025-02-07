@@ -13,7 +13,7 @@
 .registro-container {
     display: flex;
     width: 1600px; /* Dimensión fija */
-    height: 800px; /* Dimensión fija */
+    height: 900px; /* Dimensión fija */
     background: #fff;
     border-radius: 20px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
