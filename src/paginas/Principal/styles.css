@@ -1,0 +1,371 @@
+.h1-home{
+    color: rgb(209, 0, 0);
+}
+
+body{
+    background-color: rgb(255, 255, 255);
+}
+
+h1{
+    color: white;
+}
+
+
+/*Aqui inicia el css del home*/
+.header-home {
+    padding: 10px 20px 10px 20px;
+    background: #ffffff; /* Fondo gris claro */
+     /* Sombra suave */
+}
+
+.navbar-home {
+    display: flex;
+    justify-content: space-between; /* Coloca los elementos en las esquinas opuestas */
+    align-items: center;
+    max-width: 1200px;
+    margin: auto; /* Quitar los márgenes laterales adicionales */
+    width: 100%; /* Asegura que ocupe todo el ancho disponible */
+    padding: 0 20px; /* Agrega un pequeño padding para alejar los elementos de los bordes */
+}
+.logo-home {
+    color: white;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.logo-img-home {
+    width: 80px; /* Ajusta el tamaño de la imagen según lo necesites */
+    height: auto;
+    margin-right: 10px; /* Espacio entre la imagen y el texto */
+}
+.auth-buttons-home {
+    display: flex;
+    gap: 30px;
+}
+.btn-home {
+    background-color: #222A35; 
+    color: white;
+    text-decoration: none;
+    padding: 12px 20px;  /* Aumentar el tamaño del botón */
+    border-radius: 20px;
+    font-weight: bold;
+    transition: background 0.3s ease-in-out;
+    font-size: 1em; /* Aumentar el tamaño de la fuente */
+    font-family: Arial, sans-serif;
+}
+.btn-home:hover {
+    background-color: #9aaec5;
+}
+
+
+.main-content-home {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 30px auto; 
+    padding: 20px;
+}
+
+.left-side-home {
+    width: 60%;
+    padding-right: 20px;
+}
+
+.h2-home {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 2.5em;
+    color: #222A35;;
+    margin-bottom: 20px;
+    margin-left: -1px;
+    padding-left: 90px;
+}
+
+
+.info-buttons-home {
+    margin-left: 150px;
+    display: flex;
+    gap: 50px;
+}
+
+.btn-contact-home {
+    background-color: #222A35; 
+    color: white;
+    text-decoration: none;
+    padding: 12px 20px;  /* Aumentar el tamaño del botón */
+    border-radius: 20px;
+    font-weight: bold;
+    transition: background 0.3s ease-in-out;
+    font-size: 1em; /* Aumentar el tamaño de la fuente */
+    font-family: Arial, sans-serif;
+}
+
+.btn-contact-home:hover {
+    background-color: #e5eaf0;
+    color: #021a37;
+}
+
+.right-side-home {
+    width: 35%; /* Reducir el ancho del formulario */
+    padding-left: 20px;
+    background-color: #12181e;
+    padding: 40px; /* Aumentar padding para mayor largo */
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.h3-home {
+    text-align:center;
+    color: white;
+    margin-bottom: 30px;
+    font-size: 1.5em;
+    font-family: Arial, sans-serif;
+}
+
+.form-home {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Espacio entre los campos */
+}
+
+
+.input-home {
+    padding: 15px; /* Aumentar el padding para hacerlo más largo */
+    width: 80%; /* Hacerlo más delgado */
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 20px;
+    font-size: 1em;
+}
+
+.btnr-home{
+    background-color: #59626b;
+    color: white;
+    padding: 10px 20px 10px 20px;
+    border-radius: 20px;
+    font-weight: bold;
+    transition: background 0.3s ease-in-out;
+    cursor: pointer;
+    border: none;
+    font-size: 1em;
+    font-family: Arial, sans-serif;
+    
+}
+.btnr-home:hover {
+    background-color: #9aaec5;
+}
+
+.large-animation-home {
+    margin: none;
+    width: 100%;
+    height: 100%;
+    
+}
+
+
+
+/* Media Queries para Responsive */
+@media (max-width: 768px) {
+    /* Ajustes de navegación */
+    .navbar-home {
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px;
+    }
+
+    .nav-links, .auth-links {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+
+    .btn-home {
+        padding: 12px 25px;
+        font-size: 1em;
+    }
+
+    /* Ajustes de contenido principal */
+    .main-content-home {
+        flex-direction: column;
+        padding: 20px;
+    }
+
+    .left-side-home, .right-side-home {
+        width: 100% !important; /* Fuerza el ancho completo */
+        padding: 0 !important;
+    }
+
+    .right-side-home {
+        margin-top: 30px;
+    }
+
+    /* Ajustes de texto y botones */
+    .h2-home {
+        margin-left: -60px;
+        text-align: center;
+        font-size: 2em !important;
+    }
+
+    .info-buttons-home {
+        margin-left: 0;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    /* Formulario responsive */
+    .right-side-home input {
+        width: 100% !important;
+    }
+
+/* Ajustes específicos para el formulario */
+.right-side-home {
+    padding: 25px !important; /* Reducción del padding */
+    box-sizing: border-box;
+}
+
+.h3-home {
+    font-size: 1.3em; /* Tamaño de texto más adecuado para móvil */
+    margin-bottom: 15px;
+}
+
+.input-home {
+    padding: 12px !important; /* Padding reducido */
+    font-size: 0.9em !important; /* Tamaño de fuente ajustado */
+    margin-bottom: 10px !important;
+}
+
+.btnr-home {
+    padding: 8px 15px !important;
+    font-size: 0.95em !important;
+}
+
+/* Añade esto dentro del media query (max-width: 480px) */
+.right-side-home {
+    padding: 20px !important;
+}
+
+.h3-home {
+    font-size: 1.2em !important;
+}
+
+.input-home::placeholder {
+    font-size: 0.85em; /* Placeholder más pequeño */
+}
+
+}
+
+/* Media Queries */
+@media (max-width: 1200px) {
+    .navbar-home {
+        padding: 0 0px;
+    }
+    
+    .main-content-home {
+        padding: 20px 15px;
+    }
+}
+
+@media (max-width: 992px) {
+    .left-side-home {
+        width: 55%;
+    }
+    
+    .right-side-home {
+        width: 40%;
+    }
+    
+    .h2-home {
+        font-size: 3em;
+    }
+    
+    .large-animation-home {
+        width: 500px;
+        height: 500px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-home {
+        padding: 10px;
+    }
+    
+    .navbar-home {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .nav-links {
+        display: none;
+    }
+    
+    .auth-buttons-home {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .main-content-home {
+        flex-direction: column;
+        gap: 30px;
+    }
+    
+    .left-side-home, .right-side-home {
+        width: 100%;
+        padding: 0;
+    }
+    
+    .large-animation-home {
+        width: 100%;
+        height: 100%;
+        padding-left: 0;
+    }
+    
+    .info-buttons-home {
+        margin-left: 0;
+        justify-content: center;
+    }
+}
+@media (max-width: 1200px) {
+    .header-home {
+        padding: 5px 10px;
+    }
+ }
+
+@media (max-width: 480px) {
+    .logo-img-home {
+        width: 60px;
+    }
+    
+    .btn-home {
+        padding: 10px 20px;
+        font-size: 1em;
+    }
+    
+    .h2-home {
+        font-size: 3em;
+        text-align: center;
+        margin-left: 0;
+    }
+    
+    .right-side-home {
+        padding: 20px !important;
+    }
+    
+    .info-buttons-home {
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+}
+
+@media (max-width: 360px) {
+    .auth-buttons-home {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .h2-home {
+        font-size: 1.8em;
+    }
+}
