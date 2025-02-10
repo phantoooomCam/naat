@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { FaEnvelope, FaLock, FaGoogle } from "react-icons/fa";
+import { FaEnvelope, FaLock, FaGoogle, FaMoon, FaSun } from "react-icons/fa";
 import "./styles.css";
 import NAAT_image from "../../assets/naat.jpg";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
@@ -8,6 +8,26 @@ import { signInWithGoogle } from "../../firebase-config";
 
 export default function Home() {
   const [user, setUser] = useState(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    // Guardar la preferencia de modo oscuro en localStorage
+    const savedMode = localStorage.getItem("darkMode");
+    if (savedMode) {
+      setIsDarkMode(savedMode === "true");
+    }
+  }, []);
+
+  useEffect(() => {
+    // Cambiar el tema según el estado isDarkMode
+    if (isDarkMode) {
+      document.body.classList.add("dark-mode");
+      localStorage.setItem("darkMode", "true");
+    } else {
+      document.body.classList.remove("dark-mode");
+      localStorage.setItem("darkMode", "false");
+    }
+  }, [isDarkMode]);
 
   const handleGoogleSignIn = async () => {
     const userData = await signInWithGoogle();
@@ -27,26 +47,17 @@ export default function Home() {
           </div>
           <ul className="listas-home">
             <li>
-              <Link
-                to="/"
-                className={location.pathname === "/" ? "active" : ""}
-              >
+              <Link to="/" className={location.pathname === "/" ? "active" : ""}>
                 Inicio
               </Link>
             </li>
             <li>
-              <Link
-                to="/login"
-                className={location.pathname === "/login" ? "active" : ""}
-              >
+              <Link to="/login" className={location.pathname === "/login" ? "active" : ""}>
                 Servicios
               </Link>
             </li>
             <li>
-              <Link
-                to="/contact"
-                className={location.pathname === "/contact" ? "active" : ""}
-              >
+              <Link to="/contact" className={location.pathname === "/contact" ? "active" : ""}>
                 Contacto
               </Link>
             </li>
@@ -55,6 +66,10 @@ export default function Home() {
             <Link to="/login" className="btn-home">
               Registrarse
             </Link>
+            <Link to="/signin" className="btn-home">
+              Iniciar Sesión
+            </Link>
+            
           </div>
         </nav>
       </header>
@@ -77,11 +92,7 @@ export default function Home() {
           {user ? (
             <div className="user-info">
               <h3 className="h3-home">Bienvenido, {user.name}</h3>
-              <img
-                src={user.photo}
-                alt="Foto de perfil"
-                className="user-photo"
-              />
+              <img src={user.photo} alt="Foto de perfil" className="user-photo" />
               <p>{user.email}</p>
             </div>
           ) : (
