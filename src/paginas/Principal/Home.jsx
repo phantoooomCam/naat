@@ -55,9 +55,6 @@ export default function Home() {
             <Link to="/login" className="btn-home">
               Registrarse
             </Link>
-            <Link to="/signin" className="btn-home">
-              Iniciar Sesión
-            </Link>
           </div>
         </nav>
       </header>
