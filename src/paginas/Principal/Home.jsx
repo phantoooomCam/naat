@@ -52,7 +52,7 @@ export default function Home() {
               </Link>
             </li>
             <li>
-              <Link to="/login" className={location.pathname === "/login" ? "active" : ""}>
+              <Link to="/servicios" className={location.pathname === "/login" ? "active" : ""}>
                 Servicios
               </Link>
             </li>
