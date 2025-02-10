@@ -162,6 +162,8 @@
   background: transparent;
   font-size: 1rem;
   cursor: pointer;
+  position: relative;
+  bottom:70px;
 }
 
 .registro-btn-iniciar:hover {
@@ -257,3 +259,4 @@
     font-size: 0.9rem;
   }
 }
+

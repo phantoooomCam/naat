@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import NAAT from '../../assets/naat_name.png';
 import "./auth.css";
@@ -80,7 +81,9 @@ export default function Auth() {
             >
               <div className="registro-form-container">
                 {/* Imagen agregada arriba del formulario */}
+                <Link to="/">
                 <img src={NAAT} alt="NAAT Logo" className="registro-logo" />
+                </Link>
 
                 <h2 className="registro-h2">Registro</h2>
                 <form>
@@ -129,7 +132,9 @@ export default function Auth() {
             >
               <div className="registro-form-container">
                 {/* Imagen agregada arriba del formulario */}
+                <Link to="/">
                 <img src={NAAT} alt="NAAT Logo" className="registro-logo" />
+                </Link>
 
                 <h2 className="registro-h2">Inicio de Sesión</h2>
                 <form>
