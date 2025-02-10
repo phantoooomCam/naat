@@ -87,6 +87,9 @@
     max-width: 400px;
     padding: 20px;
 }
+.registro-form-group{
+    margin-bottom: 1.5rem;
+}
 
 .registro-logo {
     display: block; /* Asegura que sea un bloque centrado */
@@ -121,6 +124,20 @@
 .registro-button:hover {
     background: #1b202a;
     transform: translateY(-1px);
+}
+.registro-input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 20px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.registro-input:focus {
+    border-color: #000;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
 /* Responsive */

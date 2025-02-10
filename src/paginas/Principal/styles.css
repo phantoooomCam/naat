@@ -1,23 +1,26 @@
-
-
-/*Aqui inicia el css del home*/
-.header-home {
-    width: 100%; /* Asegura que ocupe todo el ancho */
-    padding: 10px 20px;
-    background: #ffffff; /* Fondo gris claro */
-    box-shadow: 0px 4px 6px rgba(218, 227, 243, 0.7); /* Sombra suave de color #DAE3F3 */
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
 }
 
+.header-home {
+    width: 100%;
+    padding: 10px 20px;
+    background: #ffffff;
+    box-shadow: 0px 4px 6px rgba(218, 227, 243, 0.7);
+}
 
 .navbar-home {
     display: flex;
-    justify-content: space-between; /* Coloca los elementos en las esquinas opuestas */
+    justify-content: space-between;
     align-items: center;
     max-width: 1200px;
-    margin: auto; /* Quitar los márgenes laterales adicionales */
-    width: 100%; /* Asegura que ocupe todo el ancho disponible */
-    padding: 0 20px; /* Agrega un pequeño padding para alejar los elementos de los bordes */
+    margin: auto;
+    width: 100%;
+    padding: 0 20px;
 }
+
 .logo-home {
     color: white;
     font-size: 1.1em;
@@ -25,57 +28,58 @@
 }
 
 .logo-img-home {
-    width: 80px; /* Ajusta el tamaño de la imagen según lo necesites */
+    width: 80px;
     height: auto;
-    margin-right: 10px; /* Espacio entre la imagen y el texto */
+    margin-right: 10px;
     position: relative;
     left: -210px;
 }
+
 .auth-buttons-home {
     display: flex;
     gap: 30px;
 }
+
 .btn-home {
-    background-color: #222A35;; 
+    background-color: #222A35;
     color: #ffffff;
     text-decoration: none;
-    padding: 12px 20px;  /* Aumentar el tamaño del botón */
+    padding: 12px 20px;
     border-radius: 20px;
-
     transition: background 0.3s ease-in-out;
-    font-size: 1em; /* Aumentar el tamaño de la fuente */
-    font-family:  'Poppins', sans-serif;
+    font-size: 1em;
+    font-family: 'Poppins', sans-serif;
 }
+
 .btn-home:hover {
     background-color: #9aaec5;
 }
-
 
 .main-content-home {
     display: flex;
     justify-content: space-between;
     align-items: center;
     max-width: 1200px;
-    margin: 30px auto; 
+    margin: 30px auto;
     padding: 20px;
 }
 
 .left-side-home {
     width: 60%;
     position: relative;
-    left: -180px;  /* Ajusta el valor para moverlo más a la izquierda */
+    left: -180px;
 }
+
 .h2-home {
-    font-family:  'Poppins', sans-serif;
+    font-family: 'Poppins', sans-serif;
     font-size: 2.5em;
-    color: #222A35;;
+    color: #222A35;
     margin-bottom: 20px;
     margin-left: -1px;
     padding-left: 90px;
     position: relative;
     right: -90px;
 }
-
 
 .info-buttons-home {
     margin-left: 150px;
@@ -84,15 +88,15 @@
 }
 
 .btn-contact-home {
-    background-color: #222A35; 
+    background-color: #222A35;
     color: white;
     text-decoration: none;
-    padding: 12px 20px;  /* Aumentar el tamaño del botón */
+    padding: 12px 20px;
     border-radius: 20px;
     font-weight: bold;
     transition: background 0.3s ease-in-out;
-    font-size: 1em; /* Aumentar el tamaño de la fuente */
-    font-family:  'Poppins', sans-serif;
+    font-size: 1em;
+    font-family: 'Poppins', sans-serif;
 }
 
 .btn-contact-home:hover {
@@ -101,40 +105,39 @@
 }
 
 .right-side-home {
-    width:350px; 
-    height:500px;
+    width: 350px;
+    height: 500px;
     padding-left: 20px;
     background-color: #ffffff;
-    padding: 40px; 
+    padding: 40px;
     border-radius: 15px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
 .h3-home {
-    text-align:center;
+    text-align: center;
     color: #222A35;
     margin-bottom: 50px;
     font-size: 1.5em;
-    font-family:  'Poppins', sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
 .form-home {
     align-items: center;
     display: flex;
     flex-direction: column;
-    gap: 30px; /* Espacio entre los campos */
+    gap: 30px;
 }
 
-
 .input-home {
-    padding: 15px; /* Aumentar el padding para hacerlo más largo */
-    width: 80%; /* Hacerlo más delgado */
+    padding: 15px;
+    width: 80%;
     margin-bottom: 15px;
     border-radius: 20px;
     font-size: 1em;
 }
 
-.btnr-home{
+.btnr-home {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -148,13 +151,12 @@
     font-size: 1em;
     cursor: pointer;
     transition: background 0.3s ease;
-    
-}
-.btnr-home:hover {
-    background-color: #f0f0f0;
-    color:#222A35 ;
 }
 
+.btnr-home:hover {
+    background-color: #f0f0f0;
+    color: #222A35;
+}
 
 .listas-home {
     list-style: none;
@@ -176,45 +178,45 @@
     font-weight: 500;
     padding: 5px 10px;
     transition: color 0.3s ease, border-bottom 0.3s ease;
-    font-family:  'Poppins', sans-serif;
+    font-family: 'Poppins', sans-serif;
 }
 
-.listas-home :hover{
-    text-decoration:overline;
+.listas-home :hover {
+    text-decoration: overline;
 }
 
 .listas-home a.active {
-    color: #222A35; /* Rojo cuando es la página activa */
+    color: #222A35;
     font-weight: bold;
-    
 }
+
 .input-container {
     position: relative;
     display: flex;
     align-items: center;
     width: 80%;
-  }
-  
-  .input-home {
+}
+
+.input-home {
     padding: 15px;
     width: 100%;
     margin-bottom: 15px;
     border-radius: 20px;
     font-size: 1em;
-    padding-left: 45px; /* Espacio para el icono */
+    padding-left: 45px;
     border: 1px solid #ccc;
     outline: none;
-  }
-  
-  .input-icon {
+}
+
+.input-icon {
     position: absolute;
-    left: 15px; /* Ubicación del icono dentro del input */
+    left: 15px;
     top: 15px;
     font-size: 1.2em;
-    color: #222A35 /* Color negro */
-  }
-  
-  .btn-google {
+    color: #222A35;
+}
+
+.btn-google {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -228,143 +230,154 @@
     font-size: 1em;
     cursor: pointer;
     transition: background 0.3s ease;
-  }
-  
-  .btn-google:hover {
+}
+
+.btn-google:hover {
     background-color: #f0f0f0;
-  }
-  
-  .google-icon {
+}
+
+.google-icon {
     font-size: 1.2em;
-  }
-  
+}
 
+.footer-home {
+    background-color: #222A35;
+    color: #fff;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: 40px;
+    width: 100%;
+    position: relative;
+    left: 0;
+    right: 0;
+}
 
-  
-/* Media Queries para Responsive */
+.footer-content {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.footer-links li {
+    display: inline;
+}
+
+.footer-links a {
+    color: #fff;
+    text-decoration: none;
+    transition: color 0.3s;
+    font-family: 'Poppins', sans-serif;
+}
+
+.footer-links a:hover {
+    color: #00bcd4;
+}
+
+.p-home {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Media Queries para Responsividad */
 @media (max-width: 768px) {
-    /* Ajustes de navegación */
+    .header-home {
+        padding: 10px 0px;
+    }
     .navbar-home {
         flex-direction: column;
-        gap: 15px;
-        padding: 20px;
+        align-items: center;
+        padding: 0;
     }
-
-    .logo-home {
-        text-align: center;
+    .navbar-home .listas-home{
+        flex-direction:row ;
     }
 
     .logo-img-home {
-        left: 0; /* Centrar la imagen del logo */
-        margin-right: 0;
+        left: 0;
     }
 
-    .listas-home {
-        left: 0; /* Centrar la lista de enlaces */
-        text-align: center;
-    }
-
-    .listas-home li {
-        display: block; /* Cambiar a bloque para apilar los elementos */
-        margin: 10px 0;
-    }
-
-    .auth-buttons-home {
-        justify-content: center;
-        gap: 15px;
-    }
-
-    /* Ajustes de contenido principal */
     .main-content-home {
         flex-direction: column;
-        padding: 20px;
+        align-items: center;
+        margin: 20px;
     }
 
-    .left-side-home, .right-side-home {
-        width: 100% !important; /* Fuerza el ancho completo */
-        padding: 0 !important;
-        left: 0; /* Eliminar el desplazamiento lateral */
+    .left-side-home {
+        width: 100%;
+        position: relative;
+        left: 0;
     }
 
     .right-side-home {
-        margin-top: 30px;
+        width: 100%;
+        padding: 20px;
     }
 
-    /* Ajustes de texto y botones */
     .h2-home {
-        margin-left: 0;
-        text-align: center;
-        font-size: 2em !important;
+        font-size: 2em;
         padding-left: 0;
-        right: 0;
+        margin-left: -1em;
     }
 
     .info-buttons-home {
         margin-left: 0;
+        gap: 30px;
         justify-content: center;
-        flex-wrap: wrap;
-    }
-
-    /* Formulario responsive */
-    .right-side-home input {
-        width: 100% !important;
-    }
-
-    .right-side-home {
-        padding: 25px !important; /* Reducción del padding */
-        box-sizing: border-box;
-    }
-
-    .h3-home {
-        font-size: 1.3em; /* Tamaño de texto más adecuado para móvil */
-        margin-bottom: 15px;
     }
 
     .input-home {
-        padding: 12px !important; /* Padding reducido */
-        font-size: 0.9em !important; /* Tamaño de fuente ajustado */
-        margin-bottom: 10px !important;
+        width: 90%;
     }
 
-    .btnr-home {
-        padding: 8px 15px !important;
-        font-size: 0.95em !important;
+    /* Hacemos que las listas sean en filas solo en dispositivos pequeños */
+    .listas-home {
+        position: relative;
+        left: 0;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* Ajustamos el DotLottieReact */
+    .left-side-home .lottie-container {
+        display: none;
+    }
+
+    .footer-links {
+        flex-direction: column;
+        gap: 10px;
     }
 }
 
 @media (max-width: 480px) {
-    /* Ajustes adicionales para pantallas muy pequeñas */
-    .navbar-home {
-        padding: 10px;
+    .header-home {
+        padding: 10px 0px;
     }
-
-    .logo-img-home {
-        width: 60px; /* Reducir el tamaño del logo */
-    }
-
-    .btn-home {
-        padding: 10px 20px; /* Reducir el tamaño de los botones */
-        font-size: 0.9em;
+    .navbar-home .listas-home{
+        flex-direction:row ;
     }
 
     .h2-home {
-        font-size: 1.8em !important; /* Reducir el tamaño del título */
-    }
-
-    .right-side-home {
-        padding: 15px !important;
+        font-size: 1.5em;
+        padding-left: 0;
+        margin-left: -3em;
     }
 
     .h3-home {
-        font-size: 1.1em !important;
+        font-size: 1.3em;
     }
 
-    .input-home::placeholder {
-        font-size: 0.85em; /* Placeholder más pequeño */
+    .footer-home {
+        padding: 10px 0;
     }
 
-    .btnr-home {
-        padding: 8px 12px !important;
-        font-size: 0.9em !important;
+    .footer-links {
+        gap: 15px;
     }
 }
