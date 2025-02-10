@@ -45,17 +45,20 @@ export default function PageNotFound() {
             <Link to="/login" className="btn-home">
               Registrarse
             </Link>
+            <Link to="/signin" className="btn-home">
+              Iniciar Sesión
+            </Link>
           </div>
         </nav>
       </header>
-        <div className="lottie-container-ntf">
-          <DotLottieReact
-            src="https://lottie.host/e4c68d37-5c65-49e0-9c1f-1fa6e9ba0681/YcUfu7v8V2.lottie"
-            loop
-            autoplay
-            style={{ width: "700px", height: "700px" }}
-          />
-        </div>
+      <div className="lottie-container-ntf">
+        <DotLottieReact
+          src="https://lottie.host/e4c68d37-5c65-49e0-9c1f-1fa6e9ba0681/YcUfu7v8V2.lottie"
+          loop
+          autoplay
+          style={{ width: "700px", height: "700px" }}
+        />
+      </div>
 
       {/* Footer */}
       <footer className="footer-home">

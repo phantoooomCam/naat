@@ -4,6 +4,8 @@ body {
     width: 100%;
 }
 
+
+
 .header-home {
     width: 100%;
     padding: 10px 20px;
@@ -164,7 +166,7 @@ body {
     gap: 20px;
     padding: 0;
     position: relative;
-    left: -500px;
+    left: -400px;
 }
 
 .listas-home li {
@@ -387,5 +389,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 60%; /* Esto hace que el contenedor ocupe toda la altura de la ventana */
+    height: 60%; 
+    padding-bottom: 30px;
   }
+
+  
