@@ -381,3 +381,11 @@ body {
         gap: 15px;
     }
 }
+
+
+.lottie-container-ntf {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60%; /* Esto hace que el contenedor ocupe toda la altura de la ventana */
+  }
