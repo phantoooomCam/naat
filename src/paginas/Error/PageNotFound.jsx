@@ -1,10 +1,12 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom"; // Importar useLocation
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import NAAT_image from "../../assets/naat.jpg";
 import "../Principal/styles.css"; // Importar estilos
 
 export default function PageNotFound() {
+  const location = useLocation(); // Usar useLocation para obtener la ruta actual
+
   return (
     <div>
       {/* Header */}
@@ -19,15 +21,15 @@ export default function PageNotFound() {
             <li>
               <Link
                 to="/"
-                className={location.pathname === "/" ? "active" : ""}
+                className={location.pathname === "/" ? "active" : ""} // Comprobar la ruta actual
               >
                 Inicio
               </Link>
             </li>
             <li>
               <Link
-                to="/login"
-                className={location.pathname === "/login" ? "active" : ""}
+                to="/servicios"
+                className={location.pathname === "/servicios" ? "active" : ""} // Comprobar la ruta actual
               >
                 Servicios
               </Link>
@@ -35,7 +37,7 @@ export default function PageNotFound() {
             <li>
               <Link
                 to="/contact"
-                className={location.pathname === "/contact" ? "active" : ""}
+                className={location.pathname === "/contact" ? "active" : ""} // Comprobar la ruta actual
               >
                 Contacto
               </Link>
@@ -51,6 +53,7 @@ export default function PageNotFound() {
           </div>
         </nav>
       </header>
+      
       <div className="lottie-container-ntf">
         <DotLottieReact
           src="https://lottie.host/e4c68d37-5c65-49e0-9c1f-1fa6e9ba0681/YcUfu7v8V2.lottie"
