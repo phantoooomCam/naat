@@ -5,19 +5,19 @@ import Registro from "./paginas/Registrarse/Registro"
 import SignIn from './paginas/SignIn/SignIn';
 import PageNotFound from './paginas/Error/PageNotFound';
 import Auth from './paginas/Auth/Auth';
-
-
+import Dashboard from "./paginas/Dashboard/Dashboard";
+import HomeAlt from "./paginas/HomeAlt/HomeAlt";
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<HomeAlt />} />
       <Route path="/login" element={<Auth />} />
       <Route path="/signin" element={<SignIn />} />
       <Route path="*" element={<PageNotFound />}/>
+      <Route path="/dashboard" element={<Dashboard />} />
     </Routes>
   );
 }
 
 export default App;
-
