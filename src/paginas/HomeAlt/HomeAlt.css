@@ -285,6 +285,14 @@ body {
         width: 600px;
         height: 600px;
     }
+    
+    .content-left {
+        left: 0;
+    }
+    .homealt-footer {
+        padding: 1rem;
+        text-align: center;
+    }
 }
 
 @media (max-width: 768px) {
@@ -343,3 +351,44 @@ body {
         padding: 2rem;
     }
 }
+
+@media (max-width: 480px) {
+    .lottie-container {
+        width: 100%;
+        height: auto;
+    }
+    .login-card {
+        width: 95%;
+        padding: 1rem;
+    }
+    .nav-links {
+        flex-direction: row;
+        gap: 1rem;
+    }
+    .nav-auth {
+        flex-direction: row;
+        gap: 1rem;
+    }
+}
+
+.lottie-container-ntf {
+    width: 100%;
+    height: auto;
+    max-width: 700px; /* Esto limita el tamaño máximo */
+    margin: 0 auto;
+  }
+  
+  @media (max-width: 768px) {
+    .lottie-container-ntf {
+      width: 90%;
+      height: auto;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .lottie-container-ntf {
+      width: 80%;
+      height: auto;
+    }
+  }
+  
