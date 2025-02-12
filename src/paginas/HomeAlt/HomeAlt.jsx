@@ -33,7 +33,7 @@ const HomeAlt = () => {
             <Link to="/login" className="auth-button">
               Registrarse
             </Link>
-            <Link to="/login" className="auth-button">
+            <Link to="/signin" className="auth-button">
               Iniciar Sesión
             </Link>
           </div>
