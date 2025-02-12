@@ -1,46 +1,98 @@
-import React from 'react';
-import './SignIn.css';
-import { Link } from 'react-router-dom';
-import NAAT from '../../assets/naat_name.png';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import React, { useState, useEffect } from "react";
+import "./SignIn.css";
+import { FaUser, FaEnvelope, FaLock, FaPhone } from "react-icons/fa";
+import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import NAAT from '../../assets/completo_blanco.png';
 
 export default function SignIn() {
-    return (
-        <body className="signin-body">
-            <div className="signin-container">
-                <div className="signin-left">
-                    <div className="signin-form-container">
-                        <Link to="/">
-                            <img src={NAAT} alt="Logo de NA'AT" className="signin-logo" />
-                        </Link>
-                        <h2 className="signin-h2">Inicio de Sesión</h2>
-                        <form className="signin-form" action="#" method="POST">
-                            <div className="signin-form-group">
-                                <label htmlFor="email" className="signin-label">Correo Electrónico</label>
-                                <input type="email" id="email" name="email" placeholder="tucorreo@ejemplo.com" className="signin-input" required />
-                            </div>
-                            <div className="signin-form-group">
-                                <label htmlFor="password" className="signin-label">Contraseña</label>
-                                <input type="password" id="password" name="password" placeholder="Password" className="signin-input" required />
-                            </div>
-                            <button type="submit" className="signin-button">Iniciar Sesión</button>
-                        </form>
-                    </div>
-                </div>
+  const [isRegister, setIsRegister] = useState(true);
 
-                <div className="signin-right">
-                    <div className="signin-decorative-content">
-                        <h1 className="signin-h1">Inicia Sesión</h1>
-                        <p className="signin-subtitle">¡Bienvenido de nuevo! Todo listo para ti.</p>
-                        <DotLottieReact
-                            src="https://lottie.host/02867c13-6f60-48eb-9529-c29eb94f2d0b/YffA0B8UhL.lottie"
-                            autoplay
-                            loop
-                            className="signin-lottie-animation"
-                        />
-                    </div>
-                </div>
+  useEffect(() => {
+    // Agregar clase al body cuando se carga el componente
+    document.body.classList.add("auth-body");
+
+    // Remover clase al desmontar el componente
+    return () => {
+      document.body.classList.remove("auth-body");
+    };
+  }, []);
+
+  return (
+    <div className="auth-container-wrapper">
+      <div className={`auth-container ${isRegister ? "auth-active" : ""}`}>
+        {/* Formulario de Registro */}
+        <div className="auth-form-box auth-form-box-login">
+          <form>
+            <h1>Registro</h1>
+            <div className="auth-input-box">
+              <FaUser className="auth-input-icon" />
+              <input type="text" placeholder="Tu Nombre" required />
             </div>
-        </body>
-    );
+            <div className="auth-input-box">
+              <FaUser className="auth-input-icon" />
+              <input type="text" placeholder="Tus Apellidos" required />
+            </div>
+            <div className="auth-input-box">
+              <FaPhone className="auth-input-icon" />
+              <input type="tel" placeholder="Tu teléfono" required />
+            </div>
+            <div className="auth-input-box">
+              <FaEnvelope className="auth-input-icon" />
+              <input type="email" placeholder="tucorreo@ejemplo.com" required />
+            </div>
+            <div className="auth-input-box">
+              <FaLock className="auth-input-icon" />
+              <input type="password" placeholder="Password" required />
+            </div>
+            <button type="submit" className="auth-btn">REGISTRARSE</button>
+          </form>
+        </div>
+
+        {/* Formulario de Login */}
+        <div className="auth-form-box auth-form-box-register">
+          <form>
+            <h1>Inicio de Sesión</h1>
+            <div className="auth-input-box">
+              <FaEnvelope className="auth-input-icon" />
+              <input type="email" placeholder="tucorreo@ejemplo.com" required />
+            </div>
+            <div className="auth-input-box">
+              <FaLock className="auth-input-icon" />
+              <input type="password" placeholder="Password" required />
+            </div>
+            <div className="auth-forgot-link">
+              <a href="#">¿Olvidaste tu contraseña?</a>
+            </div>
+            <button type="submit" className="auth-btn">INICIAR SESIÓN</button>
+          </form>
+        </div>
+
+        {/* Panel de cambio */}
+        <div className="auth-toggle-box">
+          <div className="auth-toggle-panel auth-toggle-left">
+            <Link to="/">
+              <img src={NAAT} alt="NAAT Logo" className="auth-registro-logo" />
+            </Link>
+            <h1>Crea tu cuenta</h1>
+            <p>Únete a nuestra comunidad tecnológica.</p>
+            <button className="auth-btn" onClick={() => setIsRegister(true)}>
+              Iniciar Sesión
+            </button>
+          </div>
+
+          <div className="auth-toggle-panel auth-toggle-right">
+            <Link to="/">
+              <img src={NAAT} alt="NAAT Logo" className="auth-registro-logo" />
+            </Link>
+            <h1>Bienvenido de nuevo</h1>
+            <p>Inicia sesión para continuar.</p>
+            <button className="auth-btn" onClick={() => setIsRegister(false)}>
+              Registrarse
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

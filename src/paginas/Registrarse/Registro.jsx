@@ -1,58 +1,98 @@
-import React from 'react';
-import './Registro.css';
-import { Link } from 'react-router-dom';
-import NAAT from '../../assets/naat_name.png';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import React, { useState, useEffect } from "react";
+import "./registro.css";
+import { FaUser, FaEnvelope, FaLock, FaPhone } from "react-icons/fa";
+import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
+import { Link } from "react-router-dom";
+import NAAT from '../../assets/completo_blanco.png';
 
-export default function Registro() {
-    return (
-        <body className="registro-body">
-            <div className="registro-container">
-                <div className="registro-left">
-                    <div className="registro-decorative-content">
-                        <h1 className="registro-h1">Crea tu cuenta</h1>
-                        <p className="registro-subtitle">Únete a nuestra comunidad tecnológica.</p>
-                        <DotLottieReact
-                            src="https://lottie.host/02867c13-6f60-48eb-9529-c29eb94f2d0b/YffA0B8UhL.lottie"
-                            loop
-                            autoplay
-                            className="registro-lottie-animation"
-                        />
-                    </div>
-                </div>
+export default function Login() {
+  const [isRegister, setIsRegister] = useState(false);
 
-                <div className="registro-right">
-                    <div className="registro-form-container">
-                        <Link to="/">
-                            <img src={NAAT} alt="Logo de NA'AT" className="registro-logo" />
-                        </Link>
-                        <h2 className="registro-h2">Registro</h2>
-                        <form className="registro-form" action="#" method="POST">
-                            <div className="registro-form-group">
-                                <label htmlFor="nombre" className="registro-label">Nombre(s)</label>
-                                <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" className="registro-input" required />
-                            </div>
-                            <div className="registro-form-group">
-                                <label htmlFor="apellidos" className="registro-label">Apellidos</label>
-                                <input type="text" id="apellidos" name="apellidos" placeholder="Tus Apellidos" className="registro-input" required />
-                            </div>
-                            <div className="registro-form-group">
-                                <label htmlFor="telefono" className="registro-label">Teléfono</label>
-                                <input type="tel" id="telefono" name="telefono" placeholder="Tu teléfono" className="registro-input" required />
-                            </div>
-                            <div className="registro-form-group">
-                                <label htmlFor="email" className="registro-label">Correo Electrónico</label>
-                                <input type="email" id="email" name="email" placeholder="tucorreo@ejemplo.com" className="registro-input" required />
-                            </div>
-                            <div className="registro-form-group">
-                                <label htmlFor="password" className="registro-label">Contraseña</label>
-                                <input type="password" id="password" name="password" placeholder="Password" className="registro-input" required />
-                            </div>
-                            <button type="submit" className="registro-button">Registrarse</button>
-                        </form>
-                    </div>
-                </div>
+  useEffect(() => {
+    // Agregar clase al body cuando se carga el componente
+    document.body.classList.add("auth-body");
+
+    // Remover clase al desmontar el componente
+    return () => {
+      document.body.classList.remove("auth-body");
+    };
+  }, []);
+
+  return (
+    <div className="auth-container-wrapper">
+      <div className={`auth-container ${isRegister ? "auth-active" : ""}`}>
+        {/* Formulario de Registro */}
+        <div className="auth-form-box auth-form-box-login">
+          <form>
+            <h1>Registro</h1>
+            <div className="auth-input-box">
+              <FaUser className="auth-input-icon" />
+              <input type="text" placeholder="Tu Nombre" required />
             </div>
-        </body>
-    );
+            <div className="auth-input-box">
+              <FaUser className="auth-input-icon" />
+              <input type="text" placeholder="Tus Apellidos" required />
+            </div>
+            <div className="auth-input-box">
+              <FaPhone className="auth-input-icon" />
+              <input type="tel" placeholder="Tu teléfono" required />
+            </div>
+            <div className="auth-input-box">
+              <FaEnvelope className="auth-input-icon" />
+              <input type="email" placeholder="tucorreo@ejemplo.com" required />
+            </div>
+            <div className="auth-input-box">
+              <FaLock className="auth-input-icon" />
+              <input type="password" placeholder="Password" required />
+            </div>
+            <button type="submit" className="auth-btn">REGISTRARSE</button>
+          </form>
+        </div>
+
+        {/* Formulario de Login */}
+        <div className="auth-form-box auth-form-box-register">
+          <form>
+            <h1>Inicio de Sesión</h1>
+            <div className="auth-input-box">
+              <FaEnvelope className="auth-input-icon" />
+              <input type="email" placeholder="tucorreo@ejemplo.com" required />
+            </div>
+            <div className="auth-input-box">
+              <FaLock className="auth-input-icon" />
+              <input type="password" placeholder="Password" required />
+            </div>
+            <div className="auth-forgot-link">
+              <a href="#">¿Olvidaste tu contraseña?</a>
+            </div>
+            <button type="submit" className="auth-btn">INICIAR SESIÓN</button>
+          </form>
+        </div>
+
+        {/* Panel de cambio */}
+        <div className="auth-toggle-box">
+          <div className="auth-toggle-panel auth-toggle-left">
+            <Link to="/">
+              <img src={NAAT} alt="NAAT Logo" className="auth-registro-logo" />
+            </Link>
+            <h1>Crea tu cuenta</h1>
+            <p>Únete a nuestra comunidad tecnológica.</p>
+            <button className="auth-btn" onClick={() => setIsRegister(true)}>
+              Iniciar Sesión
+            </button>
+          </div>
+
+          <div className="auth-toggle-panel auth-toggle-right">
+            <Link to="/">
+              <img src={NAAT} alt="NAAT Logo" className="auth-registro-logo" />
+            </Link>
+            <h1>Bienvenido de nuevo</h1>
+            <p>Inicia sesión para continuar.</p>
+            <button className="auth-btn" onClick={() => setIsRegister(false)}>
+              Registrarse
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
