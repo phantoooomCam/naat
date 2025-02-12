@@ -4,7 +4,7 @@ import { FaEnvelope, FaLock } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import "./HomeAlt.css";
-import NAAT_image from '../../assets/naat.jpg';
+import NAAT_image from '../../assets/naat.png';
 
 const HomeAlt = () => {
   return (
