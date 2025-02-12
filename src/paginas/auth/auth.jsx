@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./auth.css";
 import { FaUser, FaEnvelope, FaLock, FaPhone } from "react-icons/fa";
 import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
@@ -8,8 +8,18 @@ import NAAT from '../../assets/completo_blanco.png';
 export default function Auth() {
   const [isRegister, setIsRegister] = useState(false);
 
+  useEffect(() => {
+    // Agregar clase al body cuando se carga el componente
+    document.body.classList.add("auth-body");
+
+    // Remover clase al desmontar el componente
+    return () => {
+      document.body.classList.remove("auth-body");
+    };
+  }, []);
+
   return (
-    <body className="auth-body">  
+    <div className="auth-container-wrapper">
       <div className={`auth-container ${isRegister ? "auth-active" : ""}`}>
         {/* Formulario de Registro */}
         <div className="auth-form-box auth-form-box-login">
@@ -83,6 +93,6 @@ export default function Auth() {
           </div>
         </div>
       </div>
-    </body>
+    </div>
   );
 }
