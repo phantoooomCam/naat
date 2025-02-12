@@ -9,7 +9,7 @@ export default function Auth() {
   const [isRegister, setIsRegister] = useState(false);
 
   return (
-    <body>
+    <body className="auth-body">
       <div className={`auth-container ${isRegister ? "auth-active" : ""}`}>
         {/* Formulario de Registro */}
         <div className="auth-form-box auth-form-box-login">
