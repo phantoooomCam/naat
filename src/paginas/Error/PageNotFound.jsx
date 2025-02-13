@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom"; // Importar useLocation
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import NAAT_image from "../../assets/naat.jpg";
+import NAAT_image from "../../assets/naat.png";
 import "../HomeAlt/HomeAlt.css"
 
 export default function PageNotFound() {

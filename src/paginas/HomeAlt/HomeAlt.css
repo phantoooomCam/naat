@@ -1,394 +1,397 @@
 html {
-    overflow-y: scroll;
+  overflow-y: scroll;
 }
 
 body {
-    margin: 0;
-    padding: 0;
-  }
+  margin: 0;
+  padding: 0;
   
+}
 
 .homealt-wrapper {
-    min-height: 100vh;
-    font-family: 'Poppins', sans-serif;
-    display: flex;
-    flex-direction: column;
-    background-color: #fff;
+  min-height: 100vh;
+  font-family: "Poppins", sans-serif;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
 }
 
 /* Header y Navegación */
 .homealt-header {
-    background: #ffffff;
-    box-shadow: 0px 4px 6px rgba(218, 227, 243, 0.7);
-    padding: 1rem 0;
+  background: #ffffff;
+  box-shadow: 0px 4px 6px rgba(218, 227, 243, 0.7);
+  padding: 1rem 0;
 }
 
 .homealt-nav {
-    max-width: 1440px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 2rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
 }
 
 .nav-left {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
 }
 
 .nav-logo img {
-    width: 80px;
-    height: auto;
+  width: 80px;
+  height: auto;
 }
 
 .nav-links {
-    display: flex;
-    list-style: none;
-    gap: 2rem;
+  display: flex;
+  list-style: none;
+  gap: 2rem;
 }
 
 .nav-links a {
-    color: #222A35;
-    text-decoration: none;
-    font-size: 1.2rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
+  color: #222a35;
+  text-decoration: none;
+  font-size: 1.2rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .nav-links a:hover {
-    text-decoration: overline;
+  text-decoration: overline;
 }
 
 .nav-auth {
-    display: flex;
-    gap: 1.5rem;
+  display: flex;
+  gap: 1.5rem;
 }
 
 .auth-button {
-    color: #ffffff;
-    background-color: #222A35;
-    text-decoration: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 20px;
-    transition: background 0.3s ease;
-    font-weight: 500;
+  color: #ffffff;
+  background-color: #222a35;
+  text-decoration: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 20px;
+  transition: background 0.3s ease;
+  font-weight: 500;
 }
 
 .auth-button:hover {
-    background-color: #9aaec5;
+  background-color: #9aaec5;
 }
 
 /* Main Content */
 .homealt-main {
-    flex: 1;
-    max-width: 1440px;
-    margin: 0 auto;
-    padding: 2rem;
-    width: 100%;
+  flex: 1;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 2rem;
+  width: 100%;
+  
 }
 
 .main-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8rem;
-    padding: 2rem 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8rem;
+  padding: 2rem 0;
+  flex: 1;
+  margin-left: 250px;
+  transition: margin-left 0.3s ease;
 }
 
 .content-left {
-    flex: 1;
-    max-width: 65%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    left: -280px;
+  flex: 1;
+  max-width: 65%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  left: -280px;
 }
 
 .content-left h1 {
-    font-size: 2.7rem;
-    color: #222A35;
-    margin-bottom: 2rem;
-    text-align: center;
+  font-size: 2.7rem;
+  color: #222a35;
+  margin-bottom: 2rem;
+  text-align: center;
 }
 
 .lottie-container {
-    width: 700px;
-    height: 700px;
-    position: relative;
-    left: -50px;
-    top: -50px;
+  width: 700px;
+  height: 700px;
+  position: relative;
+  left: -50px;
+  top: -50px;
 }
 
 .lottie-container-ntf {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
 }
 
 /* Login Card */
 .login-card {
-    background: #ffffff;
-    padding: 2.5rem 3.5rem;
-    border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    width: 500px;
-    height: auto;
-    box-sizing: border-box;
-    position: relative;
-    right: 200px;
+  background: #ffffff;
+  padding: 2.5rem 3.5rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 500px;
+  height: auto;
+  box-sizing: border-box;
+  position: relative;
+  right: 200px;
 }
 
 .login-card h2 {
-    text-align: center;
-    color: #222A35;
-    margin-bottom: 2.5rem;
-    font-size: 1.8rem;
+  text-align: center;
+  color: #222a35;
+  margin-bottom: 2.5rem;
+  font-size: 1.8rem;
 }
 
 .login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    width: 100%;
-    max-height: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  width: 100%;
+  max-height: 500px;
 }
 
 .input-group {
-    position: relative;
-    width: 100%;
+  position: relative;
+  width: 100%;
 }
 
 .input-icon {
-    position: absolute;
-    left: 1.5rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #666;
-    font-size: 1.2rem;
+  position: absolute;
+  left: 1.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
+  font-size: 1.2rem;
 }
 
 .input-group input {
-    width: 100%;
-    padding: 1.2rem 1.2rem 1.2rem 4rem;
-    border: 1px solid #ccc;
-    border-radius: 25px;
-    font-size: 1rem;
-    box-sizing: border-box;
-    height: 70px;
+  width: 100%;
+  padding: 1.2rem 1.2rem 1.2rem 4rem;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  height: 70px;
 }
 
 .submit-button {
-    background-color: #222A35;
-    color: white;
-    border: none;
-    border-radius: 25px;
-    padding: 1.2rem;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    width: 100%;
-    height: 70px;
+  background-color: #222a35;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 1.2rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  width: 100%;
+  height: 70px;
 }
 
 .submit-button:hover {
-    background-color: #9aaec5;
+  background-color: #9aaec5;
 }
 
 .divider {
-    display: flex;
-    align-items: center;
-    text-align: center;
-    margin: 1.5rem 0;
-    width: 100%;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0;
+  width: 100%;
 }
 
 .divider::before,
 .divider::after {
-    content: '';
-    flex: 1;
-    border-bottom: 1px solid #ccc;
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #ccc;
 }
 
 .divider span {
-    padding: 0 1.2rem;
-    color: #666;
-    font-size: 0.9rem;
+  padding: 0 1.2rem;
+  color: #666;
+  font-size: 0.9rem;
 }
 
 .google-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.8rem;
-    background-color: white;
-    color: #222A35;
-    border: 1px solid #ccc;
-    border-radius: 25px;
-    padding: 1.2rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    width: 100%;
-    height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  background-color: white;
+  color: #222a35;
+  border: 1px solid #ccc;
+  border-radius: 25px;
+  padding: 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  width: 100%;
+  height: 70px;
 }
 
 .google-button:hover {
-    background-color: #f0f0f0;
+  background-color: #f0f0f0;
 }
 
 /* Footer */
 .homealt-footer {
-    background-color: #222A35;
-    color: white;
-    text-align: center;
-    padding: 20px 0;
-    width: 100%;
-    margin-top: auto;
+  background-color: #222a35;
+  color: white;
+  text-align: center;
+  padding: 20px 0;
+  width: 100%;
+  margin-top: auto;
 }
 
 .footer-links {
-    display: flex;
-    justify-content: center;
-    gap: 30px;
-    margin-bottom: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 10px;
 }
 
 .footer-links a {
-    color: white;
-    text-decoration: none;
-    font-size: 0.9em;
-    transition: color 0.3s ease;
+  color: white;
+  text-decoration: none;
+  font-size: 0.9em;
+  transition: color 0.3s ease;
 }
 
 .footer-links a:hover {
-    color: #00bcd4;
+  color: #00bcd4;
 }
 
 .p-home {
-    font-family: 'Poppins', sans-serif;
-    margin: 0;
-    font-size: 0.9em;
+  font-family: "Poppins", sans-serif;
+  margin: 0;
+  font-size: 0.9em;
 }
 
 /* Responsive */
 @media (max-width: 1200px) {
-    .main-content {
-        gap: 6rem;
-    }
-    
-    .lottie-container {
-        width: 600px;
-        height: 600px;
-    }
-    
-    .content-left {
-        left: 0;
-    }
-    .homealt-footer {
-        padding: 1rem;
-        text-align: center;
-    }
+  .main-content {
+    gap: 6rem;
+  }
+
+  .lottie-container {
+    width: 600px;
+    height: 600px;
+  }
+
+  .content-left {
+    left: 0;
+  }
+  .homealt-footer {
+    padding: 1rem;
+    text-align: center;
+  }
 }
 
 @media (max-width: 768px) {
-    .homealt-wrapper {
-        overflow-x: hidden;
-    }
+  .homealt-wrapper {
+    overflow-x: hidden;
+  }
 
-    .homealt-nav {
-        flex-direction: column;
-        align-items: center;
-        padding: 0;
-    }
+  .homealt-nav {
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+  }
 
-    .nav-left {
-        flex-direction: column;
-        gap: 1rem;
-    }
+  .nav-left {
+    flex-direction: column;
+    gap: 1rem;
+  }
 
-    .nav-links {
-        flex-direction: row;
-        justify-content: center;
-        margin-bottom: 1rem;
-    }
+  .nav-links {
+    flex-direction: row;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
 
-    .nav-auth {
-        flex-direction: column;
-        align-items: center;
-        width: auto;
-        gap: 0.5rem;
-        padding-top: 0.5rem;
-    }
+  .nav-auth {
+    flex-direction: column;
+    align-items: center;
+    width: auto;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+  }
 
-    .main-content {
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        margin: 0;
-        gap: 0;
-        padding: 1rem;
-        position: static;
-        width: 100%;
-    }
+  .main-content {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    gap: 0;
+    padding: 1rem;
+    position: static;
+    width: 100%;
+  }
 
-    .content-left {
-        display: none;
-        position: static;
-        left: 0;
-    }
+  .content-left {
+    display: none;
+    position: static;
+    left: 0;
+  }
 
-    .login-card {
-        width: 95%;
-        max-width: 650px;
-        margin: 0 auto;
-        position: static;
-        right: 0;
-        padding: 2rem;
-    }
+  .login-card {
+    width: 95%;
+    max-width: 650px;
+    margin: 0 auto;
+    position: static;
+    right: 0;
+    padding: 2rem;
+  }
 }
 
 @media (max-width: 480px) {
-    .lottie-container {
-        width: 100%;
-        height: auto;
-    }
-    .login-card {
-        width: 95%;
-        padding: 1rem;
-    }
-    .nav-links {
-        flex-direction: row;
-        gap: 1rem;
-    }
-    .nav-auth {
-        flex-direction: row;
-        gap: 1rem;
-    }
+  .lottie-container {
+    width: 100%;
+    height: auto;
+  }
+  .login-card {
+    width: 95%;
+    padding: 1rem;
+  }
+  .nav-links {
+    flex-direction: row;
+    gap: 1rem;
+  }
+  .nav-auth {
+    flex-direction: row;
+    gap: 1rem;
+  }
 }
 
 .lottie-container-ntf {
-    width: 100%;
+  width: 100%;
+  height: auto;
+  max-width: 700px; /* Esto limita el tamaño máximo */
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .lottie-container-ntf {
+    width: 90%;
     height: auto;
-    max-width: 700px; /* Esto limita el tamaño máximo */
-    margin: 0 auto;
   }
-  
-  @media (max-width: 768px) {
-    .lottie-container-ntf {
-      width: 90%;
-      height: auto;
-    }
+}
+
+@media (max-width: 480px) {
+  .lottie-container-ntf {
+    width: 80%;
+    height: auto;
   }
-  
-  @media (max-width: 480px) {
-    .lottie-container-ntf {
-      width: 80%;
-      height: auto;
-    }
-  }
-  
+}
