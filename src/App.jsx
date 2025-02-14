@@ -6,6 +6,8 @@ import PageNotFound from './paginas/Error/PageNotFound';
 import HomeAlt from "./paginas/HomeAlt/HomeAlt";
 import Dashboard from './paginas/Dashboard/dashboard';
 
+import ProtectedRoute from "./componentes/ProtectedRoute"; 
+
 function App() {
   return (
     <Routes>
@@ -13,7 +15,9 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signin" element={<SignIn />} />
       <Route path="*" element={<PageNotFound />}/>
-      <Route path="/dashboard" element={<Dashboard/>}/>
+      <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Route>
     </Routes>
   );
 }

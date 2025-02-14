@@ -38,7 +38,6 @@ const HomeAlt = () => {
   
       if (data.mensaje === "ok" && data.response?.token) {
         localStorage.setItem("token", data.response.token);
-        alert("Inicio de sesión exitoso");
         navigate("/dashboard");
       } else {
         throw new Error(data.mensaje || "Error en el inicio de sesión");
@@ -67,8 +66,8 @@ const HomeAlt = () => {
             </ul>
           </div>
           <div className="nav-auth">
-            <Link to="/register" className="auth-button">Registrarse</Link>
-            <Link to="/login" className="auth-button">Iniciar Sesión</Link>
+            <Link to="/login" className="auth-button">Registrarse</Link>
+            <Link to="/signin" className="auth-button">Iniciar Sesión</Link>
           </div>
         </nav>
       </header>
