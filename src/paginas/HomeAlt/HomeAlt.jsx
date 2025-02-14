@@ -37,7 +37,9 @@ const HomeAlt = () => {
       console.log("Respuesta del servidor:", data); // Verifica qué devuelve en consola
   
       if (data.mensaje === "ok" && data.response?.token) {
+        // Guardar tanto el token como el objeto usuario en localStorage
         localStorage.setItem("token", data.response.token);
+        localStorage.setItem("user", JSON.stringify(data.response.usuario)); // Guarda el usuario
         navigate("/dashboard");
       } else {
         throw new Error(data.mensaje || "Error en el inicio de sesión");
@@ -47,6 +49,7 @@ const HomeAlt = () => {
       setError(error.message || "Hubo un problema con la conexión al servidor");
     }
   };
+  
   
 
   return (

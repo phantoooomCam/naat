@@ -18,17 +18,23 @@ const DashHome = ({ activeView }) => {
   );
 };
 
-const HomeView = () => (
-  <div className="home-view">
-    <h1>Bienvenido al Panel de Control</h1>
-    <div className="cards-grid">
-      <div className="card blue"></div>
-      <div className="card green"></div>
-      <div className="card orange"></div>
-      <div className="card purple"></div>
+const HomeView = () => {
+  // Obtener el usuario desde localStorage dentro del componente HomeView
+  const usuario = JSON.parse(localStorage.getItem("user"));
+  const nombre = usuario?.nombre || "Usuario"; // Si no hay usuario, se muestra "Usuario"
+
+  return (
+    <div className="home-view">
+      <h1>Bienvenido, {nombre} al Panel de Control</h1>
+      <div className="cards-grid">
+        <div className="card blue"></div>
+        <div className="card green"></div>
+        <div className="card orange"></div>
+        <div className="card purple"></div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Componentes de ejemplo para otras vistas
 const ReportsView = () => <div className="chart-placeholder" />;
