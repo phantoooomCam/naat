@@ -4,6 +4,7 @@ import Login from "./paginas/Login-SignIn/Registro"
 import SignIn from './paginas/Login-SignIn/SignIn';
 import PageNotFound from './paginas/Error/PageNotFound';
 import HomeAlt from "./paginas/HomeAlt/HomeAlt";
+import Dashboard from './paginas/Dashboard/dashboard';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signin" element={<SignIn />} />
       <Route path="*" element={<PageNotFound />}/>
+      <Route path="/dashboard" element={<Dashboard/>}/>
     </Routes>
   );
 }

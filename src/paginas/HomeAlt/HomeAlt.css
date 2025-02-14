@@ -116,13 +116,14 @@ body {
   color: #222a35;
   margin-bottom: 2rem;
   text-align: center;
+  position: relative;
+  left: -12px;
 }
 
 .lottie-container {
   width: 700px;
   height: 700px;
   position: relative;
-  left: -50px;
   top: -50px;
 }
 
