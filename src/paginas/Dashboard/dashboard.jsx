@@ -1,16 +1,28 @@
-import React from 'react'
-import { Link, useNavigate } from "react-router-dom";
-import './dashboard.css'
+import { useState } from 'react';
+import Header from './Header';
+import Sidebar from './Sidebar';
+import DashHome from './DashHome';
+import './Dashboard.css';
 
-function Dashboard() {
+const Dashboard = () => {
+  const [activeView, setActiveView] = useState('inicio');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
-    <div>
-        <h1 className='h1-dashboard'>
-            Dashboard
-        </h1>
+    <div className="dashboard-container">
+      <Sidebar 
+        activeView={activeView}
+        setActiveView={setActiveView}
+        isOpen={sidebarOpen}
+        toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+      />
       
+      <main className={`main-content ${sidebarOpen ? '' : 'collapsed'}`}>
+        <Header />
+        <DashHome activeView={activeView} />
+      </main>
     </div>
-  )
-}
+  );
+};
 
 export default Dashboard;

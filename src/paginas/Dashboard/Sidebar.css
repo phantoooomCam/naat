@@ -1,0 +1,182 @@
+.sidebar {
+  width: 280px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: linear-gradient(195deg, #42424a, #191919);
+  color: #fff;
+  transition: width 0.3s ease;
+  padding: 20px;
+  z-index: 999; /* Asegurar que Sidebar esté encima */
+}
+
+.sidebar.closed {
+  width: 88px;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.top-logo {
+  width: 80px; /* Ajusta este valor */
+  height: auto; 
+  transition: all 0.3s ease; /* Animación suave */
+}
+
+
+.dashboard-title {
+  color: white;
+  font-size: 1.4rem;
+  margin: 0;
+  text-align: center;
+}
+
+/* Ajustes para el header */
+.sidebar-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem 0;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Cuando el sidebar está colapsado */
+.sidebar.closed .top-logo {
+  width: 40px;
+  height: auto;
+  margin-bottom: 0;
+}
+
+.sidebar.closed .logo-wrapper {
+  gap: 0;
+}
+
+.sidebar-logo-vertical {
+  width: 50px;
+  height: 50px;
+  margin-bottom: 10px;
+}
+
+.sidebar-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.logo-text {
+  font-size: 1.5rem;
+  margin: 0;
+  color: #fff;
+  transition: opacity 0.3s ease;
+}
+
+/* Ajusta el sidebar-header */
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.toggle-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.menu-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.menu-item.active {
+  background: #1976d2;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.icon {
+  font-size: 1.25rem;
+  display: flex;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 88px;
+  }
+  .sidebar.closed {
+    width: 0;
+  }
+  .main-content {
+    margin-left: 0;
+  }
+}
