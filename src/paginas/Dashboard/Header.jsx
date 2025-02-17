@@ -1,33 +1,46 @@
-import { useState } from "react";
-import { FiLogOut } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
-import "./Header.css";
+import { useState, useEffect, useRef } from 'react';
+import { FiUser, FiLogOut } from 'react-icons/fi';
+import PropTypes from 'prop-types';
+import './Header.css';
 
 const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const navigate = useNavigate();
+  const profileRef = useRef(null);
 
-  // Obtener el usuario desde localStorage
-  const storedUser = localStorage.getItem("user");
-  const user = storedUser ? JSON.parse(storedUser) : null;
-
-  // Función para cerrar sesión
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/signin"); // Redirige a la página de inicio de sesión
+  const user = {
+    name: 'Juan Pérez',
+    email: 'juan@empresa.com',
+    role: 'Administrador',
+    avatar: 'https://i.pravatar.cc/100'
   };
+
+  // Cerrar el menú si el usuario hace clic fuera del perfil
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    if (isProfileOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isProfileOpen]);
 
   return (
     <header className="header">
-      <div className="profile-container">
-        <button
+      <div className="profile-container" ref={profileRef}>
+        <button 
           className="profile-btn"
           onClick={() => setIsProfileOpen(!isProfileOpen)}
         >
-          <img
-            src={user?.avatar || "https://i.pravatar.cc/100"}
-            alt="Perfil"
+          <img 
+            src={user.avatar} 
+            alt="Perfil" 
             className="avatar"
           />
         </button>
@@ -35,17 +48,17 @@ const Header = () => {
         {isProfileOpen && (
           <div className="profile-card">
             <div className="user-info">
-              <img
-                src={user?.avatar || "https://i.pravatar.cc/100"}
-                alt="Perfil"
+              <img 
+                src={user.avatar} 
+                alt="Perfil" 
                 className="avatar-lg"
               />
-              <h3>{user?.name || "Usuario"}</h3>
-              <p className="email">{user?.email || "Sin correo"}</p>
-              <p className="role">{user?.role || "Sin rol"}</p>
+              <h3>{user.name}</h3>
+              <p className="email">{user.email}</p>
+              <p className="role">{user.role}</p>
             </div>
-
-            <button className="logout-btn" onClick={handleLogout}>
+            
+            <button className="logout-btn">
               <FiLogOut className="icon" />
               Cerrar sesión
             </button>

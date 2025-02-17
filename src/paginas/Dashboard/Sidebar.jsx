@@ -1,4 +1,5 @@
-import { FiHome, FiBarChart2, FiSettings, FiHelpCircle } from 'react-icons/fi';
+import { FiHome, FiBarChart2, FiSettings, FiHelpCircle, FiUsers   } from 'react-icons/fi';
+import { BiLogIn } from "react-icons/bi";
 import PropTypes from 'prop-types';
 import './Sidebar.css';
 import NAAT from '../../assets/completo_blanco.png';
@@ -6,10 +7,11 @@ import NAAT from '../../assets/completo_blanco.png';
 const Sidebar = ({ activeView, setActiveView, isOpen, toggleSidebar }) => {
   const menuItems = [
     { id: 'inicio', icon: <FiHome />, label: 'Inicio' },
-    { id: 'reportes', icon: <FiBarChart2 />, label: 'Reportes' },
-    { id: 'config', icon: <FiSettings />, label: 'Configuración' },
-    { id: 'ayuda', icon: <FiHelpCircle />, label: 'Ayuda' },
+    { id: 'gestionar-usuarios', icon: <FiUsers  />, label: 'Gestionar usuarios' },
+    { id: 'ingresos-sistema', icon: <BiLogIn />, label: 'Ingresos al sistema' },
+    { id: 'actividad-sistema', icon: <FiBarChart2 />, label: 'Actividad del sistema' },
   ];
+  
 
   return (
     <nav className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
