@@ -30,7 +30,6 @@ const HomeView = () => {
         <div className="card blue"></div>
         <div className="card green"></div>
         <div className="card orange"></div>
-        <div className="card purple"></div>
       </div>
     </div>
   );
