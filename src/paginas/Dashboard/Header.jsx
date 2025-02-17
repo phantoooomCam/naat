@@ -4,6 +4,9 @@ import PropTypes from 'prop-types';
 import './Header.css';
 
 const Header = () => {
+  const usuario = JSON.parse(localStorage.getItem("user"));
+  const nombre = usuario?.nombre|| "Usuario"; // Si no hay usuario, se muestra "Usuario"
+  const apellido =usuario?.apellidoPaterno || "Apellido";
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef(null);
 
@@ -53,8 +56,7 @@ const Header = () => {
                 alt="Perfil" 
                 className="avatar-lg"
               />
-              <h3>{user.name}</h3>
-              <p className="email">{user.email}</p>
+              <h3>{nombre + " " + apellido}</h3>
               <p className="role">{user.role}</p>
             </div>
             
