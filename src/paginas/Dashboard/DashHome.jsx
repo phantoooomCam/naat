@@ -27,9 +27,15 @@ const HomeView = () => {
     <div className="home-view">
       <h1>Bienvenido, {nombre} al Panel de Control</h1>
       <div className="cards-grid">
-        <div className="card blue"></div>
-        <div className="card green"></div>
-        <div className="card orange"></div>
+        <div className="card blue">
+          <h2>Gestionar Usuarios</h2>
+        </div>
+        <div className="card green">
+          <h2>Ingresos al Sistema</h2>
+        </div>
+        <div className="card orange">
+          <h2>Actividad del Sistema</h2>
+        </div>
       </div>
     </div>
   );
