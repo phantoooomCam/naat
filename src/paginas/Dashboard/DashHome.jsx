@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import './DashHome.css';
+import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 const DashHome = ({ activeView }) => {
   const views = {
@@ -29,12 +30,30 @@ const HomeView = () => {
       <div className="cards-grid">
         <div className="card blue">
           <h2>Gestionar Usuarios</h2>
+          <DotLottieReact
+            src="https://lottie.host/00b12e36-f691-4b85-8546-6f70be161665/9PEhlcnxOD.lottie"
+            loop
+            autoplay
+            className="lottie-animation"
+          />
         </div>
         <div className="card green">
           <h2>Ingresos al Sistema</h2>
+          <DotLottieReact
+            src="https://lottie.host/0ac02a9f-36d2-44fd-bf17-31c8c8cb4bdc/IJJBt2KPzb.lottie"
+            loop
+            autoplay
+            className="lottie-animation"
+          />
         </div>
         <div className="card orange">
           <h2>Actividad del Sistema</h2>
+          <DotLottieReact
+            src="https://lottie.host/63f7e54f-126d-48d1-b91c-3f591c5be4d2/s5r8T0SwtQ.lottie"
+            loop
+            autoplay
+            className="lottie-animation"
+          />
         </div>
       </div>
     </div>
@@ -51,3 +70,7 @@ DashHome.propTypes = {
 };
 
 export default DashHome;
+
+
+
+

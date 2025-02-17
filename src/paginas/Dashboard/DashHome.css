@@ -47,16 +47,18 @@
   align-self: center; /* Asegurar que se centre en su fila */
 }
 
-
 .card {
   border-radius: 12px;
   background: white;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease;
-  height: 200px; /* Tamaño fijo para que sean uniformes */
+  height: 250px; /* Aumentar altura para acomodar animaciones */
   display: flex;
+  flex-direction: column; /* Para que los elementos se apilen */
   justify-content: center;
   align-items: center;
+  padding: 1rem;
+  text-align: center;
 }
 
 /* Efecto hover */
@@ -66,17 +68,25 @@
 
 /* Colores para las tarjetas */
 .card.blue {
-  border-left: 4px solid #1976d2;
+  border-left: 4px solid #757A81;
 }
 .card.green {
-  border-left: 4px solid #4caf50;
+  border-left: 4px solid #757A81;
 }
 .card.orange {
-  border-left: 4px solid #ff9800;
+  border-left: 4px solid #757A81;
 }
-.card.purple {
-  border-left: 4px solid #8e44ad;
+
+/* Ajustes para LottieFiles */
+.card h2 {
+  margin-bottom: .5rem;
 }
+
+.card .lottie-animation {
+  width: 300px; /* Reducir tamaño */
+  height: 300; /* Mantener proporción */
+}
+
 
 /* Responsivo: en móviles se apilan en 1 sola columna */
 @media (max-width: 768px) {
