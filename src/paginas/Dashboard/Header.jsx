@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { FiLogOut } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
-import './Header.css';
+import { useState } from "react";
+import { FiLogOut } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+import "./Header.css";
 
 const Header = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -21,13 +21,13 @@ const Header = () => {
   return (
     <header className="header">
       <div className="profile-container">
-        <button 
+        <button
           className="profile-btn"
           onClick={() => setIsProfileOpen(!isProfileOpen)}
         >
-          <img 
-            src={user?.avatar || "https://i.pravatar.cc/100"} 
-            alt="Perfil" 
+          <img
+            src={user?.avatar || "https://i.pravatar.cc/100"}
+            alt="Perfil"
             className="avatar"
           />
         </button>
@@ -35,16 +35,16 @@ const Header = () => {
         {isProfileOpen && (
           <div className="profile-card">
             <div className="user-info">
-              <img 
-                src={user?.avatar || "https://i.pravatar.cc/100"} 
-                alt="Perfil" 
+              <img
+                src={user?.avatar || "https://i.pravatar.cc/100"}
+                alt="Perfil"
                 className="avatar-lg"
               />
               <h3>{user?.name || "Usuario"}</h3>
               <p className="email">{user?.email || "Sin correo"}</p>
               <p className="role">{user?.role || "Sin rol"}</p>
             </div>
-            
+
             <button className="logout-btn" onClick={handleLogout}>
               <FiLogOut className="icon" />
               Cerrar sesión

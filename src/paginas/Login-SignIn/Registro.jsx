@@ -3,10 +3,63 @@ import "./login-signin.css";
 import { FaUser, FaEnvelope, FaLock, FaPhone } from "react-icons/fa";
 import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import NAAT from '../../assets/completo_blanco.png';
+import NAAT from "../../assets/completo_blanco.png";
 
-export default function Login() {
+export default function SignIn() {
   const [isRegister, setIsRegister] = useState(false);
+
+  // States de inicio de sesion
+  const [correo, setCorreo] = useState("");
+  const [clave, setClave] = useState("");
+  const [error, setError] = useState("");
+
+  // Funcion del inicio de sesion
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError(""); // Limpiar error al intentar iniciar sesión
+
+    try {
+      const response = await fetch(
+        "http://192.168.100.89:44444/api/Autenticacion/Autenticar",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            usuario: correo,
+            clave: clave,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          `Error del servidor: ${response.status} - ${
+            data.mensaje || "Sin mensaje"
+          }`
+        );
+      }
+
+      console.log("Respuesta del servidor:", data); // Verifica qué devuelve en consola
+
+      if (data.mensaje === "ok" && data.response?.token) {
+        localStorage.setItem("token", data.response.token);
+        localStorage.setItem("user", JSON.stringify(data.response.usuario));
+
+        // Redirigir a otra página como dashboard
+        // Aquí es donde agregamos la redirección
+        window.location.href = "/dashboard"; // O usar useNavigate() si prefieres el método de react-router
+      } else {
+        throw new Error(data.mensaje || "Error en el inicio de sesión");
+      }
+    } catch (error) {
+      console.error("Error en la autenticación:", error);
+      setError(error.message || "Hubo un problema con la conexión al servidor");
+    }
+  };
 
   useEffect(() => {
     // Agregar clase al body cuando se carga el componente
@@ -45,26 +98,43 @@ export default function Login() {
               <FaLock className="auth-input-icon" />
               <input type="password" placeholder="Password" required />
             </div>
-            <button type="submit" className="auth-btn">REGISTRARSE</button>
+            <button type="submit" className="auth-btn">
+              REGISTRARSE
+            </button>
           </form>
         </div>
 
         {/* Formulario de Login */}
         <div className="auth-form-box auth-form-box-register">
-          <form>
+          <form onSubmit={handleLogin}>
             <h1>Inicio de Sesión</h1>
+            {error && <p className="error-message">{error}</p>}
             <div className="auth-input-box">
               <FaEnvelope className="auth-input-icon" />
-              <input type="email" placeholder="tucorreo@ejemplo.com" required />
+              <input
+                type="text"
+                placeholder="tucorreo@ejemplo.com"
+                value={correo}
+                onChange={(e) => setCorreo(e.target.value)}
+                required
+              />
             </div>
             <div className="auth-input-box">
               <FaLock className="auth-input-icon" />
-              <input type="password" placeholder="Password" required />
+              <input
+                type="password"
+                placeholder="Password"
+                value={clave}
+                onChange={(e) => setClave(e.target.value)}
+                required
+              />
             </div>
             <div className="auth-forgot-link">
               <a href="#">¿Olvidaste tu contraseña?</a>
             </div>
-            <button type="submit" className="auth-btn">INICIAR SESIÓN</button>
+            <button type="submit" className="auth-btn">
+              INICIAR SESIÓN
+            </button>
           </form>
         </div>
 

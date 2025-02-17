@@ -47,6 +47,7 @@ export default function SignIn() {
 
       if (data.mensaje === "ok" && data.response?.token) {
         localStorage.setItem("token", data.response.token);
+        localStorage.setItem("user", JSON.stringify(data.response.usuario));
 
         // Redirigir a otra página como dashboard
         // Aquí es donde agregamos la redirección
