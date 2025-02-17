@@ -45,15 +45,22 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  justify-content: center;
+  gap: 0.5rem; /* Ajusta el espacio entre el logo y el texto */
   width: 100%;
+  padding: 0; /* Elimina el padding extra */
+  background: none; /* Asegura que no haya un fondo */
+  border-radius: 0; /* Elimina cualquier borde redondeado */
 }
 
+
 .top-logo {
-  width: 80px; /* Ajusta este valor */
-  height: auto; 
-  transition: all 0.3s ease; /* Animación suave */
+  width: 80px; /* Ajusta según lo necesites */
+  height: auto;
+  object-fit: contain; /* Evita distorsión */
+  background: none; /* Asegura que no tenga fondo */
 }
+
 
 
 .dashboard-title {
@@ -68,10 +75,10 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.5rem;
-  padding: 1.5rem 0;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  justify-content: center;
+  padding: 0;
+  margin-bottom: 1rem;/* Elimina cualquier fondo */
+  border-bottom: none; /* Quita cualquier borde si existe */
 }
 
 /* Cuando el sidebar está colapsado */
@@ -112,7 +119,7 @@
   align-items: center;
   margin-bottom: 40px;
   padding: 15px;
-  background: rgba(255, 255, 255, 0.05);
+  background: none;
   border-radius: 8px;
 }
 

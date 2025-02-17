@@ -2,7 +2,7 @@
   display: flex;
   justify-content: flex-end;
   padding: 1rem 2rem;
-  background: #ffffff;
+  background: #757A81;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: fixed;
   width: calc(100% - 280px); /* Ancho total menos sidebar */
