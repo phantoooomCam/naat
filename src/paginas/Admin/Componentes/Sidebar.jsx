@@ -3,7 +3,7 @@ import { BiLogIn } from "react-icons/bi";
 import PropTypes from 'prop-types';
 import { useNavigate } from 'react-router-dom';  // Importar useNavigate
 import './Sidebar.css';
-import NAAT from '../../assets/completo_blanco.png';
+import NAAT from '../../../assets/completo_blanco.png';
 
 const Sidebar = ({ activeView, setActiveView, isOpen, toggleSidebar }) => {
   const navigate = useNavigate(); // Inicializar useNavigate

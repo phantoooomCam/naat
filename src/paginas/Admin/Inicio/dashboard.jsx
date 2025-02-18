@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import Header from './Header';
-import Sidebar from './Sidebar';
+import Header from '../Componentes/Header';
+import Sidebar from '../Componentes/Sidebar';
 import DashHome from './DashHome';
 import './Dashboard.css';
 

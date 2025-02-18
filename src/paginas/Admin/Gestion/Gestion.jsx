@@ -1,8 +1,8 @@
 import React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Header from "../Dashboard/Header";
-import Sidebar from "../Dashboard/Sidebar";
+import Header from "../Componentes/Header"
+import Sidebar from "../Componentes/Sidebar";
 import GestionDash from "./DashGestion";
 import "./Gestion.css";
 
@@ -22,7 +22,6 @@ function Gestion() {
         <Header />
         <GestionDash/> 
       </main>
-
        
 
     </div>
