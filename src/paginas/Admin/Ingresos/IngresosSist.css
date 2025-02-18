@@ -1,41 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background: #f4f6f9;
+  color: #333;
+}
+
 .ingreso-sist {
-  max-width: 900px;
+  max-width: 100%; /* Hacer que el contenedor ocupe todo el ancho */
+  width: 90%; /* Ocupar el 90% del ancho de la pantalla */
   margin: 20px auto;
   padding: 20px;
   background: white;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
 }
 
 h2 {
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+  font-weight: 600;
   color: #2c3e50;
 }
 
 .filtro-input {
   width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
 }
 
 .tabla-ingresos {
   width: 100%;
-  border-collapse: collapse;
-}
-
-.tabla-ingresos th,
-.tabla-ingresos td {
-  padding: 10px;
-  border: 1px solid #ddd;
-  text-align: left;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: 12px;
 }
 
 .tabla-ingresos th {
-  background: #3498db;
+  background: #2d98da;
   color: white;
+  padding: 12px;
+  text-transform: uppercase;
+}
+
+.tabla-ingresos td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+}
+
+.tabla-ingresos tr:hover {
+  background: rgba(45, 152, 218, 0.1);
 }
 
 .paginacion {
@@ -45,12 +63,17 @@ h2 {
 }
 
 .paginacion button {
-  padding: 5px 10px;
+  padding: 8px 12px;
   border: none;
-  background: #3498db;
+  background: #2d98da;
   color: white;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.paginacion button:hover {
+  background: #1e7cb7;
 }
 
 .paginacion button:disabled {
@@ -60,4 +83,5 @@ h2 {
 
 .paginacion span {
   align-self: center;
+  font-weight: 600;
 }
