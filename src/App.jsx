@@ -6,7 +6,7 @@ import PageNotFound from './paginas/Error/PageNotFound';
 import HomeAlt from "./paginas/HomeAlt/HomeAlt";
 import Dashboard from './paginas/Admin/Inicio/dashboard';
 import Gestion from './paginas/Admin/Gestion/Gestion';
-import IngresoSist from './paginas/Admin/Ingresos/Ingresos';
+import IngresoSist from './paginas/Admin/Ingresos/IngresosSist';
 
 import ProtectedRoute from "./componentes/ProtectedRoute"; 
 
