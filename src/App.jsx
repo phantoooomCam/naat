@@ -6,6 +6,7 @@ import PageNotFound from './paginas/Error/PageNotFound';
 import HomeAlt from "./paginas/HomeAlt/HomeAlt";
 import Dashboard from './paginas/Dashboard/dashboard';
 import Gestion from './paginas/Gestion/Gestion';
+import IngresoSist from './paginas/IngresoSist/IngresoSist';
 
 import ProtectedRoute from "./componentes/ProtectedRoute"; 
 
@@ -19,6 +20,7 @@ function App() {
       <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/gestion" element={<Gestion />} />
+          <Route path="/ingresos" element={<IngresoSist />} />
         </Route>
     </Routes>
   );
