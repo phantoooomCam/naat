@@ -58,7 +58,7 @@ select:focus {
 }
 
 button {
-  padding: 14px 22px;          /* Padding ajustado */
+  padding: 10px 22px;          /* Padding ajustado */
   border-radius: 8px;
   font-size: 1.1rem;           /* Tamaño del texto del botón ajustado */
   transition: all 0.3s;
@@ -70,26 +70,32 @@ button:hover {
 
 .bg-blue-500 {
   background-color: #007BFF;
+  border: none;
 }
 
 .bg-blue-500:hover {
   background-color: #0056b3;
+  border: none;
 }
 
 .bg-yellow-500 {
   background-color: #FFC107;
+  border: none;
 }
 
 .bg-yellow-500:hover {
   background-color: #e0a800;
+  border: none;
 }
 
 .bg-red-500 {
   background-color: #DC3545;
+  border: none;
 }
 
 .bg-red-500:hover {
   background-color: #c82333;
+  border: none;
 }
 
 button:focus {
