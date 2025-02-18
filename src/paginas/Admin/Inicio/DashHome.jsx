@@ -4,25 +4,6 @@ import IngresoSist from '../Ingresos/IngresosSist';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Link, useNavigate } from "react-router-dom";
 
-const DashHome = ({ activeView }) => {
-
-
-  const views = {
-    inicio: <HomeView />,
-    reportes: <ReportsView />,
-    Ingresos: <IngresoSist />,
-    ayuda: <HelpView />
-  };
-
-  return (
-    <div className="dash-home">
-      <div className="container">
-        {views[activeView]}
-      </div>
-    </div>
-  );
-};
-
 const HomeView = () => {
   // Obtener el usuario desde localStorage dentro del componente HomeView
   const usuario = JSON.parse(localStorage.getItem("user"));
