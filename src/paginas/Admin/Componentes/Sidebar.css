@@ -137,6 +137,13 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
+/* Elimina el subrayado de los enlaces */
+.menu-link {
+  text-decoration: none; /* Quita la línea debajo del texto */
+  display: block; /* Hace que el enlace cubra todo el botón */
+}
+
+
 .menu-items {
   display: flex;
   flex-direction: column;
@@ -154,7 +161,7 @@
   background: transparent;
   color: #fff;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background 0.2s ease-in-out; /* Ajustamos para hacerlo más rápido */
 }
 
 .menu-item:hover {
@@ -164,6 +171,7 @@
 .menu-item.active {
   background: #1976d2;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: none; /* Eliminamos transiciones innecesarias */
 }
 
 .icon {
