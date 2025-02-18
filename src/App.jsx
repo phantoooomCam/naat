@@ -7,6 +7,7 @@ import HomeAlt from "./paginas/HomeAlt/HomeAlt";
 import Dashboard from './paginas/Admin/Inicio/dashboard';
 import Gestion from './paginas/Admin/Gestion/Gestion';
 import IngresoSist from './paginas/Admin/Ingresos/Ingresos';
+import Actividad from './paginas/Admin/Actividad/Actividad';
 
 import ProtectedRoute from "./componentes/ProtectedRoute";
 
@@ -21,6 +22,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/gestion" element={<Gestion />} />
         <Route path="/ingresos" element={<IngresoSist />} />
+        <Route path="/actividad" element={<Actividad />} />
       </Route>
     </Routes>
   );

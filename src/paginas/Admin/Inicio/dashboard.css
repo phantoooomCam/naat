@@ -1,7 +1,7 @@
 .dashboard-container {
   display: flex;
   min-height: 100vh;
-  background: #e8eaed;
+  background: #e8e9e9;
 }
 
 .main-content {

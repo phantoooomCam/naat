@@ -1,19 +1,4 @@
-.dashboard-container {
-  display: flex;
-  min-height: 100vh;
-  background: #e9e8e8;
-}
 
-.main-content {
-  flex-grow: 1;
-  margin-left: 280px; /* Sidebar abierto */
-  transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  padding-top: var(--header-height);
-}
-
-.main-content.collapsed {
-  margin-left: 88px; /* Sidebar colapsado */
-}
 
 .content-wrapper {
   display: flex;               /* Usa flexbox */
