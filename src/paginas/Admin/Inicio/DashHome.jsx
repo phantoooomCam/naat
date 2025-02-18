@@ -42,7 +42,7 @@ const HomeView = () => {
             className="lottie-animation"
           />
         </div>
-        <div className="card green">
+        <div className="card green" onClick={() => navigate("/ingresos")}>
           <h2>Ingresos al Sistema</h2>
           <DotLottieReact
             src="https://lottie.host/0ac02a9f-36d2-44fd-bf17-31c8c8cb4bdc/IJJBt2KPzb.lottie"
