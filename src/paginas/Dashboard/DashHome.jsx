@@ -1,8 +1,11 @@
 import PropTypes from 'prop-types';
 import './DashHome.css';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import { Link, useNavigate } from "react-router-dom";
 
 const DashHome = ({ activeView }) => {
+
+
   const views = {
     inicio: <HomeView />,
     reportes: <ReportsView />,
@@ -23,12 +26,13 @@ const HomeView = () => {
   // Obtener el usuario desde localStorage dentro del componente HomeView
   const usuario = JSON.parse(localStorage.getItem("user"));
   const nombre = usuario?.nombre || "Usuario"; // Si no hay usuario, se muestra "Usuario"
+  const navigate = useNavigate();
 
   return (
     <div className="home-view">
       <h1>Bienvenido, {nombre} al Panel de Control</h1>
       <div className="cards-grid">
-        <div className="card blue">
+        <div className="card blue" onClick={() => navigate("/gestion")}>
           <h2>Gestionar Usuarios</h2>
           <DotLottieReact
             src="https://lottie.host/00b12e36-f691-4b85-8546-6f70be161665/9PEhlcnxOD.lottie"

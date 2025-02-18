@@ -5,6 +5,7 @@ import SignIn from './paginas/Login-SignIn/SignIn';
 import PageNotFound from './paginas/Error/PageNotFound';
 import HomeAlt from "./paginas/HomeAlt/HomeAlt";
 import Dashboard from './paginas/Dashboard/dashboard';
+import Gestion from './paginas/Gestion/Gestion';
 
 import ProtectedRoute from "./componentes/ProtectedRoute"; 
 
@@ -17,6 +18,7 @@ function App() {
       <Route path="*" element={<PageNotFound />}/>
       <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/gestion" element={<Gestion />} />
         </Route>
     </Routes>
   );

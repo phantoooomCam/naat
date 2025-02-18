@@ -1,0 +1,152 @@
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background: #e9e8e8;
+}
+
+.main-content {
+  flex-grow: 1;
+  margin-left: 280px; /* Sidebar abierto */
+  transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding-top: var(--header-height);
+}
+
+.main-content.collapsed {
+  margin-left: 88px; /* Sidebar colapsado */
+}
+
+.content-wrapper {
+  display: flex;               /* Usa flexbox */
+  justify-content: center;     /* Centra horizontalmente */
+  align-items: flex-start;     /* Alinea al inicio de la página de manera vertical */
+  padding: 30px;               /* Aumenta el padding */
+  background-color: #ffffff;
+  height: auto;                /* Ajusta la altura automáticamente según el contenido */
+  max-height: 85vh;            /* Limita la altura a un máximo del 85% de la ventana */
+  width: auto;                  /* Define el ancho más grande */
+  max-width: 1200px;           /* Ancho máximo */
+  margin: 0 auto;        
+  border-radius: 20px;         /* Centra horizontalmente */
+}
+
+h2 {
+  color: #333;
+  font-size: 1.6rem;           /* Tamaño de fuente más grande, pero no tan grande */
+  margin-bottom: 25px;         /* Espacio adecuado debajo del título */
+}
+
+/* Formulario */
+form {
+  display: flex;
+  flex-direction: row;
+  gap: 20px; /* Espacio entre los campos */
+}
+
+input,
+select {
+  padding: 16px;               /* Ajusta el padding para hacerlo más cómodo */
+  margin-bottom: 20px;         /* Espacio adecuado entre los campos */
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1.1rem;           /* Aumenta el tamaño del texto en los campos */
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+button {
+  padding: 14px 22px;          /* Padding ajustado */
+  border-radius: 8px;
+  font-size: 1.1rem;           /* Tamaño del texto del botón ajustado */
+  transition: all 0.3s;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.bg-blue-500 {
+  background-color: #007BFF;
+}
+
+.bg-blue-500:hover {
+  background-color: #0056b3;
+}
+
+.bg-yellow-500 {
+  background-color: #FFC107;
+}
+
+.bg-yellow-500:hover {
+  background-color: #e0a800;
+}
+
+.bg-red-500 {
+  background-color: #DC3545;
+}
+
+.bg-red-500:hover {
+  background-color: #c82333;
+}
+
+button:focus {
+  outline: none;
+}
+
+/* Estilo de la tabla */
+.table-container {
+  margin-top: 25px;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.1rem;            /* Aumenta el tamaño de la fuente de la tabla */
+}
+
+th,
+td {
+  padding: 14px;               /* Aumenta el padding de las celdas */
+  text-align: left;
+}
+
+th {
+  background-color: #f1f1f1;
+  font-weight: bold;
+}
+
+tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tr:hover {
+  background-color: #f1f1f1;
+  cursor: pointer;
+}
+
+td button {
+  margin-right: 10px;          /* Espacio adecuado entre los botones */
+}
+
+/* Estilos para pantallas pequeñas */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+  }
+
+  .content-container {
+    padding: 20px; /* Ajuste de padding para pantallas pequeñas */
+  }
+
+  table {
+    font-size: 1.05rem; /* Tamaño de fuente ligeramente mayor en pantallas pequeñas */
+  }
+
+  th, td {
+    padding: 12px;    /* Padding adecuado para pantallas pequeñas */
+  }
+}
