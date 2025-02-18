@@ -1,14 +1,24 @@
 import { useState } from "react";
-import './Gestion.css';
+import "./Gestion.css";
 
 const GestionDash = () => {
   const [users, setUsers] = useState([
     { id: 1, name: "Juan Pérez", email: "juan@email.com", role: "Admin" },
     { id: 2, name: "Ana López", email: "ana@email.com", role: "Usuario" },
-    { id: 3, name: "Diego Flores", email: "bigocam123@gmail.com", role: "Admin" }
+    {
+      id: 3,
+      name: "Diego Flores",
+      email: "bigocam123@gmail.com",
+      role: "Admin",
+    },
   ]);
-  
-  const [formData, setFormData] = useState({ id: null, name: "", email: "", role: "Usuario" });
+
+  const [formData, setFormData] = useState({
+    id: null,
+    name: "",
+    email: "",
+    role: "Usuario",
+  });
   const [isEditing, setIsEditing] = useState(false);
 
   const handleChange = (e) => {
@@ -18,7 +28,9 @@ const GestionDash = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (isEditing) {
-      setUsers(users.map(user => (user.id === formData.id ? formData : user)));
+      setUsers(
+        users.map((user) => (user.id === formData.id ? formData : user))
+      );
     } else {
       setUsers([...users, { ...formData, id: users.length + 1 }]);
     }
@@ -32,7 +44,7 @@ const GestionDash = () => {
   };
 
   const handleDelete = (id) => {
-    setUsers(users.filter(user => user.id !== id));
+    setUsers(users.filter((user) => user.id !== id));
   };
 
   return (
@@ -40,7 +52,7 @@ const GestionDash = () => {
       <div className="content-container">
         <h2 className="text-xl">Gestión de Usuarios</h2>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-2 mb-4">
+        <form onSubmit={handleSubmit} className="gestion-form">
           <input
             type="text"
             name="name"
@@ -68,7 +80,10 @@ const GestionDash = () => {
             <option value="Usuario">Usuario</option>
             <option value="Admin">Admin</option>
           </select>
-          <button type="submit" className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">
+          <button
+            style={{ padding: "10px 22px" }}
+            className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 mt-4"
+          >
             {isEditing ? "Actualizar Usuario" : "Agregar Usuario"}
           </button>
         </form>
@@ -90,10 +105,16 @@ const GestionDash = () => {
                   <td>{user.email}</td>
                   <td>{user.role}</td>
                   <td>
-                    <button onClick={() => handleEdit(user)} className="mr-2 bg-yellow-500 text-white p-2 rounded">
+                    <button
+                      onClick={() => handleEdit(user)}
+                      className="mr-2 bg-yellow-500 text-white p-2 rounded"
+                    >
                       Editar
                     </button>
-                    <button onClick={() => handleDelete(user.id)} className="bg-red-500 text-white p-2 rounded">
+                    <button
+                      onClick={() => handleDelete(user.id)}
+                      className="bg-red-500 text-white p-2 rounded"
+                    >
                       Eliminar
                     </button>
                   </td>

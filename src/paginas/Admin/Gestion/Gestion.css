@@ -1,51 +1,48 @@
-
-
 .content-wrapper {
-  display: flex;               /* Usa flexbox */
-  justify-content: center;     /* Centra horizontalmente */
-  align-items: flex-start;     /* Alinea al inicio de la página de manera vertical */
-  padding: 30px;               /* Aumenta el padding */
-  background-color: #ffffff;
-  height: auto;                /* Ajusta la altura automáticamente según el contenido */
-  max-height: 85vh;            /* Limita la altura a un máximo del 85% de la ventana */
-  width: auto;                  /* Define el ancho más grande */
-  max-width: 1200px;           /* Ancho máximo */
-  margin: 0 auto;        
-  border-radius: 20px;         /* Centra horizontalmente */
+  max-width: 100%;
+  width: 90%;
+  margin: 20px auto;
+  padding: 20px;
+  background: white;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
 }
 
 h2 {
   color: #333;
-  font-size: 1.6rem;           /* Tamaño de fuente más grande, pero no tan grande */
-  margin-bottom: 25px;         /* Espacio adecuado debajo del título */
+  font-size: 1.6rem;
+  margin-bottom: 25px;
 }
 
 /* Formulario */
-.flex flex-col gap-2 mb-4 {
+.gestion-form {
   display: flex;
   flex-direction: row;
-  gap: 20px; /* Espacio entre los campos */
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
 }
 
 input,
 select {
-  padding: 16px;               /* Ajusta el padding para hacerlo más cómodo */
-  margin-bottom: 20px;         /* Espacio adecuado entre los campos */
+  padding: 8px 16px;
+  margin-bottom: 0;
   border-radius: 8px;
   border: 1px solid #ccc;
-  font-size: 1.1rem;           /* Aumenta el tamaño del texto en los campos */
+  font-size: 1.1rem;
+  width: 25%;
 }
 
 input:focus,
 select:focus {
   outline: none;
-  border-color: #4CAF50;
+  border-color: #4c6aaf;
 }
 
 button {
-  padding: 10px 22px;          /* Padding ajustado */
+  padding: 8px 22px;
   border-radius: 8px;
-  font-size: 1.1rem;           /* Tamaño del texto del botón ajustado */
+  font-size: 1.1rem;
   transition: all 0.3s;
 }
 
@@ -54,7 +51,7 @@ button:hover {
 }
 
 .bg-blue-500 {
-  background-color: #87ccf6;
+  background-color: #87b3f6;
   border: none;
 }
 
@@ -96,12 +93,12 @@ button:focus {
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 1.1rem;            /* Aumenta el tamaño de la fuente de la tabla */
+  font-size: 1.1rem;
 }
 
 th,
 td {
-  padding: 14px;               /* Aumenta el padding de las celdas */
+  padding: 14px;
   text-align: left;
 }
 
@@ -120,7 +117,7 @@ tr:hover {
 }
 
 td button {
-  margin-right: 10px;          /* Espacio adecuado entre los botones */
+  margin-right: 10px;
 }
 
 /* Estilos para pantallas pequeñas */
@@ -130,14 +127,14 @@ td button {
   }
 
   .content-container {
-    padding: 20px; /* Ajuste de padding para pantallas pequeñas */
+    padding: 20px;
   }
 
   table {
-    font-size: 1.05rem; /* Tamaño de fuente ligeramente mayor en pantallas pequeñas */
+    font-size: 1.05rem;
   }
 
   th, td {
-    padding: 12px;    /* Padding adecuado para pantallas pequeñas */
+    padding: 12px;
   }
 }
