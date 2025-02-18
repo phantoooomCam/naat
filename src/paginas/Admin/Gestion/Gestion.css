@@ -36,7 +36,7 @@ h2 {
 }
 
 /* Formulario */
-form {
+.flex flex-col gap-2 mb-4 {
   display: flex;
   flex-direction: row;
   gap: 20px; /* Espacio entre los campos */
@@ -69,32 +69,32 @@ button:hover {
 }
 
 .bg-blue-500 {
-  background-color: #007BFF;
+  background-color: #87ccf6;
   border: none;
 }
 
 .bg-blue-500:hover {
-  background-color: #0056b3;
+  background-color: #628bb1;
   border: none;
 }
 
 .bg-yellow-500 {
-  background-color: #FFC107;
+  background-color: #b4aec0;
   border: none;
 }
 
 .bg-yellow-500:hover {
-  background-color: #e0a800;
+  background-color: rgb(99, 91, 129);
   border: none;
 }
 
 .bg-red-500 {
-  background-color: #DC3545;
+  background-color: #ffa27d;
   border: none;
 }
 
 .bg-red-500:hover {
-  background-color: #c82333;
+  background-color: #bb8a64;
   border: none;
 }
 
