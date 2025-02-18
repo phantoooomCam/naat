@@ -1,12 +1,13 @@
 import PropTypes from 'prop-types';
 import './DashHome.css';
+import IngresoSist from './IngresosSist';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 
 const DashHome = ({ activeView }) => {
   const views = {
     inicio: <HomeView />,
     reportes: <ReportsView />,
-    config: <ConfigView />,
+    Ingresos: <IngresoSist />,
     ayuda: <HelpView />
   };
 

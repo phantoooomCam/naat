@@ -8,7 +8,7 @@ const Sidebar = ({ activeView, setActiveView, isOpen, toggleSidebar }) => {
   const menuItems = [
     { id: 'inicio', icon: <FiHome />, label: 'Inicio' },
     { id: 'gestionar-usuarios', icon: <FiUsers  />, label: 'Gestionar usuarios' },
-    { id: 'ingresos-sistema', icon: <BiLogIn />, label: 'Ingresos al sistema' },
+    { id: 'Ingresos', icon: <BiLogIn />, label: 'Ingresos al sistema' },
     { id: 'actividad-sistema', icon: <FiBarChart2 />, label: 'Actividad del sistema' },
   ];
   
