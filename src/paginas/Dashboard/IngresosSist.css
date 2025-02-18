@@ -1,0 +1,63 @@
+.ingreso-sist {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  background: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #2c3e50;
+}
+
+.filtro-input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.tabla-ingresos {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-ingresos th,
+.tabla-ingresos td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.tabla-ingresos th {
+  background: #3498db;
+  color: white;
+}
+
+.paginacion {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.paginacion button {
+  padding: 5px 10px;
+  border: none;
+  background: #3498db;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.paginacion button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.paginacion span {
+  align-self: center;
+}
