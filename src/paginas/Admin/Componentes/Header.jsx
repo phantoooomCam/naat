@@ -7,17 +7,57 @@ const Header = () => {
   const usuario = JSON.parse(localStorage.getItem("user"));
   const nombre = usuario?.nombre || "Usuario";
   const apellido = usuario?.apellidoPaterno || "Apellido";
+  const idUsuario = usuario?.idUsuario || null;
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef(null);
-
-  // Generar avatar con las iniciales del usuario
-  const iniciales = `${nombre.charAt(0)}${apellido.charAt(0)}`;
-  const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(iniciales)}&size=100&background=random`;
-
   const navigate = useNavigate();
-  const handleLogout = () => {
+
+  // Función para registrar el cierre de sesión en el backend
+  const registrarCierreSesion = async () => {
+    if (!idUsuario) {
+      console.error("Error: idUsuario es null, no se puede cerrar sesión.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("Error: No hay token almacenado.");
+      return;
+    }
+
+    try {
+      console.log("Enviando petición para cerrar sesión...");
+      const response = await fetch(
+        "http://192.168.100.89:44444/api/Autenticacion/Salir",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ usuario: usuario.nombreUsuario }), // Verificar si este valor es correcto
+        }
+      );
+
+      const data = await response.json();
+      console.log("Respuesta de la API:", data);
+
+      if (!response.ok) {
+        throw new Error(data.mensaje || "Error al registrar cierre de sesión");
+      }
+    } catch (error) {
+      console.error("Error al registrar cierre de sesión:", error);
+    }
+  };
+
+  const handleLogout = async () => {
+    await registrarCierreSesion(); // Registrar el cierre de sesión en la base de datos
+
+    console.log("Eliminando datos de sesión del localStorage...");
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+
+    console.log("Redirigiendo a /signin");
     navigate("/signin");
   };
 
@@ -44,14 +84,14 @@ const Header = () => {
           className="profile-btn"
           onClick={() => setIsProfileOpen(!isProfileOpen)}
         >
-          <img src={avatarUrl} alt="Perfil" className="avatar" />
+          <img src={`https://ui-avatars.com/api/?name=${nombre}+${apellido}&size=100&background=random`} alt="Perfil" className="avatar" />
         </button>
 
         {isProfileOpen && (
           <div className="profile-card">
             <div className="user-info">
-              <img src={avatarUrl} alt="Perfil" className="avatar-lg" />
-              <h3>{nombre + " " + apellido}</h3>
+              <img src={`https://ui-avatars.com/api/?name=${nombre}+${apellido}&size=100&background=random`} alt="Perfil" className="avatar-lg" />
+              <h3>{nombre} {apellido}</h3>
               <p className="role">Administrador</p>
             </div>
 
