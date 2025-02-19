@@ -5,20 +5,37 @@ import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import NAAT from "../../assets/completo_blanco.png";
 
+// Función para convertir array de bytes a string hexadecimal
+const byteArrayToHexString = (byteArray) => {
+  return Array.from(byteArray)
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase();
+};
+
+// Función para generar el hash SHA-512
+const generateSHA512 = async (text) => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-512', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return byteArrayToHexString(hashArray);
+};
+
 export default function SignIn() {
   const [isRegister, setIsRegister] = useState(false);
-
-  // States de inicio de sesion
   const [correo, setCorreo] = useState("");
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
 
-  // Funcion del inicio de sesion
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError(""); // Limpiar error al intentar iniciar sesión
+    setError("");
 
     try {
+      // Generar el hash SHA-512 de la contraseña
+      const hashedPassword = await generateSHA512(clave);
+
       const response = await fetch(
         "http://192.168.100.89:44444/api/Autenticacion/Autenticar",
         {
@@ -28,7 +45,7 @@ export default function SignIn() {
           },
           body: JSON.stringify({
             usuario: correo,
-            clave: clave,
+            clave: hashedPassword, // Enviamos el hash en lugar de la contraseña original
           }),
         }
       );
@@ -43,15 +60,12 @@ export default function SignIn() {
         );
       }
 
-      console.log("Respuesta del servidor:", data); // Verifica qué devuelve en consola
+      console.log("Respuesta del servidor:", data);
 
       if (data.mensaje === "ok" && data.response?.token) {
         localStorage.setItem("token", data.response.token);
         localStorage.setItem("user", JSON.stringify(data.response.usuario));
-
-        // Redirigir a otra página como dashboard
-        // Aquí es donde agregamos la redirección
-        window.location.href = "/dashboard"; // O usar useNavigate() si prefieres el método de react-router
+        window.location.href = "/dashboard";
       } else {
         throw new Error(data.mensaje || "Error en el inicio de sesión");
       }
@@ -62,10 +76,7 @@ export default function SignIn() {
   };
 
   useEffect(() => {
-    // Agregar clase al body cuando se carga el componente
     document.body.classList.add("auth-body");
-
-    // Remover clase al desmontar el componente
     return () => {
       document.body.classList.remove("auth-body");
     };

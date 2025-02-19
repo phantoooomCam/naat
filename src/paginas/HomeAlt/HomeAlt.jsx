@@ -6,6 +6,23 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import "./HomeAlt.css";
 import NAAT_image from "../../assets/naat.png";
 
+// Función para convertir un array de bytes a string hexadecimal
+const byteArrayToHexString = (byteArray) => {
+  return Array.from(byteArray)
+    .map(byte => byte.toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase();
+};
+
+// Función para generar el hash SHA-512
+const generateSHA512 = async (text) => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-512', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return byteArrayToHexString(hashArray);
+};
+
 const HomeAlt = () => {
   const [usuario, setUsuario] = useState("");
   const [clave, setClave] = useState("");
@@ -17,6 +34,9 @@ const HomeAlt = () => {
     setError("");
   
     try {
+      // Generar el hash SHA-512 de la contraseña
+      const hashedPassword = await generateSHA512(clave);
+      
       const response = await fetch("http://192.168.100.89:44444/api/Autenticacion/Autenticar", {
         method: "POST",
         headers: {
@@ -24,7 +44,7 @@ const HomeAlt = () => {
         },
         body: JSON.stringify({
           usuario,
-          clave
+          clave: hashedPassword // Enviamos el hash en lugar de la contraseña original
         }),
       });
   
@@ -34,12 +54,11 @@ const HomeAlt = () => {
         throw new Error(`Error del servidor: ${response.status} - ${data.mensaje || "Sin mensaje"}`);
       }
   
-      console.log("Respuesta del servidor:", data); // Verifica qué devuelve en consola
+      console.log("Respuesta del servidor:", data);
   
       if (data.mensaje === "ok" && data.response?.token) {
-        // Guardar tanto el token como el objeto usuario en localStorage
         localStorage.setItem("token", data.response.token);
-        localStorage.setItem("user", JSON.stringify(data.response.usuario)); // Guarda el usuario
+        localStorage.setItem("user", JSON.stringify(data.response.usuario));
         navigate("/dashboard");
       } else {
         throw new Error(data.mensaje || "Error en el inicio de sesión");
@@ -49,8 +68,6 @@ const HomeAlt = () => {
       setError(error.message || "Hubo un problema con la conexión al servidor");
     }
   };
-  
-  
 
   return (
     <div className="homealt-wrapper">
