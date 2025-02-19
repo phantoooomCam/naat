@@ -12,6 +12,7 @@
   "dependencies": {
     "@dotlottie/react-player": "^1.6.19",
     "bootstrap": "^5.3.3",
+    "crypto-js": "^4.2.0",
     "firebase": "^11.3.0",
     "framer-motion": "^12.4.2",
     "react": "^18.2.0",

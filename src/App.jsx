@@ -18,11 +18,6 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signin" element={<SignIn />} />
       <Route path="*" element={<PageNotFound />} />
-      {/* <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/gestion" element={<Gestion />} />
-      <Route path="/ingresos" element={<IngresoSist />} />
-      <Route path="/actividad" element={<Actividad />} /> */}
-
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/gestion" element={<Gestion />} />

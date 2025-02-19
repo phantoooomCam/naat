@@ -61,22 +61,22 @@ button:hover {
 }
 
 .bg-yellow-500 {
-  background-color: #b4aec0;
+  background-color: #c5aef1;
   border: none;
 }
 
 .bg-yellow-500:hover {
-  background-color: rgb(99, 91, 129);
+  background-color: #957dc2;
   border: none;
 }
 
 .bg-red-500 {
-  background-color: #ffa27d;
+  background-color: #ff7d7d;
   border: none;
 }
 
 .bg-red-500:hover {
-  background-color: #bb8a64;
+  background-color: #bb6464;
   border: none;
 }
 
