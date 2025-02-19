@@ -1,27 +1,70 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./IngresosSist.css";
 
-const datosPrueba = [
-  { idingreso: 1, idusuario: 101, nombre: "Juan", apellidopaterno: "Pérez", apellidomaterno: "López", hora: "10:30", tipo: "Entrada" },
-  { idingreso: 2, idusuario: 102, nombre: "Ana", apellidopaterno: "Gómez", apellidomaterno: "Martínez", hora: "11:00", tipo: "Salida" },
-  { idingreso: 3, idusuario: 103, nombre: "Carlos", apellidopaterno: "Rodríguez", apellidomaterno: "Fernández", hora: "12:15", tipo: "Entrada" },
-  { idingreso: 4, idusuario: 104, nombre: "Laura", apellidopaterno: "Fernández", apellidomaterno: "García", hora: "13:20", tipo: "Entrada" },
-  { idingreso: 5, idusuario: 105, nombre: "María", apellidopaterno: "López", apellidomaterno: "Ramírez", hora: "14:40", tipo: "Salida" },
-  { idingreso: 6, idusuario: 106, nombre: "Pedro", apellidopaterno: "Méndez", apellidomaterno: "Sánchez", hora: "15:10", tipo: "Entrada" },
-  { idingreso: 7, idusuario: 107, nombre: "Sofía", apellidopaterno: "Martínez", apellidomaterno: "Vega", hora: "16:30", tipo: "Entrada" },
-  { idingreso: 8, idusuario: 108, nombre: "Luis", apellidopaterno: "Ramírez", apellidomaterno: "Castro", hora: "17:45", tipo: "Salida" },
-  { idingreso: 9, idusuario: 109, nombre: "Carolina", apellidopaterno: "Vega", apellidomaterno: "Méndez", hora: "18:50", tipo: "Entrada" },
-  { idingreso: 10, idusuario: 110, nombre: "Fernando", apellidopaterno: "Castro", apellidomaterno: "López", hora: "19:05", tipo: "Salida" }
-];
-
 const IngresoSist = () => {
-  const [busqueda, setBusqueda] = useState("");
-  const [paginaActual, setPaginaActual] = useState(1);
-  const registrosPorPagina = 5;
+  const [ingresos, setIngresos] = useState([]); // Datos de ingresos obtenidos de la API
+  const [busqueda, setBusqueda] = useState(""); // Estado para la búsqueda
+  const [paginaActual, setPaginaActual] = useState(1); // Estado de la paginación
+  const [loading, setLoading] = useState(false); // Estado de carga
+  const [error, setError] = useState(null); // Estado de error
+  const registrosPorPagina = 10; // Cantidad de registros por página
+
+  useEffect(() => {
+    fetchIngresos();
+  }, []);
+
+  // Función para obtener los ingresos desde la API
+  const fetchIngresos = async () => {
+    setLoading(true);
+    setError(null);
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await fetch(
+        "http://192.168.100.89:44444/api/Administracion/Ingresos",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+          body: JSON.stringify({
+            inicio: 1,
+            cantidad: 20, // Número de registros a obtener
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const text = await response.text(); // Obtener respuesta como texto
+
+      if (!text) {
+        throw new Error("No se recibieron datos del servidor");
+      }
+
+      const data = JSON.parse(text); // Convertir el texto a JSON
+
+      if (data.mensaje === "ok") {
+        setIngresos(data.response);
+      } else {
+        throw new Error(data.mensaje || "Error desconocido");
+      }
+    } catch (error) {
+      console.error("Error detallado:", error);
+      setError(error.message);
+      setIngresos([]); // Si hay error, limpiar la lista
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filtrar por nombre o apellido
-  const datosFiltrados = datosPrueba.filter((item) =>
-    `${item.nombre} ${item.apellidopaterno} ${item.apellidomaterno}`
+  const datosFiltrados = ingresos.filter((item) =>
+    `${item.nombre} ${item.apellidoPaterno} ${item.apellidoMaterno}`
       .toLowerCase()
       .includes(busqueda.toLowerCase())
   );
@@ -45,7 +88,11 @@ const IngresoSist = () => {
         className="filtro-input"
       />
 
-      {/* Tabla */}
+      {/* Mensajes de carga y error */}
+      {loading && <p>Cargando datos...</p>}
+      {error && <p className="error">{error}</p>}
+
+      {/* Tabla de ingresos */}
       <table className="tabla-ingresos">
         <thead>
           <tr>
@@ -61,12 +108,12 @@ const IngresoSist = () => {
         <tbody>
           {datosPaginados.length > 0 ? (
             datosPaginados.map((item) => (
-              <tr key={item.idingreso}>
-                <td>{item.idingreso}</td>
-                <td>{item.idusuario}</td>
+              <tr key={item.idIngreso}>
+                <td>{item.idIngreso}</td>
+                <td>{item.idUsuario}</td>
                 <td>{item.nombre}</td>
-                <td>{item.apellidopaterno}</td>
-                <td>{item.apellidomaterno}</td>
+                <td>{item.apellidoPaterno}</td>
+                <td>{item.apellidoMaterno}</td>
                 <td>{item.hora}</td>
                 <td>{item.tipo}</td>
               </tr>
@@ -81,17 +128,11 @@ const IngresoSist = () => {
 
       {/* Controles de paginación */}
       <div className="paginacion">
-        <button
-          onClick={() => setPaginaActual(paginaActual - 1)}
-          disabled={paginaActual === 1}
-        >
+        <button onClick={() => setPaginaActual(paginaActual - 1)} disabled={paginaActual === 1}>
           ← Anterior
         </button>
         <span>Página {paginaActual} de {totalPaginas}</span>
-        <button
-          onClick={() => setPaginaActual(paginaActual + 1)}
-          disabled={paginaActual === totalPaginas}
-        >
+        <button onClick={() => setPaginaActual(paginaActual + 1)} disabled={paginaActual === totalPaginas}>
           Siguiente →
         </button>
       </div>

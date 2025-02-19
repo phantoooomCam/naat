@@ -9,7 +9,7 @@ body {
 .ingreso-sist {
   max-width: 100%; /* Hacer que el contenedor ocupe todo el ancho */
   width: 90%; /* Ocupar el 90% del ancho de la pantalla */
-  margin: 20px auto;
+  margin: 140px auto;
   padding: 20px;
   background: white;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
