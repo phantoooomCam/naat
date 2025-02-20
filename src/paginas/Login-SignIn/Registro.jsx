@@ -2,24 +2,13 @@ import React, { useState, useEffect } from "react";
 import "./login-signin.css";
 import { FaUser, FaEnvelope, FaLock, FaPhone } from "react-icons/fa";
 import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import NAAT from "../../assets/completo_blanco.png";
+import SHA512 from "crypto-js/sha512";
 
-// Función para convertir array de bytes a string hexadecimal
-const byteArrayToHexString = (byteArray) => {
-  return Array.from(byteArray)
-    .map(byte => byte.toString(16).padStart(2, '0'))
-    .join('')
-    .toUpperCase();
-};
-
-// Función para generar el hash SHA-512
-const generateSHA512 = async (text) => {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const hashBuffer = await crypto.subtle.digest('SHA-512', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return byteArrayToHexString(hashArray);
+// Función para generar el hash SHA-512 usando crypto-js
+const generateSHA512 = (text) => {
+  return SHA512(text).toString().toUpperCase();
 };
 
 export default function SignIn() {
@@ -28,14 +17,16 @@ export default function SignIn() {
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
 
+  const navigate = useNavigate();
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-
+  
     try {
-      // Generar el hash SHA-512 de la contraseña
-      const hashedPassword = await generateSHA512(clave);
-
+      // Generar el hash SHA-512 de la contraseña usando crypto-js
+      const hashedPassword = generateSHA512(clave);
+  
       const response = await fetch(
         "http://192.168.100.89:44444/api/Autenticacion/Autenticar",
         {
@@ -45,13 +36,13 @@ export default function SignIn() {
           },
           body: JSON.stringify({
             usuario: correo,
-            clave: hashedPassword, // Enviamos el hash en lugar de la contraseña original
+            clave: hashedPassword, // Enviamos el hash
           }),
         }
       );
-
+  
       const data = await response.json();
-
+  
       if (!response.ok) {
         throw new Error(
           `Error del servidor: ${response.status} - ${
@@ -59,21 +50,29 @@ export default function SignIn() {
           }`
         );
       }
-
-      console.log("Respuesta del servidor:", data);
-
+  
+  
       if (data.mensaje === "ok" && data.response?.token) {
+        // Almacenar el token y la información del usuario en el localStorage
         localStorage.setItem("token", data.response.token);
         localStorage.setItem("user", JSON.stringify(data.response.usuario));
-        window.location.href = "/dashboard";
+  
+        // Verificar el estatus del usuario
+        if (data.response.usuario.estatus === 1) {
+          // Si el estatus es 1, redirigir a la página correspondiente
+          navigate("/forgotpasswd");
+        } else if (data.response.usuario.estatus === 2) {
+          // Si el estatus es 2, permitir el acceso al dashboard
+          navigate("/dashboard");
+        }
       } else {
         throw new Error(data.mensaje || "Error en el inicio de sesión");
       }
     } catch (error) {
-      console.error("Error en la autenticación:", error);
       setError(error.message || "Hubo un problema con la conexión al servidor");
     }
   };
+  
 
   useEffect(() => {
     document.body.classList.add("auth-body");
@@ -141,7 +140,7 @@ export default function SignIn() {
               />
             </div>
             <div className="auth-forgot-link">
-              <a href="#">¿Olvidaste tu contraseña?</a>
+              <Link to="/forgotpasswd">¿Olvidaste tu contraseña?</Link>
             </div>
             <button type="submit" className="auth-btn">
               INICIAR SESIÓN

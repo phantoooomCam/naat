@@ -141,10 +141,8 @@ const GestionDash = () => {
         <h2>Gestión de Usuarios</h2>
 
         {/* Barra de búsqueda */}
-       
 
         <form onSubmit={handleSubmit} className="gestion-form">
-
           <input
             type="text"
             value={searchText}
@@ -152,9 +150,7 @@ const GestionDash = () => {
             placeholder="Buscar usuario..."
             className="search-input"
           />
-
         </form>
-        
 
         <div className="table-container">
           <table>
@@ -172,12 +168,12 @@ const GestionDash = () => {
             <tbody>
               {filteredUsers.map((user) => (
                 <tr key={user.idUsuario}>
-                  <td>{user.idUsuario}</td> {/* Mostrar idUsuario */}
-                  <td>{user.nombreUsuario}</td> {/* Mostrar nombreUsuario */}
-                  <td>{user.estatus}</td> {/* Mostrar estatus */}
-                  <td>{user.nombre}</td> {/* Mostrar nombre */}
-                  <td>{user.apellidoPaterno}</td> {/* Mostrar apellidoPaterno */}
-                  <td>{user.apellidoMaterno}</td> {/* Mostrar apellidoMaterno */}
+                  <td>{user.idUsuario}</td>
+                  <td>{user.nombreUsuario}</td>
+                  <td>{user.estatus}</td>
+                  <td>{user.nombre}</td>
+                  <td>{user.apellidoPaterno}</td>
+                  <td>{user.apellidoMaterno}</td>
                   <td>
                     <button
                       onClick={() => handleEdit(user)}

@@ -8,6 +8,7 @@ import Dashboard from "./paginas/Admin/Inicio/dashboard";
 import Gestion from "./paginas/Admin/Gestion/Gestion";
 import IngresoSist from "./paginas/Admin/Ingresos/Ingresos";
 import Actividad from "./paginas/Admin/Actividad/Actividad";
+import PasswordChange from "./paginas/Error/ChangePassword";
 
 import ProtectedRoute from "./componentes/ProtectedRoute";
 
@@ -24,6 +25,7 @@ function App() {
         <Route path="/ingresos" element={<IngresoSist />} />
         <Route path="/actividad" element={<Actividad />} />
       </Route>
+      <Route path="/forgotpasswd" element={<PasswordChange />} />
     </Routes>
   );
 }

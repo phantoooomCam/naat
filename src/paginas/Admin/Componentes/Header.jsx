@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { FiUser, FiLogOut } from "react-icons/fi";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "./Header.css";
 
 const Header = () => {
@@ -26,7 +26,6 @@ const Header = () => {
     }
 
     try {
-      console.log("Enviando petición para cerrar sesión...");
       const response = await fetch(
         "http://192.168.100.89:44444/api/Autenticacion/Salir",
         {
@@ -40,7 +39,6 @@ const Header = () => {
       );
 
       const data = await response.json();
-      console.log("Respuesta de la API:", data);
 
       if (!response.ok) {
         throw new Error(data.mensaje || "Error al registrar cierre de sesión");
@@ -53,11 +51,10 @@ const Header = () => {
   const handleLogout = async () => {
     await registrarCierreSesion(); // Registrar el cierre de sesión en la base de datos
 
-    console.log("Eliminando datos de sesión del localStorage...");
+
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 
-    console.log("Redirigiendo a /signin");
     navigate("/signin");
   };
 
@@ -84,17 +81,27 @@ const Header = () => {
           className="profile-btn"
           onClick={() => setIsProfileOpen(!isProfileOpen)}
         >
-          <img src={`https://ui-avatars.com/api/?name=${nombre}+${apellido}&size=100&background=random`} alt="Perfil" className="avatar" />
+          <img
+            src={`https://ui-avatars.com/api/?name=${nombre}+${apellido}&size=100&background=random`}
+            alt="Perfil"
+            className="avatar"
+          />
         </button>
 
         {isProfileOpen && (
           <div className="profile-card">
             <div className="user-info">
-              <img src={`https://ui-avatars.com/api/?name=${nombre}+${apellido}&size=100&background=random`} alt="Perfil" className="avatar-lg" />
-              <h3>{nombre} {apellido}</h3>
+              <img
+                src={`https://ui-avatars.com/api/?name=${nombre}+${apellido}&size=100&background=random`}
+                alt="Perfil"
+                className="avatar-lg"
+              />
+              <h3>
+                {nombre} {apellido}
+              </h3>
               <p className="role">Administrador</p>
+              <Link to="/forgotpasswd" className="link-contra">Cambiar Contraseña</Link>
             </div>
-
             <button className="logout-btn" onClick={handleLogout}>
               <FiLogOut className="icon" />
               Cerrar sesión
