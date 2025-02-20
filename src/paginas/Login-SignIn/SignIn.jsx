@@ -45,7 +45,7 @@ export default function SignIn() {
   
       if (!response.ok) {
         throw new Error(
-          `Error del servidor: ${response.status} - ${
+          `${
             data.mensaje || "Sin mensaje"
           }`
         );
