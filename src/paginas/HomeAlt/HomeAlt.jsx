@@ -106,7 +106,7 @@ const HomeAlt = () => {
                   <FaEnvelope className="input-icon" />
                   <input
                     type="text"
-                    placeholder="Ingresa tu usuario"
+                    placeholder="Ingresa tu correo electrónico"
                     value={usuario}
                     onChange={(e) => setUsuario(e.target.value)}
                     required

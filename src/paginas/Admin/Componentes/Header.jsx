@@ -12,68 +12,39 @@ const Header = () => {
   const profileRef = useRef(null);
   const navigate = useNavigate();
 
-  // Función para registrar el cierre de sesión en el backend
-  const registrarCierreSesion = async () => {
-    if (!idUsuario) {
-      console.error("Error: idUsuario es null, no se puede cerrar sesión.");
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("Error: No hay token almacenado.");
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        "http://192.168.100.89:44444/api/Autenticacion/Salir",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ usuario: usuario.nombreUsuario }), // Verificar si este valor es correcto
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.mensaje || "Error al registrar cierre de sesión");
-      }
-    } catch (error) {
-      console.error("Error al registrar cierre de sesión:", error);
-    }
-  };
-
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem("token"); // Obtén el token almacenado en localStorage
-
-      const response = await fetch(
-        "http://192.168.100.89:5096/api/usuarios/logout",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Incluye el token en los headers
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/signin");
-      } else {
+      const token = localStorage.getItem("token");
+  
+      if (!token) {
+        console.error("Error: No hay token almacenado.");
+        return;
       }
+  
+      const response = await fetch("http://localhost:5096/api/usuarios/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.mensaje || "Error al cerrar sesión.");
+      }
+  
+      // ✅ Eliminar el token y la información del usuario del almacenamiento local
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+  
+      // ✅ Redirigir al usuario a la página de inicio de sesión
+      navigate("/signin");
     } catch (error) {
+      console.error("Error al cerrar sesión:", error);
     }
   };
+  
 
   useEffect(() => {
     const handleClickOutside = (event) => {
