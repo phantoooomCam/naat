@@ -49,13 +49,30 @@ const Header = () => {
   };
 
   const handleLogout = async () => {
-    await registrarCierreSesion(); // Registrar el cierre de sesión en la base de datos
+    try {
+      const token = localStorage.getItem("token"); // Obtén el token almacenado en localStorage
 
+      const response = await fetch(
+        "http://192.168.100.89:5096/api/usuarios/logout",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Incluye el token en los headers
+          },
+        }
+      );
 
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+      const data = await response.json();
 
-    navigate("/signin");
+      if (response.ok) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/signin");
+      } else {
+      }
+    } catch (error) {
+    }
   };
 
   useEffect(() => {
@@ -100,7 +117,9 @@ const Header = () => {
                 {nombre} {apellido}
               </h3>
               <p className="role">Administrador</p>
-              <Link to="/forgotpasswd" className="link-contra">Cambiar Contraseña</Link>
+              <Link to="/forgotpasswd" className="link-contra">
+                Cambiar Contraseña
+              </Link>
             </div>
             <button className="logout-btn" onClick={handleLogout}>
               <FiLogOut className="icon" />

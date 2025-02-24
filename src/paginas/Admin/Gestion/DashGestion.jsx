@@ -23,38 +23,37 @@ const GestionDash = () => {
     setError(null);
     try {
       const response = await fetch(
-        "http://192.168.100.89:44444/api/Administracion/Usuarios",
+        "http://192.168.100.89:5096/api/usuarios/?inicio=1&cantidad=10",
         {
-          method: "POST",
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
             Authorization: token ? `Bearer ${token}` : "",
           },
-          body: JSON.stringify({
-            inicio: 1,
-            cantidad: 10,
-          }),
         }
       );
-
+  
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-
+  
       const text = await response.text(); // Primero obtenemos el texto de la respuesta
-
+  
       if (!text) {
         throw new Error("No se recibieron datos del servidor");
       }
-
+  
+      console.log("Respuesta del servidor:", text);  // Verificamos el contenido
+  
       const data = JSON.parse(text); // Intentamos parsearlo como JSON
-
-      if (data.mensaje === "ok") {
-        setUsers(data.response);
-        setFilteredUsers(data.response); // Inicializamos los usuarios filtrados
+  
+      // Verificamos si el formato es el esperado (es un array de usuarios)
+      if (Array.isArray(data)) {
+        setUsers(data);
+        setFilteredUsers(data); // Inicializamos los usuarios filtrados
       } else {
-        throw new Error(data.mensaje || "Error desconocido");
+        throw new Error("Formato de datos inesperado");
       }
     } catch (error) {
       console.error("Error detallado:", error);
@@ -65,6 +64,7 @@ const GestionDash = () => {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     fetchUsers();
@@ -157,23 +157,32 @@ const GestionDash = () => {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Usuario</th>
-                <th>Estatus</th>
                 <th>Nombre</th>
                 <th>Apellido Paterno</th>
                 <th>Apellido Materno</th>
+                <th>Correo</th>                    
+                <th>Telefono</th>                    
+                {/* <th>Contraseña</th>  */}
+                <th>Nivel</th>    
+                <th>Organizacion</th>    
+                <th>Rol</th>    
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {filteredUsers.map((user) => (
-                <tr key={user.idUsuario}>
-                  <td>{user.idUsuario}</td>
-                  <td>{user.nombreUsuario}</td>
-                  <td>{user.estatus}</td>
+                <tr key={user.id}>
+                  <td>{user.id}</td>
                   <td>{user.nombre}</td>
                   <td>{user.apellidoPaterno}</td>
                   <td>{user.apellidoMaterno}</td>
+                  <td>{user.correo}</td>
+                  <td>{user.telefono}</td>
+                  {/* <td>{user.contraseña}</td> */}
+                  <td>{user.nivel}</td>
+                  <td>{user.organizacion}</td>
+                  <td>{user.rol}</td>
+
                   <td>
                     <button
                       onClick={() => handleEdit(user)}

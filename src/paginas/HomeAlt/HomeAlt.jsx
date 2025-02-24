@@ -7,11 +7,6 @@ import SHA512 from "crypto-js/sha512";
 import "./HomeAlt.css";
 import NAAT_image from "../../assets/naat.png";
 
-// Función para generar el hash SHA-512 usando crypto-js
-const generateSHA512 = (text) => {
-  return SHA512(text).toString().toUpperCase();
-};
-
 const HomeAlt = () => {
   const [usuario, setUsuario] = useState("");
   const [clave, setClave] = useState("");
@@ -21,58 +16,40 @@ const HomeAlt = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-  
+
+    const requestBody = {
+      correo: usuario,
+      contraseña: clave,
+    };
+
     try {
-      // Generar el hash SHA-512 de la contraseña usando crypto-js
-      const hashedPassword = generateSHA512(clave);
-  
       const response = await fetch(
-        "http://192.168.100.89:44444/api/Autenticacion/Autenticar",
+        "http://192.168.100.89:5096/api/usuarios/login",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            usuario,
-            clave: hashedPassword, // Enviamos el hash en lugar de la contraseña original
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
-  
+
       const data = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(
-          `${
-            data.mensaje || "Sin mensaje"
-          }`
-        );
-      }
-  
-  
-      if (data.mensaje === "ok" && data.response?.token) {
+      if (data.token) {
         // Almacenar el token y la información del usuario en el localStorage
-        localStorage.setItem("token", data.response.token);
-        localStorage.setItem("user", JSON.stringify(data.response.usuario));
-  
-        // Verificar el estatus del usuario
-        if (data.response.usuario.estatus === 1) {
-          // Si el estatus es 1, redirigir a la página correspondiente
-          navigate("/forgotpasswd");
-        } else if (data.response.usuario.estatus === 2) {
-          // Si el estatus es 2, permitir el acceso al dashboard
-          navigate("/dashboard");
-        }
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.usuario));
+
+        // Redirigir al dashboard si todo está bien
+        navigate("/dashboard");
       } else {
-        throw new Error(data.mensaje || "Error en el inicio de sesión");
+        throw new Error("Error en el inicio de sesión");
       }
     } catch (error) {
       console.error("Error en la autenticación:", error);
       setError(error.message || "Hubo un problema con la conexión al servidor");
     }
   };
-  
 
   return (
     <div className="homealt-wrapper">

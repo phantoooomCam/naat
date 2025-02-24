@@ -6,73 +6,95 @@ import { Link, useNavigate } from "react-router-dom";
 import NAAT from "../../assets/completo_blanco.png";
 import SHA512 from "crypto-js/sha512";
 
-// Función para generar el hash SHA-512 usando crypto-js
-const generateSHA512 = (text) => {
-  return SHA512(text).toString().toUpperCase();
-};
-
 export default function SignIn() {
   const [isRegister, setIsRegister] = useState(false);
-  const [correo, setCorreo] = useState("");
+  const [usuario, setUsuario] = useState("");
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
 
+  // Use states del registro
   const navigate = useNavigate();
+  const [nombre, setNombre] = useState("");
+  const [apellidoPaterno, setApellidoPaterno] = useState("");
+  const [apellidoMaterno, setApellidoMaterno] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [correoRegistro, setCorreoRegistro] = useState("");
+  const [claveRegistro, setClaveRegistro] = useState("");
 
-  const handleLogin = async (e) => {
+  // Funcion para el registro
+  const handleRegister = async (e) => {
     e.preventDefault();
-    setError("");
-  
+
+    const userData = {
+      nombre,
+      apellidoPaterno,
+      apellidoMaterno,
+      correo: correoRegistro,
+      telefono,
+      contraseña: claveRegistro,
+    };
+
     try {
-      // Generar el hash SHA-512 de la contraseña usando crypto-js
-      const hashedPassword = generateSHA512(clave);
-  
       const response = await fetch(
-        "http://192.168.100.89:44444/api/Autenticacion/Autenticar",
+        "http://192.168.100.89:5096/api/usuarios/register",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            usuario: correo,
-            clave: hashedPassword, // Enviamos el hash
-          }),
+          body: JSON.stringify(userData),
         }
       );
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
-        throw new Error(
-          ` ${
-            data.mensaje || "Sin mensaje"
-          }`
-        );
+        throw new Error(data.mensaje || "Error en el registro");
       }
-  
-  
-      if (data.mensaje === "ok" && data.response?.token) {
-        // Almacenar el token y la información del usuario en el localStorage
-        localStorage.setItem("token", data.response.token);
-        localStorage.setItem("user", JSON.stringify(data.response.usuario));
-  
-        // Verificar el estatus del usuario
-        if (data.response.usuario.estatus === 1) {
-          // Si el estatus es 1, redirigir a la página correspondiente
-          navigate("/forgotpasswd");
-        } else if (data.response.usuario.estatus === 2) {
-          // Si el estatus es 2, permitir el acceso al dashboard
-          navigate("/dashboard");
+
+      setTimeout(() => {
+        navigate("/signin");
+      }, 2000);
+    } catch (error) {}
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError("");
+
+    const requestBody = {
+      correo: usuario,
+      contraseña: clave,
+    };
+
+    try {
+      const response = await fetch(
+        "http://192.168.100.89:5096/api/usuarios/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
         }
+      );
+
+      const data = await response.json();
+      if (data.token) {
+        // Almacenar el token y la información del usuario en el localStorage
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.usuario));
+
+        // Redirigir al dashboard si todo está bien
+        navigate("/dashboard");
       } else {
-        throw new Error(data.mensaje || "Error en el inicio de sesión");
+        throw new Error("Error en el inicio de sesión");
       }
     } catch (error) {
+      console.error("Error en la autenticación:", error);
       setError(error.message || "Hubo un problema con la conexión al servidor");
     }
   };
-  
 
   useEffect(() => {
     document.body.classList.add("auth-body");
@@ -86,27 +108,67 @@ export default function SignIn() {
       <div className={`auth-container ${isRegister ? "auth-active" : ""}`}>
         {/* Formulario de Registro */}
         <div className="auth-form-box auth-form-box-login">
-          <form>
+          <form onSubmit={handleRegister}>
             <h1>Registro</h1>
             <div className="auth-input-box">
               <FaUser className="auth-input-icon" />
-              <input type="text" placeholder="Tu Nombre" required />
+              <input
+                type="text"
+                placeholder="Tu Nombre"
+                required
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+              />
             </div>
             <div className="auth-input-box">
               <FaUser className="auth-input-icon" />
-              <input type="text" placeholder="Tus Apellidos" required />
+              <input
+                type="text"
+                placeholder="Apellido Paterno"
+                required
+                value={apellidoPaterno}
+                onChange={(e) => setApellidoPaterno(e.target.value)}
+              />
+            </div>
+            <div className="auth-input-box">
+              <FaUser className="auth-input-icon" />
+              <input
+                type="text"
+                placeholder="Apellido materno"
+                required
+                value={apellidoMaterno}
+                onChange={(e) => setApellidoMaterno(e.target.value)}
+              />
             </div>
             <div className="auth-input-box">
               <FaPhone className="auth-input-icon" />
-              <input type="tel" placeholder="Tu teléfono" required />
+              <input
+                type="tel"
+                placeholder="Tu teléfono"
+                required
+                value={telefono}
+                onChange={(e) => setTelefono(e.target.value)}
+              />
             </div>
             <div className="auth-input-box">
               <FaEnvelope className="auth-input-icon" />
-              <input type="email" placeholder="tucorreo@ejemplo.com" required />
+              <input
+                type="email"
+                placeholder="tucorreo@ejemplo.com"
+                required
+                value={correoRegistro}
+                onChange={(e) => setCorreoRegistro(e.target.value)}
+              />
             </div>
             <div className="auth-input-box">
               <FaLock className="auth-input-icon" />
-              <input type="password" placeholder="Password" required />
+              <input
+                type="password"
+                placeholder="Password"
+                required
+                value={claveRegistro}
+                onChange={(e) => setClaveRegistro(e.target.value)}
+              />
             </div>
             <button type="submit" className="auth-btn">
               REGISTRARSE
@@ -124,8 +186,8 @@ export default function SignIn() {
               <input
                 type="text"
                 placeholder="tucorreo@ejemplo.com"
-                value={correo}
-                onChange={(e) => setCorreo(e.target.value)}
+                value={usuario}
+                onChange={(e) => setUsuario(e.target.value)}
                 required
               />
             </div>
