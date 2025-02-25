@@ -7,11 +7,12 @@ const GestionDash = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
-    id: null,
+    id_usuario: null, // Cambié aquí el nombre
     nombre: "",
     nombreUsuario: "",
     nivel: 4,
   });
+
   const [isEditing, setIsEditing] = useState(false);
   const [searchText, setSearchText] = useState("");
 
@@ -33,21 +34,19 @@ const GestionDash = () => {
           },
         }
       );
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-  
+
       const text = await response.text(); // Primero obtenemos el texto de la respuesta
-  
+
       if (!text) {
         throw new Error("No se recibieron datos del servidor");
       }
-  
-      console.log("Respuesta del servidor:", text);  // Verificamos el contenido
-  
+
       const data = JSON.parse(text); // Intentamos parsearlo como JSON
-  
+
       // Verificamos si el formato es el esperado (es un array de usuarios)
       if (Array.isArray(data)) {
         setUsers(data);
@@ -64,7 +63,6 @@ const GestionDash = () => {
       setLoading(false);
     }
   };
-  
 
   useEffect(() => {
     fetchUsers();
@@ -85,30 +83,92 @@ const GestionDash = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Aquí implementarías la lógica para enviar al backend
-    setFormData({ id: null, nombre: "", nombreUsuario: "", nivel: 4 });
-    setIsEditing(false);
+
+    // Verifica que el id_usuario esté presente
+    if (!formData.id_usuario) {
+      console.error("ID no encontrado, no se puede actualizar.");
+      return;
+    }
+
+    try {
+      // Enviar la petición PUT
+      const response = await fetch(
+        `http://192.168.100.89:5096/api/usuarios/${formData.id_usuario}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Error al actualizar usuario: ${response.status} - ${errorText}`
+        );
+      }
+
+      // Si el update fue exitoso, puedes hacer algo con la respuesta
+      console.log("Usuario actualizado correctamente.");
+
+      // Cierra el formulario
+      setIsEditing(false);
+
+      // Recarga la página
+      window.location.reload();
+    } catch (error) {
+      console.error("Error al actualizar el usuario:", error);
+    }
   };
 
   const handleEdit = (user) => {
     setFormData({
-      id: user.idUsuario,
+      id_usuario: user.id, // Usamos id_usuario para el campo de id
       nombre: user.nombre,
-      nombreUsuario: user.nombreUsuario,
+      apellidoPaterno: user.apellidoPaterno, // Cambié el nombre de la propiedad para coincidir
+      apellidoMaterno: user.apellidoMaterno, // Cambié el nombre de la propiedad para coincidir
+      correo: user.correo,
+      telefono: user.telefono,
       nivel: user.nivel,
+      organizacion: user.organizacion,
+      rol: user.rol,
     });
     setIsEditing(true);
   };
 
-  const handleDelete = (id) => {
-    // Aquí implementarías la lógica para eliminar en el backend
-    console.log("Eliminar usuario con ID:", id);
-  };
+  const handleDelete = async (id) => {
+    if (!id) {
+      console.error("El ID no es válido");
+      return;
+    }
 
-  const getNivelText = (nivel) => {
-    return nivel === 5 ? "Admin" : "Usuario";
+    try {
+      const response = await fetch(
+        `http://192.168.100.89:5096/api/usuarios/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Error al eliminar usuario: ${response.status} - ${errorText}`
+        );
+      }
+
+      // Actualizar el estado para eliminar el usuario de la lista
+      setUsers(users.filter((user) => user.id !== id));
+      setFilteredUsers(filteredUsers.filter((user) => user.id !== id));
+    } catch (error) {}
   };
 
   if (loading) {
@@ -160,12 +220,12 @@ const GestionDash = () => {
                 <th>Nombre</th>
                 <th>Apellido Paterno</th>
                 <th>Apellido Materno</th>
-                <th>Correo</th>                    
-                <th>Telefono</th>                    
+                <th>Correo</th>
+                <th>Telefono</th>
                 {/* <th>Contraseña</th>  */}
-                <th>Nivel</th>    
-                <th>Organizacion</th>    
-                <th>Rol</th>    
+                <th>Nivel</th>
+                <th>Organizacion</th>
+                <th>Rol</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -191,7 +251,7 @@ const GestionDash = () => {
                       Editar
                     </button>
                     <button
-                      onClick={() => handleDelete(user.idUsuario)}
+                      onClick={() => handleDelete(user.id)}
                       className="bg-red-500"
                     >
                       Eliminar
@@ -203,6 +263,70 @@ const GestionDash = () => {
           </table>
         </div>
       </div>
+      {isEditing && (
+        <form onSubmit={handleSubmit} className="gestion-form">
+          <div>
+            <label>Nombre</label>
+            <input
+              type="text"
+              name="nombre"
+              value={formData.nombre ?? ""} // Asegúrate de que formData siempre tenga valor
+              onChange={handleChange}
+            />
+            <input
+              type="text"
+              name="apellidoPaterno"
+              value={formData.apellidoPaterno ?? ""} // Usa el campo correcto en formData
+              onChange={handleChange}
+            />
+            <input
+              type="text"
+              name="apellidoMaterno"
+              value={formData.apellidoMaterno ?? ""} // Usa el campo correcto en formData
+              onChange={handleChange}
+            />
+            <input
+              type="email"
+              name="correo"
+              value={formData.correo ?? ""}
+              onChange={handleChange}
+            />
+            <input
+              type="tel"
+              name="telefono"
+              value={formData.telefono ?? ""}
+              onChange={handleChange}
+            />
+            <select
+              name="nivel"
+              value={formData.nivel ?? 4} // Valor por defecto 4
+              onChange={handleChange}
+            >
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+              <option value={3}>3</option>
+              <option value={4}>4</option>
+              <option value={5}>5</option>
+            </select>
+            <input
+              type="text"
+              name="organizacion"
+              placeholder="Ingresa Organizacion"
+              value={formData.organizacion ?? ""}
+              onChange={handleChange}
+            />
+            <select
+              name="rol"
+              value={formData.rol ?? "Lector"} // Valor por defecto "Lector"
+              onChange={handleChange}
+            >
+              <option value="Lector">Lector</option>
+              <option value="Editor">Editor</option>
+            </select>
+          </div>
+          <button type="submit" className="btn-edit">Enviar</button>
+        </form>
+      )}
     </div>
   );
 };
