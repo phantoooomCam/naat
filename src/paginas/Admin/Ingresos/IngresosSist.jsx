@@ -20,43 +20,24 @@ const IngresoSist = () => {
     const token = localStorage.getItem("token");
 
     try {
-      const response = await fetch(
-        "http://192.168.100.89:44444/api/Administracion/Ingresos",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-          body: JSON.stringify({
-            inicio: 1,
-            cantidad: 20, // Número de registros a obtener
-          }),
-        }
-      );
+      const response = await fetch("http://localhost:5096/api/ingresos", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`Error HTTP: ${response.status}`);
       }
 
-      const text = await response.text(); // Obtener respuesta como texto
-
-      if (!text) {
-        throw new Error("No se recibieron datos del servidor");
-      }
-
-      const data = JSON.parse(text); // Convertir el texto a JSON
-
-      if (data.mensaje === "ok") {
-        setIngresos(data.response);
-      } else {
-        throw new Error(data.mensaje || "Error desconocido");
-      }
+      const data = await response.json();
+      setIngresos(data); // ✅ Guardar los ingresos obtenidos en el estado
     } catch (error) {
-      console.error("Error detallado:", error);
+      console.error("Error al obtener ingresos:", error);
       setError(error.message);
-      setIngresos([]); // Si hay error, limpiar la lista
+      setIngresos([]); // Limpiar la lista si hay error
     } finally {
       setLoading(false);
     }
@@ -69,11 +50,23 @@ const IngresoSist = () => {
       .includes(busqueda.toLowerCase())
   );
 
+  // Modificacion para la fecha
+  const formatearFecha = (fechaISO) => {
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleString(); // ✅ Convierte a formato legible (ej. "24/02/2025, 12:30 PM")
+  };
+
   // Paginación
   const indexUltimo = paginaActual * registrosPorPagina;
   const indexPrimero = indexUltimo - registrosPorPagina;
   const datosPaginados = datosFiltrados.slice(indexPrimero, indexUltimo);
   const totalPaginas = Math.ceil(datosFiltrados.length / registrosPorPagina);
+
+  const traducirTipo = (tipo) => {
+    if (tipo === "Iniciar Sesión") return "Inicio Sesión";
+    if (tipo === "Cerrar Sesión") return "Cerró Sesión";
+    return tipo; // ✅ Si no es ninguno de los anteriores, devolver el valor original
+  };
 
   return (
     <div className="ingreso-sist">
@@ -101,7 +94,7 @@ const IngresoSist = () => {
             <th>Nombre</th>
             <th>Apellido Paterno</th>
             <th>Apellido Materno</th>
-            <th>Hora</th>
+            <th>Fecha y Hora</th>
             <th>Tipo</th>
           </tr>
         </thead>
@@ -113,9 +106,9 @@ const IngresoSist = () => {
                 <td>{item.idUsuario}</td>
                 <td>{item.nombre}</td>
                 <td>{item.apellidoPaterno}</td>
-                <td>{item.apellidoMaterno}</td>
-                <td>{item.hora}</td>
-                <td>{item.tipo}</td>
+                <td>{item.apellidoMaterno || "N/A"}</td> {/* ✅ Mostrar "N/A" si es null */}
+                <td>{formatearFecha(item.hora)}</td> {/* ✅ Formatear la fecha */}
+                <td>{traducirTipo(item.tipo)}</td> {/* ✅ Aplicar traducción */}
               </tr>
             ))
           ) : (
