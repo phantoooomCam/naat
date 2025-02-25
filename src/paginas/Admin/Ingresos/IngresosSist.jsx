@@ -20,7 +20,7 @@ const IngresoSist = () => {
     const token = localStorage.getItem("token");
 
     try {
-      const response = await fetch("http://localhost:5096/api/ingresos", {
+      const response = await fetch("http://192.168.100.89:5096/api/ingresos", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

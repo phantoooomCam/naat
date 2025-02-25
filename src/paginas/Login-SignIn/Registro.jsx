@@ -24,7 +24,7 @@ export default function SignIn() {
   // Funcion para el registro
   const handleRegister = async (e) => {
     e.preventDefault();
-
+  
     const userData = {
       nombre,
       apellidoPaterno,
@@ -33,7 +33,7 @@ export default function SignIn() {
       telefono,
       contraseña: claveRegistro,
     };
-
+  
     try {
       const response = await fetch(
         "http://192.168.100.89:5096/api/usuarios/register",
@@ -45,18 +45,26 @@ export default function SignIn() {
           body: JSON.stringify(userData),
         }
       );
-
+  
       const data = await response.json();
-
+  
       if (!response.ok) {
         throw new Error(data.mensaje || "Error en el registro");
       }
-
+  
+      // Cambiar el estado antes de redirigir
+      setIsRegister(false);
+  
+      // Redirigir después de 2 segundos
       setTimeout(() => {
         navigate("/signin");
       }, 2000);
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+      setError(error.message || "Hubo un problema con el registro");
+    }
   };
+  
 
   const handleLogin = async (e) => {
     e.preventDefault();

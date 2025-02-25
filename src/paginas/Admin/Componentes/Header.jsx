@@ -21,7 +21,7 @@ const Header = () => {
         return;
       }
   
-      const response = await fetch("http://localhost:5096/api/usuarios/logout", {
+      const response = await fetch("http://192.168.100.89:5096/api/usuarios/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

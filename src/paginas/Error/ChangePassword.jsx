@@ -1,21 +1,13 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import SHA512 from "crypto-js/sha512";
 import { useNavigate } from "react-router-dom";
 import "./Change.css";
 
-// Función para generar el hash SHA-512
-const generateSHA512 = (text) => {
-  return SHA512(text).toString().toUpperCase();
-};
-
 const PasswordChange = () => {
   const [formData, setFormData] = useState({
-    username: "",
     currentPassword: "",
     newPassword: "",
   });
-  const token = localStorage.getItem("token");
 
   const [showPasswords, setShowPasswords] = useState({
     currentPassword: false,
@@ -25,8 +17,45 @@ const PasswordChange = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // Usar navigate para redirigir
+  // Recuperar el objeto del usuario desde el localStorage
+  const usuario = JSON.parse(localStorage.getItem("user"));
+  const userId = usuario ? usuario.id : null; // Suponiendo que el ID del usuario está en 'id'
+
+  const token = localStorage.getItem("token"); // El token almacenado en localStorage
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("token");
+  
+      if (!token) {
+        console.error("Error: No hay token almacenado.");
+        return;
+      }
+  
+      const response = await fetch("http://192.168.100.89:5096/api/usuarios/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.mensaje || "Error al cerrar sesión.");
+      }
+  
+      // ✅ Eliminar el token y la información del usuario del almacenamiento local
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+  
+      // ✅ Redirigir al usuario a la página de inicio de sesión
+      navigate("/signin");
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -44,58 +73,61 @@ const PasswordChange = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (
-      !formData.username ||
-      !formData.currentPassword ||
-      !formData.newPassword
-    ) {
-      setError("Por favor completa todos los campos");
+    if (!userId) {
+      setError("No se ha detectado un ID de sesión válido.");
       return;
     }
 
-    if (formData.newPassword.length < 8) {
-      setError("La contraseña debe tener al menos 8 caracteres");
-      return;
-    }
-
-    // Convertir las contraseñas a SHA-512
-    const hashedData = {
-      Usuario: formData.username,
-      ClaveAnterior: generateSHA512(formData.currentPassword),
-      NuevaClave: generateSHA512(formData.newPassword),
+    // Crear el objeto JSON que enviarás al backend
+    const passwordData = {
+      OldPassword: formData.currentPassword,
+      NewPassword: formData.newPassword,
     };
 
-    // Enviar los datos al backend
-    fetch("http://192.168.100.89:44444/api/Administracion/ModificarClave", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: token ? `Bearer ${token}` : "",
-      },
-      body: JSON.stringify(hashedData),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        // Si la respuesta es "ok", consideramos que la contraseña se cambió correctamente
-        if (data.mensaje === "ok") {
-          setSuccess(true);
-          setError("");
 
-          // Esperar 3 segundos antes de redirigir
-          setTimeout(() => {
-            navigate("/signin");
-          }, 3000); // 3000 ms = 3 segundos
-        } else {
-          setError("Error al cambiar la contraseña");
+    try {
+      // Enviar los datos al backend
+      const response = await fetch(
+        `http://192.168.100.89:5096/api/usuarios/change-password/${userId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Asegúrate de enviar el token en los encabezados
+          },
+          body: JSON.stringify(passwordData),
         }
-      })
-      .catch((error) => {
-        setError("Hubo un error al cambiar la contraseña");
-        console.error("Error:", error);
-      });
+      );
+
+      // Verificar que la respuesta del servidor sea exitosa
+      if (!response.ok) {
+        throw new Error("Error en la solicitud");
+      }
+
+      // Obtener la respuesta como texto (ya que el backend devuelve solo un string)
+      const responseText = await response.text();
+
+      // Mostrar la respuesta del servidor
+      // Si la respuesta es el string esperado
+      if (responseText === "Contraseña actualizada correctamente.") {
+        setSuccess(true);
+        setError(""); // Limpiar cualquier mensaje de error previo
+
+        // Esperar 2 segundos antes de redirigir al Sign-In
+        setTimeout(() => {
+          handleLogout();
+          navigate("/signin"); // Asegúrate de tener la ruta correcta para SignIn
+        }, 2000); // 2000 ms = 2 segundos
+      } else {
+        setError("Error al cambiar la contraseña.");
+      }
+    } catch (error) {
+      console.error("Error en la solicitud:", error);
+      setError("Error al cambiar la contraseña.");
+    }
   };
 
   return (
@@ -104,17 +136,6 @@ const PasswordChange = () => {
         <h2 className="h2-change">Cambiar Contraseña</h2>
 
         <form onSubmit={handleSubmit} className="password-form-change">
-          <div className="input-group-change">
-            <input
-              className="input-change"
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              placeholder="Usuario"
-            />
-          </div>
-
           <div className="input-group-change">
             <input
               className="input-change"
