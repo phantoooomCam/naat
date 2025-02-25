@@ -1,12 +1,11 @@
 import React from "react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Header from "../Componentes/Header"
-import Sidebar from "../Componentes/Sidebar";
-import GestionDash from "./DashGestion";
-import "./Gestion.css";
+import Header from "../../Componentes/Header"
+import Sidebar from "../../Componentes/Sidebar";
+import "./Actividad.css";
 
-function Gestion() {
+function Actividad() {
   const [activeView, setActiveView] = useState("inicio");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -20,7 +19,6 @@ function Gestion() {
       />
       <main className={`main-content ${sidebarOpen ? "" : "collapsed"}`}>
         <Header />
-        <GestionDash/> 
       </main>
        
 
@@ -28,4 +26,4 @@ function Gestion() {
   );
 }
 
-export default Gestion;
+export default Actividad;

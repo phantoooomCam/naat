@@ -56,9 +56,7 @@ export default function SignIn() {
       setIsRegister(false);
   
       // Redirigir después de 2 segundos
-      setTimeout(() => {
-        navigate("/signin");
-      }, 2000);
+      navigate("/mensaje");
     } catch (error) {
       console.error(error);
       setError(error.message || "Hubo un problema con el registro");

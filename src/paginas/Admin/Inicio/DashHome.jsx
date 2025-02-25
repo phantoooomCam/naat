@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import './DashHome.css';
-import IngresoSist from '../Ingresos/IngresosSist';
+import IngresoSist from '../../Admin/Sistema/Ingresos/IngresosSist';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { Link, useNavigate } from "react-router-dom";
 
