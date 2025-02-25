@@ -1,17 +1,12 @@
 import PropTypes from 'prop-types';
 import './DashHome.css';
-import IngresoSist from '../../Admin/Sistema/Ingresos/IngresosSist';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const DashHome = ({ activeView }) => {
 
-
   const views = {
     inicio: <HomeView />,
-    reportes: <ReportsView />,
-    Ingresos: <IngresoSist />,
-    ayuda: <HelpView />
   };
 
   return (
@@ -65,10 +60,7 @@ const HomeView = () => {
   );
 };
 
-// Componentes de ejemplo para otras vistas
-const ReportsView = () => <div className="chart-placeholder" />;
-const ConfigView = () => <h1>Configuración del Sistema</h1>;
-const HelpView = () => <h1>Centro de Ayuda</h1>;
+
 
 DashHome.propTypes = {
   activeView: PropTypes.string.isRequired,
