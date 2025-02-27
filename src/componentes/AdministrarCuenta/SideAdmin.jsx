@@ -1,4 +1,7 @@
-import { FiHome, FiUsers, FiSettings, FiBarChart2, FiHelpCircle } from 'react-icons/fi';
+import { FiHome, FiUsers, FiSettings, FiHelpCircle } from 'react-icons/fi';
+import { AiOutlineIdcard } from 'react-icons/ai';
+import { FaCreditCard, FaMoneyBillWave } from 'react-icons/fa';
+import { BiSupport } from 'react-icons/bi'
 import { BiLogIn } from "react-icons/bi";
 import PropTypes from 'prop-types';
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -21,13 +24,12 @@ const SideAdmin = ({ isOpen, toggleSideAdmin }) => {
       return [];
     }
   });
-
   const menuItems = [
     { id: '/dashboard', icon: <FiHome />, label: 'Inicio' },
     {
       id: 'usuarios',
-      icon: <FiUsers />,
-      label: 'Informacion Personal',
+      icon: <AiOutlineIdcard />,  // Icono nuevo para Información Personal
+      label: 'Información Personal',
       subItems: [
         { id: '/gestion', label: 'Datos personales' },
         { id: '/cambiarcontra', label: 'Cambiar contraseña' }
@@ -35,27 +37,17 @@ const SideAdmin = ({ isOpen, toggleSideAdmin }) => {
     },
     {
       id: 'sistema',
-      icon: <FiSettings />,
+      icon: <FaMoneyBillWave />,  // Icono nuevo para Pagos
       label: 'Pagos',
       subItems: [
-        { id: '/sistema/configuracion', label: 'Creditos' },
+        { id: '/sistema/configuracion', label: 'Créditos' },
         { id: '/ingresos', label: 'Historial' }
       ]
     },
-    // {
-    //   id: 'organizaciones',
-    //   icon: <FiHelpCircle />,
-    //   label: 'Organizaciones',
-    //   subItems: [
-    //     { id: '/orga', label: 'Gestion Organización' },
-    //     { id: '/depto', label: 'Gestion Departamento' },
-    //     { id: '/area', label: 'Gestion Area' }   
-    //   ]
-    // },
     {
       id: 'ayuda',
-      icon: <FiHelpCircle />,
-      label :'Ayuda',
+      icon: <BiSupport />,  // Icono nuevo para Ayuda
+      label: 'Ayuda',
     },
   ];
 

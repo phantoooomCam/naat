@@ -26,9 +26,7 @@ import ProtectedRoute from "./componentes/ProtectedRoute";
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<HomeAlt />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signin" element={<SignIn />} />
+      <Route path="/" element={<SignIn />} />
       <Route path="/mensaje" element={<MensajeRegistro />} />
       <Route path="*" element={<PageNotFound />} />
       <Route element={<ProtectedRoute />}>
