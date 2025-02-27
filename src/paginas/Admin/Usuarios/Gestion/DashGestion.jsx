@@ -45,6 +45,7 @@ const GestionDash = () => {
       }
 
       const data = JSON.parse(text); // Intentamos parsearlo como JSON
+      console.log(data);
 
       // Verificamos si el formato es el esperado (es un array de usuarios)
       if (Array.isArray(data)) {
@@ -431,8 +432,25 @@ const GestionDash = () => {
                       <td>{user.apellidoMaterno}</td>
                       <td>{user.correo}</td>
                       <td>{user.telefono}</td>
-                      <td>{user.nivel}</td>
-                      <td>{user.organizacion}</td>
+                      <td>
+                        {(() => {
+                          switch (user.nivel) {
+                            case 1:
+                              return "SuperAdmin";
+                            case 2:
+                              return "AdminOrganizacion";
+                            case 3:
+                              return "Jefe de Area";
+                            case 4:
+                              return "Jefe de Departamento";
+                            case 5:
+                              return "Analista";
+                            default:
+                              return "Sin nivel";
+                          }
+                        })()}
+                      </td>
+                      <td>{user.nombreOrganizacion}</td>
                       <td>{user.rol}</td>
                       <td>
                         <button

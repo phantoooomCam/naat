@@ -21,6 +21,7 @@ const DashOrga = () => {
       }
 
       const data = await response.json();
+      console.log(data)
       setOrganizaciones(data);
     } catch (error) {
       console.error("Error al obtener organizaciones:", error);
