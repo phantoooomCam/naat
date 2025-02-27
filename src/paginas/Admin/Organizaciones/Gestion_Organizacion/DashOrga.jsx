@@ -3,7 +3,7 @@ import "../../Usuarios/Gestion/Gestion.css";
 
 const DashOrga = () => {
   const [organizaciones, setOrganizaciones] = useState([]);
-  const API_URL = "http://192.168.100.89:5096/api/organizaciones"; // Ruta corregida
+  const API_URL = "http://192.168.100.89:44444/api/organizaciones"; // Ruta corregida
   const token = localStorage.getItem("token"); // Reemplázalo con el token válido
 
   const obtenerOrganizaciones = async () => {

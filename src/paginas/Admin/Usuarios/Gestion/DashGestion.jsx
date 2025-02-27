@@ -23,7 +23,7 @@ const GestionDash = () => {
     setError(null);
     try {
       const response = await fetch(
-        "http://192.168.100.89:5096/api/usuarios/?inicio=1&cantidad=10",
+        "http://192.168.100.89:44444/api/usuarios/?inicio=1&cantidad=10",
         {
           method: "GET",
           headers: {
@@ -92,7 +92,7 @@ const GestionDash = () => {
     try {
       // Enviar la petición PUT
       const response = await fetch(
-        `http://192.168.100.89:5096/api/usuarios/${formData.id_usuario}`,
+        `http://192.168.100.89:44444/api/usuarios/${formData.id_usuario}`,
         {
           method: "PUT",
           headers: {
@@ -142,7 +142,7 @@ const GestionDash = () => {
 
     try {
       const response = await fetch(
-        `http://192.168.100.89:5096/api/usuarios/${id}`,
+        `http://192.168.100.89:44444/api/usuarios/${id}`,
         {
           method: "DELETE",
           headers: {
@@ -189,7 +189,7 @@ const GestionDash = () => {
     // Enviamos la solicitud POST para crear el usuario
     try {
       const response = await fetch(
-        "http://192.168.100.89:5096/api/usuarios/register",
+        "http://192.168.100.89:44444/api/usuarios/register",
         {
           method: "POST",
           headers: {
