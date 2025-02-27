@@ -3,10 +3,10 @@ import { BiLogIn } from "react-icons/bi";
 import PropTypes from 'prop-types';
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from 'react';
-import './Sidebar.css';
-import NAAT from '../../../assets/completo_blanco.png';
+import '../../paginas/Admin/Componentes/Sidebar.css';
+import NAAT from '../../../src/assets/completo_blanco.png';
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
+const SideAdmin = ({ isOpen, toggleSideAdmin }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const initialRender = useRef(true);
@@ -27,30 +27,35 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     {
       id: 'usuarios',
       icon: <FiUsers />,
-      label: 'Usuarios',
+      label: 'Informacion Personal',
       subItems: [
-        { id: '/gestion', label: 'Gestionar Usuarios' },
-        { id: '/usuarios/listar', label: 'Solicitudes' }
+        { id: '/gestion', label: 'Datos personales' },
+        { id: '/cambiarcontra', label: 'Cambiar contraseña' }
       ]
     },
     {
       id: 'sistema',
       icon: <FiSettings />,
-      label: 'Sistema',
+      label: 'Pagos',
       subItems: [
-        { id: '/sistema/configuracion', label: 'Actividad' },
-        { id: '/ingresos', label: 'Ingresos' }
+        { id: '/sistema/configuracion', label: 'Creditos' },
+        { id: '/ingresos', label: 'Historial' }
       ]
     },
+    // {
+    //   id: 'organizaciones',
+    //   icon: <FiHelpCircle />,
+    //   label: 'Organizaciones',
+    //   subItems: [
+    //     { id: '/orga', label: 'Gestion Organización' },
+    //     { id: '/depto', label: 'Gestion Departamento' },
+    //     { id: '/area', label: 'Gestion Area' }   
+    //   ]
+    // },
     {
-      id: 'organizaciones',
+      id: 'ayuda',
       icon: <FiHelpCircle />,
-      label: 'Organizaciones',
-      subItems: [
-        { id: '/orga', label: 'Gestion Organización' },
-        { id: '/depto', label: 'Gestion Departamento' },
-        { id: '/area', label: 'Gestion Area' }   
-      ]
+      label :'Ayuda',
     },
   ];
 
@@ -129,7 +134,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       <div className="sidebar-header">
         <div 
           className="logo-wrapper"
-          onClick={toggleSidebar}
+          onClick={toggleSideAdmin}
           style={{ cursor: 'pointer' }}
         >
           <img 
@@ -137,7 +142,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             alt="NAAT Logo" 
             className="top-logo"
           />
-          {isOpen && <h1 className="dashboard-title">Dashboard</h1>}
+          {isOpen && <h1 className="dashboard-title">Administar cuenta</h1>}
         </div>
       </div>
 
@@ -192,9 +197,9 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
   );
 };
 
-Sidebar.propTypes = {
+SideAdmin.propTypes = {
   isOpen: PropTypes.bool.isRequired,
-  toggleSidebar: PropTypes.func.isRequired,
+  toggleSideAdmin: PropTypes.func.isRequired,
 };
 
-export default Sidebar;
+export default SideAdmin;

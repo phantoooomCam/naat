@@ -88,8 +88,8 @@ const Header = () => {
                 {nombre} {apellido}
               </h3>
               <p className="role">Administrador</p>
-              <Link to="/forgotpasswd" className="link-contra">
-                Cambiar Contraseña
+              <Link to="/administrarcuenta" className="link-contra">
+                Administrar Cuenta
               </Link>
             </div>
             <button className="logout-btn" onClick={handleLogout}>

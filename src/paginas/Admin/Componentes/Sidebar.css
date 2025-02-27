@@ -195,3 +195,36 @@
     margin-left: 0;
   }
 }
+
+
+
+/* Estilo para el submenú */
+.sub-menu {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Estilo de los elementos del submenú */
+.sub-menu-item {
+  background: none;
+  border: none;
+  color: #787878;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out; /* Suaviza el efecto de hover */
+}
+
+/* Efecto hover para los elementos del submenú */
+.sub-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.1); /* Cambia el fondo al pasar el ratón */
+}
+
+/* Estilo para el submenú activo */
+.sub-menu .sub-menu-item.active {
+  font-weight: bold;
+  color: #ffffff !important; /* Forzar el color blanco */
+}
+
