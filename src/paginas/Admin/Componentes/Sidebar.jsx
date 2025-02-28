@@ -1,4 +1,4 @@
-import { FiHome, FiUsers, FiSettings, FiBarChart2, FiHelpCircle } from 'react-icons/fi';
+import { FiHome, FiUsers, FiSettings, FiHelpCircle } from 'react-icons/fi';
 import { BiLogIn } from "react-icons/bi";
 import PropTypes from 'prop-types';
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -6,12 +6,16 @@ import { useState, useEffect, useRef } from 'react';
 import './Sidebar.css';
 import NAAT from '../../../assets/completo_blanco.png';
 
-const Sidebar = ({ isOpen, toggleSidebar }) => {
+const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const initialRender = useRef(true);
   
-  // Inicialización de estado desde localStorage
+  // Estado para controlar si el sidebar está abierto o cerrado
+  // En móviles (<=390px), inicia cerrado; en pantallas grandes, inicia abierto
+  const [isOpen, setIsOpen] = useState(window.innerWidth > 390);
+  
+  // Inicialización de estado desde localStorage para submenús expandidos
   const [expandedMenus, setExpandedMenus] = useState(() => {
     try {
       const saved = localStorage.getItem('expandedMenus');
@@ -22,6 +26,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     }
   });
 
+  // Estructura del menú
   const menuItems = [
     { id: '/dashboard', icon: <FiHome />, label: 'Inicio' },
     {
@@ -54,6 +59,25 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
     },
   ];
 
+  // Ajustar automáticamente según el tamaño de pantalla
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= 390) {
+        setIsOpen(false); // En móviles, el sidebar siempre inicia cerrado
+      } else {
+        setIsOpen(true); // En pantallas grandes, inicia abierto
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Función para alternar el sidebar
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
+
   // Guardar en localStorage cada vez que cambia expandedMenus
   useEffect(() => {
     // Evitar guardar en el primer renderizado para no sobrescribir el estado inicial
@@ -84,7 +108,30 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         setExpandedMenus(menusToExpand);
       }
     }
-  }, []);
+  }, [expandedMenus.length, location.pathname, menuItems]);
+
+  // Función para manejar clic en menú cuando el sidebar está cerrado
+  const handleMenuClick = (menuId, event) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    // Si el sidebar está cerrado y se hace clic en un menú con submenús
+    if (!isOpen && menuId !== '/dashboard') {
+      // Abrir el sidebar
+      setIsOpen(true);
+      
+      // Expandir solo este menú y colapsar los demás
+      setExpandedMenus([menuId]);
+    } else if (menuId === '/dashboard') {
+      // Si es el menú de inicio, navegar directamente
+      handleNavigation(menuId, event);
+    } else {
+      // Si el sidebar ya está abierto, comportamiento normal de toggle
+      toggleSubMenu(menuId, event);
+    }
+  };
 
   // Función para alternar menú manualmente
   const toggleSubMenu = (menuId, event) => {
@@ -92,15 +139,18 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       event.preventDefault();
       event.stopPropagation();
     }
-    
-    setExpandedMenus(prevMenus => {
+  
+    setExpandedMenus((prevMenus) => {
+      // Si el menú ya está abierto, se cierra
       if (prevMenus.includes(menuId)) {
-        return prevMenus.filter(id => id !== menuId);
-      } else {
-        return [...prevMenus, menuId];
+        return [];
       }
+      
+      // Si otro menú estaba abierto, se cierra
+      return [menuId];
     });
   };
+  
 
   // Función para navegación manual
   const handleNavigation = (path, event) => {
@@ -109,6 +159,11 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       event.stopPropagation();
     }
     navigate(path);
+    
+    // En móviles, cerrar el sidebar después de navegar
+    if (window.innerWidth <= 390) {
+      setIsOpen(false);
+    }
   };
 
   // Verificar si un subítem está activo
@@ -158,7 +213,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
               <div className="menu-wrapper">
                 <button
                   className={`menu-item ${isMenuActive(item) ? 'active' : ''}`}
-                  onClick={(e) => toggleSubMenu(item.id, e)}
+                  onClick={(e) => handleMenuClick(item.id, e)}
                 >
                   <span className="icon">{item.icon}</span>
                   {isOpen && <span className="label">{item.label}</span>}
@@ -190,11 +245,6 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
       </div>
     </nav>
   );
-};
-
-Sidebar.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggleSidebar: PropTypes.func.isRequired,
 };
 
 export default Sidebar;
