@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./login-signin.css";
+import "./registro.css";
 import { FaUser, FaEnvelope, FaLock, FaPhone } from "react-icons/fa";
 import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";

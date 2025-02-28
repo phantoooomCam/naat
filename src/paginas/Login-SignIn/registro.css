@@ -231,9 +231,7 @@
   .btn-responsive{
     display: block;
   }
-  .auth-form-box-login {
-    display: none;
-  }
+ 
 
   .auth-toggle-box {
     display: none;
@@ -246,4 +244,4 @@
   .auth-input-box {
     margin: 10px 0;
   }
-}
+} 

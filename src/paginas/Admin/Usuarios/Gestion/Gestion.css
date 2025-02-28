@@ -77,6 +77,7 @@ button:hover {
 .bg-yellow-500 {
   background-color: #54a3d4;
   border: none;
+  cursor: pointer;
 }
 
 .bg-yellow-500:hover {
@@ -87,6 +88,7 @@ button:hover {
 .bg-red-500 {
   background-color: #f16464;
   border: none;
+  cursor: pointer;
 }
 
 .bg-red-500:hover {

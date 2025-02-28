@@ -162,6 +162,8 @@ const GestionDash = () => {
       // Actualizar el estado para eliminar el usuario de la lista
       setUsers(users.filter((user) => user.id !== id));
       setFilteredUsers(filteredUsers.filter((user) => user.id !== id));
+
+      window.location.reload();
     } catch (error) {}
   };
 
@@ -336,6 +338,7 @@ const GestionDash = () => {
                   onChange={handleChange}
                   className="inputedit"
                 >
+                  <option value={null}>Pendiente</option>
                   <option value={1}>Super Administrador</option>
                   <option value={2}>Administrador de Organizacion</option>
                   <option value={3}>Jefe de area</option>
@@ -434,6 +437,9 @@ const GestionDash = () => {
                       <td>{user.telefono}</td>
                       <td>
                         {(() => {
+                          if (user.nivel === null) {
+                            return "Nivel no asignado";
+                          }
                           switch (user.nivel) {
                             case 1:
                               return "SuperAdmin";
