@@ -334,3 +334,22 @@ td button {
 .gestion-form label {
   font-weight: bold;
 }
+
+
+.search-bar {
+  padding: 8px;
+  margin: 10px 0;
+  width: 100%;
+  max-width: 400px;
+}
+
+.form-nueva-organizacion {
+  margin: 10px 0;
+  display: flex;
+  gap: 10px;
+}
+
+.form-nueva-organizacion input {
+  flex: 1;
+  padding: 8px;
+}

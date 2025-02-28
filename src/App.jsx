@@ -27,6 +27,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<SignIn />} />
+      <Route path="/registro" element={<Login />} />
       <Route path="/mensaje" element={<MensajeRegistro />} />
       <Route path="*" element={<PageNotFound />} />
       <Route element={<ProtectedRoute />}>

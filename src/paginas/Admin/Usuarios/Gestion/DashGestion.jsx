@@ -336,11 +336,11 @@ const GestionDash = () => {
                   onChange={handleChange}
                   className="inputedit"
                 >
-                  <option value={1}>1</option>
-                  <option value={2}>2</option>
-                  <option value={3}>3</option>
-                  <option value={4}>4</option>
-                  <option value={5}>5</option>
+                  <option value={1}>Super Administrador</option>
+                  <option value={2}>Administrador de Organizacion</option>
+                  <option value={3}>Jefe de area</option>
+                  <option value={4}>Jefe de Departamento</option>
+                  <option value={5}>Analista</option>
                 </select>
               </div>
               <div>

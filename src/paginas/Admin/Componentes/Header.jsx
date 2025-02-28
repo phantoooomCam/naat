@@ -39,7 +39,7 @@ const Header = () => {
       localStorage.removeItem("user");
   
       // ✅ Redirigir al usuario a la página de inicio de sesión
-      navigate("/signin");
+      navigate("/");
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     }

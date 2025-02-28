@@ -134,7 +134,7 @@ const SideAdmin = ({ isOpen, toggleSideAdmin }) => {
             alt="NAAT Logo" 
             className="top-logo"
           />
-          {isOpen && <h1 className="dashboard-title">Administar cuenta</h1>}
+          {isOpen && <h1 className="dashboard-title">Mi cuenta</h1>}
         </div>
       </div>
 
