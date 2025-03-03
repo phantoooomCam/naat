@@ -3,22 +3,23 @@ import "../../Usuarios/Gestion/Gestion.css";
 
 const DashDepartamento = () => {
   const [departamentos, setDepartamentos] = useState([]);
-  const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState(null);
+  const [departamentoSeleccionado, setDepartamentoSeleccionado] =
+    useState(null);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [formData, setFormData] = useState({
     idDepartamento: 0,
     nombreDepartamento: "",
     idArea: 0,
-    idOrganizacion: 0
+    idOrganizacion: 0,
   });
   const [areas, setAreas] = useState([]);
   const [organizaciones, setOrganizaciones] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  
+
   const API_URL = "http://192.168.100.89:44444/api";
   const token = localStorage.getItem("token");
-  
+
   // Obtener departamentos
   const obtenerDepartamentos = async () => {
     setLoading(true);
@@ -39,7 +40,9 @@ const DashDepartamento = () => {
       setError(null);
     } catch (error) {
       console.error("Error al obtener departamentos:", error);
-      setError("Error al cargar los departamentos. Intente nuevamente más tarde.");
+      setError(
+        "Error al cargar los departamentos. Intente nuevamente más tarde."
+      );
     } finally {
       setLoading(false);
     }
@@ -96,11 +99,11 @@ const DashDepartamento = () => {
         idDepartamento: 0,
         nombreDepartamento: formData.nombreDepartamento,
         idArea: parseInt(formData.idArea, 10),
-        idOrganizacion: parseInt(formData.idOrganizacion, 10)
+        idOrganizacion: parseInt(formData.idOrganizacion, 10),
       };
-      
+
       console.log("Enviando datos para crear departamento:", dataToSend);
-      
+
       const response = await fetch(`${API_URL}/departamentos`, {
         method: "POST",
         headers: {
@@ -109,21 +112,20 @@ const DashDepartamento = () => {
         },
         body: JSON.stringify(dataToSend),
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Respuesta de error del servidor:", errorText);
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
-      
+
       const responseData = await response.json();
       console.log("Respuesta al crear departamento:", responseData);
-      
+
       resetearFormulario();
       obtenerDepartamentos();
       setMostrarFormulario(false);
       setError(null);
-      
     } catch (error) {
       console.error("Error al crear el departamento:", error);
       setError("Error al crear el departamento. Intente nuevamente.");
@@ -141,34 +143,36 @@ const DashDepartamento = () => {
         idDepartamento: parseInt(formData.idDepartamento, 10),
         nombreDepartamento: formData.nombreDepartamento,
         idArea: parseInt(formData.idArea, 10),
-        idOrganizacion: parseInt(formData.idOrganizacion, 10)
+        idOrganizacion: parseInt(formData.idOrganizacion, 10),
       };
-      
+
       console.log("Enviando datos para actualizar departamento:", dataToSend);
-      
-      const response = await fetch(`${API_URL}/departamentos/${formData.idDepartamento}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(dataToSend),
-      });
-      
+
+      const response = await fetch(
+        `${API_URL}/departamentos/${formData.idDepartamento}`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dataToSend),
+        }
+      );
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Respuesta de error del servidor:", errorText);
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
-      
+
       const responseData = await response.json();
       console.log("Respuesta al actualizar departamento:", responseData);
-      
+
       resetearFormulario();
       obtenerDepartamentos();
       setMostrarFormulario(false);
       setError(null);
-      
     } catch (error) {
       console.error("Error al actualizar el departamento:", error);
       setError("Error al actualizar el departamento. Intente nuevamente.");
@@ -183,7 +187,7 @@ const DashDepartamento = () => {
       setLoading(true);
       try {
         console.log("Intentando eliminar departamento con ID:", id);
-        
+
         const response = await fetch(`${API_URL}/departamentos/${id}`, {
           method: "DELETE",
           headers: {
@@ -191,17 +195,16 @@ const DashDepartamento = () => {
             "Content-Type": "application/json",
           },
         });
-        
+
         if (!response.ok) {
           const errorText = await response.text();
           console.error("Respuesta de error del servidor:", errorText);
           throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
-        
+
         console.log("Departamento eliminado con éxito");
         obtenerDepartamentos();
         setError(null);
-        
       } catch (error) {
         console.error("Error al eliminar el departamento:", error);
         setError("Error al eliminar el departamento. Intente nuevamente.");
@@ -214,24 +217,26 @@ const DashDepartamento = () => {
   // Filtrar áreas por organización seleccionada
   const areasFiltradas = () => {
     if (!formData.idOrganizacion) return [];
-    return areas.filter(area => area.idOrganizacion === parseInt(formData.idOrganizacion, 10));
+    return areas.filter(
+      (area) => area.idOrganizacion === parseInt(formData.idOrganizacion, 10)
+    );
   };
 
   // Manejar cambios en el formulario
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     if (name === "idOrganizacion") {
       // Al cambiar organización, resetear el área seleccionada
       setFormData({
         ...formData,
         [name]: value,
-        idArea: 0 // Resetear área
+        idArea: 0, // Resetear área
       });
     } else {
       setFormData({
         ...formData,
-        [name]: value
+        [name]: value,
       });
     }
   };
@@ -239,24 +244,24 @@ const DashDepartamento = () => {
   // Manejar envío del formulario
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!formData.nombreDepartamento.trim()) {
       setError("El nombre del departamento no puede estar vacío");
       return;
     }
-    
+
     if (!formData.idOrganizacion) {
       setError("Debe seleccionar una organización");
       return;
     }
-    
+
     if (!formData.idArea) {
       setError("Debe seleccionar un área");
       return;
     }
-    
+
     setError(null);
-    
+
     if (departamentoSeleccionado) {
       actualizarDepartamento();
     } else {
@@ -271,7 +276,7 @@ const DashDepartamento = () => {
       idDepartamento: departamento.idDepartamento,
       nombreDepartamento: departamento.nombreDepartamento,
       idArea: departamento.idArea,
-      idOrganizacion: departamento.idOrganizacion
+      idOrganizacion: departamento.idOrganizacion,
     });
     setMostrarFormulario(true);
   };
@@ -282,7 +287,7 @@ const DashDepartamento = () => {
       idDepartamento: 0,
       nombreDepartamento: "",
       idArea: 0,
-      idOrganizacion: 0
+      idOrganizacion: 0,
     });
     setDepartamentoSeleccionado(null);
   };
@@ -305,7 +310,7 @@ const DashDepartamento = () => {
       <div className="content-container">
         <div className="header-actions flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Gestión de Departamentos</h2>
-          <button 
+          <button
             className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
             onClick={mostrarFormularioNuevo}
             disabled={loading}
@@ -313,22 +318,27 @@ const DashDepartamento = () => {
             {loading ? "Procesando..." : "Agregar Departamento"}
           </button>
         </div>
-        
+
         {error && (
           <div className="error-message bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
             {error}
           </div>
         )}
-        
+
         {mostrarFormulario && (
           <div className="form-container bg-white p-6 rounded shadow-md mb-6">
             <h3 className="text-lg font-semibold mb-4">
-              {departamentoSeleccionado ? "Editar Departamento" : "Agregar Departamento"}
+              {departamentoSeleccionado
+                ? "Editar Departamento"
+                : "Agregar Departamento"}
             </h3>
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="form-group">
-                  <label htmlFor="idOrganizacion" className="block mb-1 font-medium">
+                  <label
+                    htmlFor="idOrganizacion"
+                    className="block mb-1 font-medium"
+                  >
                     Organización:
                   </label>
                   <select
@@ -342,13 +352,16 @@ const DashDepartamento = () => {
                   >
                     <option value="">Seleccione una organización</option>
                     {organizaciones.map((org) => (
-                      <option key={org.idOrganizacion} value={org.idOrganizacion}>
+                      <option
+                        key={org.idOrganizacion}
+                        value={org.idOrganizacion}
+                      >
                         {org.nombreOrganizacion}
                       </option>
                     ))}
                   </select>
                 </div>
-                
+
                 <div className="form-group">
                   <label htmlFor="idArea" className="block mb-1 font-medium">
                     Área:
@@ -375,9 +388,12 @@ const DashDepartamento = () => {
                     </p>
                   )}
                 </div>
-                
+
                 <div className="form-group md:col-span-2">
-                  <label htmlFor="nombreDepartamento" className="block mb-1 font-medium">
+                  <label
+                    htmlFor="nombreDepartamento"
+                    className="block mb-1 font-medium"
+                  >
                     Nombre del Departamento:
                   </label>
                   <input
@@ -393,17 +409,17 @@ const DashDepartamento = () => {
                   />
                 </div>
               </div>
-              
+
               <div className="form-actions flex mt-6">
-                <button 
-                  type="submit" 
-                  className="editar-btn"
-                  disabled={loading}
-                >
-                  {loading ? "Procesando..." : (departamentoSeleccionado ? "Actualizar" : "Guardar")}
+                <button type="submit" className="editar-btn" disabled={loading}>
+                  {loading
+                    ? "Procesando..."
+                    : departamentoSeleccionado
+                    ? "Actualizar"
+                    : "Guardar"}
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="editar-btn2"
                   onClick={() => {
                     setMostrarFormulario(false);
@@ -417,13 +433,13 @@ const DashDepartamento = () => {
             </form>
           </div>
         )}
-        
+
         {loading && !mostrarFormulario && (
           <div className="loading-indicator text-center py-4">
             <p>Cargando datos...</p>
           </div>
         )}
-        
+
         <div className="table-container overflow-x-auto">
           <table className="min-w-full bg-white border border-gray-200">
             <thead>
@@ -437,38 +453,59 @@ const DashDepartamento = () => {
             </thead>
             <tbody>
               {departamentos.length > 0 ? (
-                departamentos.map((departamento) => (
-                  <tr key={departamento.idDepartamento} className="hover:bg-gray-50">
-                    <td className="py-2 px-4 border">{departamento.idDepartamento}</td>
-                    <td className="py-2 px-4 border">{departamento.nombreDepartamento}</td>
-                    <td className="py-2 px-4 border">
-                      {departamento.organizacion ? departamento.organizacion.nombreOrganizacion : "-"}
-                    </td>
-                    <td className="py-2 px-4 border">
-                      {departamento.area ? departamento.area.nombreArea : "-"}
-                    </td>
-                    <td className="py-2 px-4 border text-center">
-                      <button
-                        className="bg-yellow-500 text-white px-3 py-1 rounded mr-2 hover:bg-yellow-600"
-                        onClick={() => prepararEdicion(departamento)}
-                        disabled={loading}
-                      >
-                        Editar
-                      </button>
-                      <button
-                        className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                        onClick={() => eliminarDepartamento(departamento.idDepartamento)}
-                        disabled={loading}
-                      >
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                departamentos.map((departamento) => {
+                  // Buscar el nombre de la organización y área usando los IDs
+                  const organizacion = organizaciones.find(
+                    (org) => org.idOrganizacion === departamento.idOrganizacion
+                  );
+                  const area = areas.find(
+                    (area) => area.idArea === departamento.idArea
+                  );
+
+                  return (
+                    <tr
+                      key={departamento.idDepartamento}
+                      className="hover:bg-gray-50"
+                    >
+                      <td className="py-2 px-4 border">
+                        {departamento.idDepartamento}
+                      </td>
+                      <td className="py-2 px-4 border">
+                        {departamento.nombreDepartamento}
+                      </td>
+                      <td className="py-2 px-4 border">
+                        {organizacion ? organizacion.nombreOrganizacion : "-"}
+                      </td>
+                      <td className="py-2 px-4 border">
+                        {area ? area.nombreArea : "-"}
+                      </td>
+                      <td className="py-2 px-4 border text-center">
+                        <button
+                          className="bg-yellow-500 text-white px-3 py-1 rounded mr-2 hover:bg-yellow-600"
+                          onClick={() => prepararEdicion(departamento)}
+                          disabled={loading}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                          onClick={() =>
+                            eliminarDepartamento(departamento.idDepartamento)
+                          }
+                          disabled={loading}
+                        >
+                          Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td colSpan="5" className="py-4 px-4 border text-center">
-                    {loading ? "Cargando departamentos..." : "No hay departamentos disponibles"}
+                    {loading
+                      ? "Cargando departamentos..."
+                      : "No hay departamentos disponibles"}
                   </td>
                 </tr>
               )}

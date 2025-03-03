@@ -9,14 +9,14 @@ const DashArea = () => {
     idArea: 0,
     nombreArea: "",
     idOrganizacion: 0,
-    organizacion: null  // Inicialmente nulo
+    organizacion: null, // Inicialmente nulo
   });
   const [organizaciones, setOrganizaciones] = useState([]);
   const [error, setError] = useState(null);
-  
+
   const API_URL = "http://192.168.100.89:44444/api";
   const token = localStorage.getItem("token");
-  
+
   // Obtener áreas
   const obtenerAreas = async () => {
     try {
@@ -65,14 +65,14 @@ const DashArea = () => {
     try {
       // Preparamos el objeto exactamente como lo espera la API
       const dataToSend = {
-        idArea: 0,  // Siempre 0 para nuevas áreas
+        idArea: 0, // Siempre 0 para nuevas áreas
         nombreArea: formData.nombreArea,
         idOrganizacion: parseInt(formData.idOrganizacion, 10),
-        organizacion: null  // Puede que la API no necesite esto para crear
+        organizacion: null, // Puede que la API no necesite esto para crear
       };
-      
+
       console.log("Enviando datos para crear área:", dataToSend);
-      
+
       const response = await fetch(`${API_URL}/areas`, {
         method: "POST",
         headers: {
@@ -81,21 +81,20 @@ const DashArea = () => {
         },
         body: JSON.stringify(dataToSend),
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Respuesta de error del servidor:", errorText);
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
-      
+
       const responseData = await response.json();
       console.log("Respuesta al crear área:", responseData);
-      
+
       resetearFormulario();
       obtenerAreas();
       setMostrarFormulario(false);
       setError(null);
-      
     } catch (error) {
       console.error("Error al crear el área:", error);
       setError("Error al crear el área. Intente nuevamente.");
@@ -110,11 +109,11 @@ const DashArea = () => {
         idArea: parseInt(formData.idArea, 10),
         nombreArea: formData.nombreArea,
         idOrganizacion: parseInt(formData.idOrganizacion, 10),
-        organizacion: null  // No enviamos esto para actualizar
+        organizacion: null, // No enviamos esto para actualizar
       };
-      
+
       console.log("Enviando datos para actualizar área:", dataToSend);
-      
+
       const response = await fetch(`${API_URL}/areas/${formData.idArea}`, {
         method: "PUT",
         headers: {
@@ -123,21 +122,20 @@ const DashArea = () => {
         },
         body: JSON.stringify(dataToSend),
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Respuesta de error del servidor:", errorText);
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
-      
+
       const responseData = await response.json();
       console.log("Respuesta al actualizar área:", responseData);
-      
+
       resetearFormulario();
       obtenerAreas();
       setMostrarFormulario(false);
       setError(null);
-      
     } catch (error) {
       console.error("Error al actualizar el área:", error);
       setError("Error al actualizar el área. Intente nuevamente.");
@@ -149,7 +147,7 @@ const DashArea = () => {
     if (window.confirm("¿Está seguro que desea eliminar esta área?")) {
       try {
         console.log("Intentando eliminar área con ID:", id);
-        
+
         const response = await fetch(`${API_URL}/areas/${id}`, {
           method: "DELETE",
           headers: {
@@ -157,17 +155,16 @@ const DashArea = () => {
             "Content-Type": "application/json",
           },
         });
-        
+
         if (!response.ok) {
           const errorText = await response.text();
           console.error("Respuesta de error del servidor:", errorText);
           throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
-        
+
         console.log("Área eliminada con éxito");
         obtenerAreas();
         setError(null);
-        
       } catch (error) {
         console.error("Error al eliminar el área:", error);
         setError("Error al eliminar el área. Intente nuevamente.");
@@ -178,29 +175,29 @@ const DashArea = () => {
   // Manejar cambios en el formulario
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
   };
 
   // Manejar envío del formulario
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!formData.nombreArea.trim()) {
       setError("El nombre del área no puede estar vacío");
       return;
     }
-    
+
     if (!formData.idOrganizacion) {
       setError("Debe seleccionar una organización");
       return;
     }
-    
+
     setError(null);
-    
+
     if (areaSeleccionada) {
       actualizarArea();
     } else {
@@ -214,7 +211,7 @@ const DashArea = () => {
     setFormData({
       idArea: area.idArea,
       nombreArea: area.nombreArea,
-      idOrganizacion: area.idOrganizacion
+      idOrganizacion: area.idOrganizacion,
     });
     setMostrarFormulario(true);
   };
@@ -225,7 +222,7 @@ const DashArea = () => {
       idArea: 0,
       nombreArea: "",
       idOrganizacion: 0,
-      organizacion: null
+      organizacion: null,
     });
     setAreaSeleccionada(null);
   };
@@ -247,22 +244,30 @@ const DashArea = () => {
       <div className="content-container">
         <div className="header-actions">
           <h2>Lista de Áreas</h2>
-          <button 
-            className="bg-green-500 text-white px-4 py-2 rounded" 
+          <button
+            className="bg-green-500 text-white px-4 py-2 rounded"
             onClick={mostrarFormularioNuevo}
           >
             Agregar Área
           </button>
         </div>
-        
-        {error && <div className="error-message bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">{error}</div>}
-        
+
+        {error && (
+          <div className="error-message bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+            {error}
+          </div>
+        )}
+
         {mostrarFormulario && (
           <div className="form-container bg-white p-4 rounded shadow mb-4">
-            <h3 className="text-lg font-semibold mb-4">{areaSeleccionada ? "Editar Área" : "Agregar Área"}</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {areaSeleccionada ? "Editar Área" : "Agregar Área"}
+            </h3>
             <form onSubmit={handleSubmit}>
               <div className="form-group mb-4">
-                <label htmlFor="nombreArea" className="block mb-1">Nombre del Área:</label>
+                <label htmlFor="nombreArea" className="block mb-1">
+                  Nombre del Área:
+                </label>
                 <input
                   type="text"
                   id="nombreArea"
@@ -273,9 +278,11 @@ const DashArea = () => {
                   className="form-input w-full px-3 py-2 border rounded"
                 />
               </div>
-              
+
               <div className="form-group mb-4">
-                <label htmlFor="idOrganizacion" className="block mb-1">Organización:</label>
+                <label htmlFor="idOrganizacion" className="block mb-1">
+                  Organización:
+                </label>
                 <select
                   id="idOrganizacion"
                   name="idOrganizacion"
@@ -292,13 +299,13 @@ const DashArea = () => {
                   ))}
                 </select>
               </div>
-              
+
               <div className="form-actions flex">
                 <button type="submit" className="editar-btn">
                   {areaSeleccionada ? "Actualizar" : "Guardar"}
                 </button>
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   className="editar-btn2"
                   onClick={() => {
                     setMostrarFormulario(false);
@@ -311,7 +318,7 @@ const DashArea = () => {
             </form>
           </div>
         )}
-        
+
         <div className="table-container">
           <table>
             <thead>
@@ -330,7 +337,13 @@ const DashArea = () => {
                     <td>{area.idArea}</td>
                     <td>{area.nombreArea}</td>
                     <td>{area.idOrganizacion}</td>
-                    <td>{area.organizacion ? area.organizacion.nombreOrganizacion : "-"}</td>
+                    <td>
+                      {area.organizacion
+                        ? area.organizacion.nombreOrganizacion
+                        : organizaciones.find(
+                            (org) => org.idOrganizacion === area.idOrganizacion
+                          )?.nombreOrganizacion || "-"}
+                    </td>
                     <td className="actions-cell">
                       <button
                         className="bg-yellow-500 text-white px-3 py-1 rounded mr-2"
@@ -349,7 +362,9 @@ const DashArea = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center">No hay áreas disponibles</td>
+                  <td colSpan="5" className="text-center">
+                    No hay áreas disponibles
+                  </td>
                 </tr>
               )}
             </tbody>

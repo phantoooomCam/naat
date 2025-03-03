@@ -53,8 +53,9 @@ const Sidebar = () => {
       label: 'Organizaciones',
       subItems: [
         { id: '/orga', label: 'Gestion Organización' },
-        { id: '/depto', label: 'Gestion Departamento' },
-        { id: '/area', label: 'Gestion Area' }   
+        { id: '/area', label: 'Gestion Area' },
+        { id: '/depto', label: 'Gestion Departamento' }
+         
       ]
     },
   ];
@@ -80,9 +81,9 @@ const Sidebar = () => {
       touchEndX = event.changedTouches[0].clientX;
       const swipeDistance = touchEndX - touchStartX;
   
-      if (swipeDistance > 50 && !isOpen) {
+      if (swipeDistance > 120 && !isOpen) {
         setIsOpen(true); // Abrir sidebar con swipe derecho
-      } else if (swipeDistance < -50 && isOpen) {
+      } else if (swipeDistance < -120 && isOpen) {
         setIsOpen(false); // Cerrar sidebar con swipe izquierdo
       }
     };
