@@ -21,7 +21,7 @@ const Header = () => {
         return;
       }
   
-      const response = await fetch("http://192.168.100.89:44444/api/usuarios/logout", {
+      const response = await fetch("http://192.168.100.89:5096/api/usuarios/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -39,7 +39,7 @@ const Header = () => {
       localStorage.removeItem("user");
   
       // ✅ Redirigir al usuario a la página de inicio de sesión
-      navigate("/");
+      navigate("/signin");
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     }
@@ -88,8 +88,8 @@ const Header = () => {
                 {nombre} {apellido}
               </h3>
               <p className="role">Administrador</p>
-              <Link to="/administrarcuenta" className="link-contra">
-                Administrar Cuenta
+              <Link to="/forgotpasswd" className="link-contra">
+                Cambiar Contraseña
               </Link>
             </div>
             <button className="logout-btn" onClick={handleLogout}>

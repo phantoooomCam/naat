@@ -8,14 +8,11 @@
   color: #fff;
   transition: width 0.3s ease;
   padding: 20px;
-  z-index: 999;
-  /* Asegurar que Sidebar esté encima */
+  z-index: 999; /* Asegurar que Sidebar esté encima */
 }
 
 .sidebar.closed {
-  width: 60px; /* Reducido de 88px a 60px para hacerlo más delgado */
-  overflow: hidden;
-  padding: 20px 10px; /* Reducir el padding horizontal */
+  width: 88px;
 }
 
 .sidebar-header {
@@ -49,26 +46,22 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  /* Ajusta el espacio entre el logo y el texto */
+  gap: 0.5rem; /* Ajusta el espacio entre el logo y el texto */
   width: 100%;
-  padding: 0;
-  /* Elimina el padding extra */
-  background: none;
-  /* Asegura que no haya un fondo */
-  border-radius: 0;
-  /* Elimina cualquier borde redondeado */
+  padding: 0; /* Elimina el padding extra */
+  background: none; /* Asegura que no haya un fondo */
+  border-radius: 0; /* Elimina cualquier borde redondeado */
 }
 
+
 .top-logo {
-  width: 80px;
-  /* Ajusta según lo necesites */
+  width: 80px; /* Ajusta según lo necesites */
   height: auto;
-  object-fit: contain;
-  /* Evita distorsión */
-  background: none;
-  /* Asegura que no tenga fondo */
+  object-fit: contain; /* Evita distorsión */
+  background: none; /* Asegura que no tenga fondo */
 }
+
+
 
 .dashboard-title {
   color: white;
@@ -84,20 +77,13 @@
   align-items: center;
   justify-content: center;
   padding: 0;
-  margin-bottom: 1rem;
-  /* Elimina cualquier fondo */
-  border-bottom: none;
-  /* Quita cualquier borde si existe */
-}
-
-/* En móviles, solo mostrar los iconos cuando esté cerrado */
-.sidebar.closed .menu-item .label {
-  display: none;
+  margin-bottom: 1rem;/* Elimina cualquier fondo */
+  border-bottom: none; /* Quita cualquier borde si existe */
 }
 
 /* Cuando el sidebar está colapsado */
 .sidebar.closed .top-logo {
-  width: 35px; /* Reducido de 40px a 35px */
+  width: 40px;
   height: auto;
   margin-bottom: 0;
 }
@@ -153,11 +139,10 @@
 
 /* Elimina el subrayado de los enlaces */
 .menu-link {
-  text-decoration: none;
-  /* Quita la línea debajo del texto */
-  display: block;
-  /* Hace que el enlace cubra todo el botón */
+  text-decoration: none; /* Quita la línea debajo del texto */
+  display: block; /* Hace que el enlace cubra todo el botón */
 }
+
 
 .menu-items {
   display: flex;
@@ -167,9 +152,7 @@
 
 .menu-item {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  justify-content: flex-start;
   gap: 12px;
   width: 100%;
   padding: 12px;
@@ -178,31 +161,7 @@
   background: transparent;
   color: #fff;
   cursor: pointer;
-  transition: background 0.2s ease-in-out;
-  /* Ajustamos para hacerlo más rápido */
-  max-width: 100%;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.sidebar.closed .menu-item {
-  padding: 12px 8px; /* Reducir el padding horizontal cuando está cerrado */
-  justify-content: center; /* Centrar los íconos cuando está cerrado */
-}
-
-/*Mantener los íconos visibles incluso si el Sidebar está cerrado */
-.menu-item .icon {
-  font-size: 1.5rem;
-  display: flex;
-  justify-content: center; /* 📌 Centrar horizontalmente */
-  align-items: center;
-  width: 30px; /* 📌 Tamaño uniforme */
-}
-
-.sidebar.closed .menu-item .icon {
-  width: 24px; /* Hacer los iconos un poco más pequeños en modo cerrado */
-  font-size: 1.25rem;
+  transition: background 0.2s ease-in-out; /* Ajustamos para hacerlo más rápido */
 }
 
 .menu-item:hover {
@@ -211,11 +170,8 @@
 
 .menu-item.active {
   background: #1976d2;
-  color: white;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: none;
-  /* Eliminamos transiciones innecesarias */
+  transition: none; /* Eliminamos transiciones innecesarias */
 }
 
 .icon {
@@ -228,74 +184,14 @@
   font-weight: 500;
 }
 
-/* Estilo para el submenú */
-.sub-menu {
-  padding-left: 20px;
-  display: none;
-  flex-direction: column;
-}
-.sub-menu.active {
-  display: block; /* Solo el submenú activo se muestra */
-}
-
-
-.sidebar.closed .sub-menu {
-  padding-left: 5px; /* Reducir padding cuando está cerrado */
-}
-
-/* Estilo de los elementos del submenú */
-.sub-menu-item {
-  background: none;
-  border: none;
-  color: #787878;
-  display: flex;
-  align-items: center;
-  padding: 8px 12px;
-  cursor: pointer;
-  transition: background 0.2s ease-in-out;
-  /* Suaviza el efecto de hover */
-}
-
-.sidebar.closed .sub-menu-item {
-  padding: 8px 5px; /* Reducir padding cuando está cerrado */
-  justify-content: center; /* Centrar contenido cuando está cerrado */
-}
-
-/* Efecto hover para los elementos del submenú */
-.sub-menu-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  /* Cambia el fondo al pasar el ratón */
-}
-
-/* Estilo para el submenú activo */
-.sub-menu .sub-menu-item.active {
-  font-weight: bold;
-  color: #ffffff !important;
-  /* Forzar el color blanco */
-}
-
-@media (max-width: 390px) {
+@media (max-width: 768px) {
   .sidebar {
-    left: -100%;
-    /* Sidebar oculto en móviles */
+    width: 88px;
   }
-
-  .sidebar.open {
-    left: 0;
-    width: 250px; /* Ligeramente más estrecho en móviles cuando está abierto */
-    /* Aparece al abrirlo */
-  }
-  
   .sidebar.closed {
-    width: 50px; /* Aún más delgado en móviles cuando está cerrado */
-    padding: 20px 5px; /* Padding mínimo */
+    width: 0;
   }
-  
-  .sidebar.closed .menu-item {
-    padding: 10px 5px; /* Reducir aún más el padding en móviles */
-  }
-  
-  .sidebar.closed .top-logo {
-    width: 30px; /* Logo más pequeño en móviles */
+  .main-content {
+    margin-left: 0;
   }
 }
