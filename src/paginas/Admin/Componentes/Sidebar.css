@@ -6,16 +6,51 @@
   top: 0;
   background: linear-gradient(195deg, #42424a, #222a35);
   color: #fff;
-  transition: width 0.3s ease;
+  transition: all 0.3s ease;
   padding: 20px;
   z-index: 999;
-  /* Asegurar que Sidebar esté encima */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  overflow-y: auto;
+  max-height: 100vh;
+}
+
+/* Overlay para cerrar el sidebar en móviles */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  /* Justo debajo del sidebar */
+  display: none;
+}
+
+.sidebar.open {
+  transform: translateX(0);
 }
 
 .sidebar.closed {
-  width: 60px; /* Reducido de 88px a 60px para hacerlo más delgado */
+  width: 60px;
   overflow: hidden;
-  padding: 20px 10px; /* Reducir el padding horizontal */
+  padding: 20px 10px;
+}
+
+/* En sidebar cerrado, solo mostrar los iconos */
+.sidebar.closed .menu-item .label {
+  display: none;
+}
+
+/* Cuando el sidebar está colapsado */
+.sidebar.closed .top-logo {
+  width: 35px;
+  height: auto;
+  margin-bottom: 0;
+}
+
+.sidebar.closed .logo-wrapper {
+  gap: 0;
 }
 
 .sidebar-header {
@@ -25,49 +60,23 @@
   margin-bottom: 40px;
 }
 
-.logo {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #fff;
-}
-
-.logo-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.logo-column {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
 .logo-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  /* Ajusta el espacio entre el logo y el texto */
   width: 100%;
   padding: 0;
-  /* Elimina el padding extra */
   background: none;
-  /* Asegura que no haya un fondo */
   border-radius: 0;
-  /* Elimina cualquier borde redondeado */
 }
 
 .top-logo {
   width: 80px;
-  /* Ajusta según lo necesites */
   height: auto;
   object-fit: contain;
-  /* Evita distorsión */
   background: none;
-  /* Asegura que no tenga fondo */
 }
 
 .dashboard-title {
@@ -85,78 +94,15 @@
   justify-content: center;
   padding: 0;
   margin-bottom: 1rem;
-  /* Elimina cualquier fondo */
   border-bottom: none;
-  /* Quita cualquier borde si existe */
 }
 
-/* En móviles, solo mostrar los iconos cuando esté cerrado */
-.sidebar.closed .menu-item .label {
-  display: none;
-}
 
-/* Cuando el sidebar está colapsado */
-.sidebar.closed .top-logo {
-  width: 35px; /* Reducido de 40px a 35px */
-  height: auto;
-  margin-bottom: 0;
-}
-
-.sidebar.closed .logo-wrapper {
-  gap: 0;
-}
-
-.sidebar-logo-vertical {
-  width: 50px;
-  height: 50px;
-  margin-bottom: 10px;
-}
-
-.sidebar-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  object-fit: contain;
-}
-
-.logo-text {
-  font-size: 1.5rem;
-  margin: 0;
-  color: #fff;
-  transition: opacity 0.3s ease;
-}
-
-/* Ajusta el sidebar-header */
-.sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-  padding: 15px;
-  background: none;
-  border-radius: 8px;
-}
-
-.toggle-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: #fff;
-  border-radius: 8px;
-  padding: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.toggle-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
 
 /* Elimina el subrayado de los enlaces */
 .menu-link {
   text-decoration: none;
-  /* Quita la línea debajo del texto */
   display: block;
-  /* Hace que el enlace cubra todo el botón */
 }
 
 .menu-items {
@@ -179,7 +125,6 @@
   color: #fff;
   cursor: pointer;
   transition: background 0.2s ease-in-out;
-  /* Ajustamos para hacerlo más rápido */
   max-width: 100%;
   overflow: hidden;
   white-space: nowrap;
@@ -187,23 +132,32 @@
 }
 
 .sidebar.closed .menu-item {
-  padding: 12px 8px; /* Reducir el padding horizontal cuando está cerrado */
-  justify-content: center; /* Centrar los íconos cuando está cerrado */
+  padding: 12px 8px;
+  justify-content: center;
 }
 
-/*Mantener los íconos visibles incluso si el Sidebar está cerrado */
 .menu-item .icon {
   font-size: 1.5rem;
   display: flex;
-  justify-content: center; /* 📌 Centrar horizontalmente */
+  justify-content: center;
   align-items: center;
-  width: 30px; /* 📌 Tamaño uniforme */
+  width: 30px;
 }
 
 .sidebar.closed .menu-item .icon {
-  width: 24px; /* Hacer los iconos un poco más pequeños en modo cerrado */
+  width: 24px;
   font-size: 1.25rem;
 }
+
+.sidebar.closed .sub-menu-item {
+  padding: 8px 5px;
+  justify-content: center;
+}
+
+.sidebar.closed .sub-menu {
+  padding-left: 5px;
+}
+
 
 .menu-item:hover {
   background: rgba(255, 255, 255, 0.1);
@@ -213,9 +167,6 @@
   background: #1976d2;
   color: white;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: none;
-  /* Eliminamos transiciones innecesarias */
 }
 
 .icon {
@@ -228,22 +179,16 @@
   font-weight: 500;
 }
 
-/* Estilo para el submenú */
 .sub-menu {
   padding-left: 20px;
   display: none;
   flex-direction: column;
 }
+
 .sub-menu.active {
-  display: block; /* Solo el submenú activo se muestra */
+  display: block;
 }
 
-
-.sidebar.closed .sub-menu {
-  padding-left: 5px; /* Reducir padding cuando está cerrado */
-}
-
-/* Estilo de los elementos del submenú */
 .sub-menu-item {
   background: none;
   border: none;
@@ -253,49 +198,71 @@
   padding: 8px 12px;
   cursor: pointer;
   transition: background 0.2s ease-in-out;
-  /* Suaviza el efecto de hover */
 }
 
-.sidebar.closed .sub-menu-item {
-  padding: 8px 5px; /* Reducir padding cuando está cerrado */
-  justify-content: center; /* Centrar contenido cuando está cerrado */
-}
 
-/* Efecto hover para los elementos del submenú */
 .sub-menu-item:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  /* Cambia el fondo al pasar el ratón */
 }
 
-/* Estilo para el submenú activo */
 .sub-menu .sub-menu-item.active {
   font-weight: bold;
   color: #ffffff !important;
-  /* Forzar el color blanco */
 }
 
-@media (max-width: 390px) {
+/* ===== RESPONSIVE MEJORADO ===== */
+
+/* Reglas para dispositivos móviles */
+@media (max-width: 768px) {
   .sidebar {
-    left: -100%;
-    /* Sidebar oculto en móviles */
+    width: 60px;
+    /* Ancho por defecto en móvil (cerrado) */
+    z-index: 1001;
+    /* Asegurar que está por encima del overlay */
   }
 
-  .sidebar.open {
-    left: 0;
-    width: 250px; /* Ligeramente más estrecho en móviles cuando está abierto */
-    /* Aparece al abrirlo */
+  .sidebar.mobile.open {
+    width: 250px;
+    /* Ancho cuando está abierto en móvil */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    /* Sombra más pronunciada al estar abierto */
   }
-  
-  .sidebar.closed {
-    width: 50px; /* Aún más delgado en móviles cuando está cerrado */
-    padding: 20px 5px; /* Padding mínimo */
+
+  .sidebar.mobile.closed {
+    width: 50px;
+    /* Ancho cuando está cerrado en móvil */
+    padding: 20px 5px;
+    /* Padding mínimo */
   }
-  
-  .sidebar.closed .menu-item {
-    padding: 10px 5px; /* Reducir aún más el padding en móviles */
+
+  /* Mostrar overlay cuando el sidebar está abierto en móvil */
+  .sidebar.mobile.open+.sidebar-overlay,
+  .sidebar-overlay {
+    display: block;
   }
-  
-  .sidebar.closed .top-logo {
-    width: 30px; /* Logo más pequeño en móviles */
+
+  .sidebar.mobile.closed .menu-item {
+    padding: 10px 5px;
+  }
+
+  .sidebar.mobile.closed .top-logo {
+    width: 30px;
+  }
+
+  /* Para iPhones más pequeños y dispositivos estrechos */
+  @media (max-width: 360px) {
+    .sidebar.mobile.closed {
+      width: 45px;
+      padding: 15px 5px;
+    }
+
+    .sidebar.mobile.closed .top-logo {
+      width: 25px;
+    }
+
+    .sidebar.mobile.open {
+      width: 230px;
+      /* Ligeramente más estrecho en pantallas muy pequeñas */
+    }
   }
 }
