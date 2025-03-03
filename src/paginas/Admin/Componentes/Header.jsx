@@ -22,7 +22,7 @@ const Header = () => {
         return;
       }
   
-      const response = await fetch("http://192.168.100.89:44444/api/usuarios/logout", {
+      const response = await fetch("https://naatintelligence.com:44445/api/usuarios/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
