@@ -62,16 +62,44 @@ const Sidebar = () => {
   // Ajustar automáticamente según el tamaño de pantalla
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <= 390) {
+      if (window.innerWidth <= 1024) {
         setIsOpen(false); // En móviles, el sidebar siempre inicia cerrado
       } else {
         setIsOpen(true); // En pantallas grandes, inicia abierto
       }
     };
-    
+  
+    let touchStartX = 0;
+    let touchEndX = 0;
+  
+    const handleTouchStart = (event) => {
+      touchStartX = event.touches[0].clientX;
+    };
+  
+    const handleTouchEnd = (event) => {
+      touchEndX = event.changedTouches[0].clientX;
+      const swipeDistance = touchEndX - touchStartX;
+  
+      if (swipeDistance > 50 && !isOpen) {
+        setIsOpen(true); // Abrir sidebar con swipe derecho
+      } else if (swipeDistance < -50 && isOpen) {
+        setIsOpen(false); // Cerrar sidebar con swipe izquierdo
+      }
+    };
+  
+    // Agregar eventos
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    window.addEventListener('touchstart', handleTouchStart);
+    window.addEventListener('touchend', handleTouchEnd);
+  
+    // Limpiar eventos al desmontar
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isOpen]);
+  
 
   // Función para alternar el sidebar
   const toggleSidebar = () => {

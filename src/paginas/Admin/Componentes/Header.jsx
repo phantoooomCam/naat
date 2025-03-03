@@ -9,6 +9,7 @@ const Header = () => {
   const apellido = usuario?.apellidoPaterno || "Apellido";
   const idUsuario = usuario?.idUsuario || null;
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // 🔹 Estado para el sidebar
   const profileRef = useRef(null);
   const navigate = useNavigate();
 
@@ -44,7 +45,20 @@ const Header = () => {
       console.error("Error al cerrar sesión:", error);
     }
   };
-  
+
+  // 🔹 Detectar si el sidebar está abierto o cerrado dinámicamente
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const sidebar = document.querySelector(".sidebar");
+      if (sidebar) {
+        setIsSidebarOpen(!sidebar.classList.contains("closed"));
+      }
+    });
+
+    observer.observe(document.body, { attributes: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -55,15 +69,17 @@ const Header = () => {
 
     if (isProfileOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside); // 🔹 Cierra en dispositivos táctiles
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside); // 🔹 Limpia el evento táctil
     };
   }, [isProfileOpen]);
 
   return (
-    <header className="header">
+    <header className={`header ${isSidebarOpen ? "" : "full-width"}`}>
       <div className="profile-container" ref={profileRef}>
         <button
           className="profile-btn"
