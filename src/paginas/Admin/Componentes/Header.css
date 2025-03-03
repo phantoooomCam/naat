@@ -5,7 +5,6 @@
   background: #757A81;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: fixed;
-  width: calc(100% - 280px); /* Ancho total menos sidebar */
   width: calc(100% - 280px);
   transition: width 0.3s ease-in-out;
   /* Ancho total menos sidebar */
