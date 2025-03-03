@@ -213,6 +213,10 @@ export default function SignIn() {
             <div className="auth-forgot-link">
               <Link to="/forgotpasswd">¿Olvidaste tu contraseña?</Link>
             </div>
+
+            <button type="submit" className="auth-btn">
+              INICIAR SESIÓN
+            </button>
             <div className="btn-responsive">
               <Link to="/registro">
                 <button type="button" className="auth-btn">
@@ -220,9 +224,6 @@ export default function SignIn() {
                 </button>
               </Link>
             </div>
-            <button type="submit" className="auth-btn">
-              INICIAR SESIÓN
-            </button>
           </form>
         </div>
 
