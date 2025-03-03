@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../../Componentes/Header"
 import Sidebar from "../../Componentes/Sidebar";
+import DashDepartamento from "./DashDepto";
 
 
 
@@ -20,6 +21,7 @@ function Gestion_Depto() {
       />
       <main className={`main-content ${sidebarOpen ? "" : "collapsed"}`}>
         <Header />
+        <DashDepartamento/>
       </main>
        
 

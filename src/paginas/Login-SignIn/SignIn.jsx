@@ -4,7 +4,7 @@ import { FaUser, FaEnvelope, FaLock, FaPhone } from "react-icons/fa";
 import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import NAAT from "../../assets/completo_blanco.png";
-import NAAT2 from "../../assets/naat_blanco.png";
+import NAAT2 from "../../assets/naat.png";
 import SHA512 from "crypto-js/sha512";
 
 export default function SignIn() {

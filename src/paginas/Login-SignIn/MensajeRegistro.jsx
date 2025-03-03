@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import "./login-signin.css";
 import { Link, useNavigate } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import NAAT from "../../assets/completo_blanco.png";
+import "./mensaje.css";
 
 export default function MensajeRegistro() {
   const [isRegister, setIsRegister] = useState(false);
@@ -32,17 +32,19 @@ export default function MensajeRegistro() {
     <div className="auth-container-wrapper">
       <div className={`auth-container ${isRegister ? "auth-active" : ""}`}>
         {/* Formulario de Registro */}
-        <div className="auth-form-box auth-form-box-login">
+        <div className="auth-form-box auth-form-box-mensaje">
           <form>
             <h1>Registro exitoso!</h1>
             <p>Un administrador autorizara tu ingreso</p>
             <p>Te notificaremos via correo electronico</p>
+            <div className="lottie-check" onClick={() => navigate("/")}>
               <DotLottieReact
                 src="https://lottie.host/622fd858-6cc0-4fd2-bae2-27770717cb0c/LDKDhEs0dE.lottie"
                 autoplay
                 speed={0.5}
-                style={{ width: "400px", height: "400px" }}
+                style={{ width: "100%", height: "100%", cursor: "pointer" }} // <-- Aquí lo adaptas
               />
+            </div>
           </form>
         </div>
 

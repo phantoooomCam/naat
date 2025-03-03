@@ -4,6 +4,7 @@ import { FaUser, FaEnvelope, FaLock, FaPhone } from "react-icons/fa";
 import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import NAAT from "../../assets/completo_blanco.png";
+import NAAT2 from "../../assets/naat.png";
 import SHA512 from "crypto-js/sha512";
 
 export default function SignIn() {
@@ -24,7 +25,7 @@ export default function SignIn() {
   // Funcion para el registro
   const handleRegister = async (e) => {
     e.preventDefault();
-  
+
     const userData = {
       nombre,
       apellidoPaterno,
@@ -33,7 +34,7 @@ export default function SignIn() {
       telefono,
       contraseña: claveRegistro,
     };
-  
+
     try {
       const response = await fetch(
         "http://192.168.100.89:44444/api/usuarios/register",
@@ -45,16 +46,16 @@ export default function SignIn() {
           body: JSON.stringify(userData),
         }
       );
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
         throw new Error(data.mensaje || "Error en el registro");
       }
-  
+
       // Cambiar el estado antes de redirigir
       setIsRegister(false);
-  
+
       // Redirigir después de 2 segundos
       navigate("/mensaje");
     } catch (error) {
@@ -62,7 +63,6 @@ export default function SignIn() {
       setError(error.message || "Hubo un problema con el registro");
     }
   };
-  
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -113,8 +113,11 @@ export default function SignIn() {
     <div className="auth-container-wrapper">
       <div className={`auth-container ${isRegister ? "auth-active" : ""}`}>
         {/* Formulario de Registro */}
-        <div className="auth-form-box auth-form-box-login">
+        <div className="auth-form-box auth-form-box-iniciosesion">
           <form onSubmit={handleRegister}>
+            <Link to="/">
+              <img src={NAAT2} alt="NAAT Logo" className="auth-register-logo" />
+            </Link>
             <h1>Registro</h1>
             <div className="auth-input-box">
               <FaUser className="auth-input-icon" />
@@ -176,9 +179,9 @@ export default function SignIn() {
                 onChange={(e) => setClaveRegistro(e.target.value)}
               />
             </div>
-            <button type="submit" className="auth-btn">
-              REGISTRARSE
-            </button>
+              <button type="submit" className="auth-btn" onClick={handleRegister}>
+                REGISTRARSE
+              </button>
           </form>
         </div>
 

@@ -201,6 +201,8 @@
   display: none;
 }
 
+
+
 @media (max-width: 768px) {
   .auth-body {
     min-height: auto;
@@ -224,7 +226,6 @@
     display: block;
     width: 100%;
     max-width: 120px;
-    filter: brightness(0) grayscale(100%);
     margin-left: 90px;
     margin-bottom: 20px;
   }
@@ -247,3 +248,5 @@
     margin: 10px 0;
   }
 }
+
+
