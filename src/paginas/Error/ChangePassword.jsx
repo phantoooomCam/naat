@@ -27,29 +27,32 @@ const PasswordChange = () => {
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem("token");
-  
+
       if (!token) {
         console.error("Error: No hay token almacenado.");
         return;
       }
-  
-      const response = await fetch("http://192.168.100.89:5096/api/usuarios/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
+
+      const response = await fetch(
+        "http://192.168.100.89:44444/api/usuarios/logout",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.mensaje || "Error al cerrar sesión.");
       }
-  
+
       // ✅ Eliminar el token y la información del usuario del almacenamiento local
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-  
+
       // ✅ Redirigir al usuario a la página de inicio de sesión
       navigate("/signin");
     } catch (error) {
@@ -81,22 +84,23 @@ const PasswordChange = () => {
       return;
     }
 
-    // Crear el objeto JSON que enviarás al backend
+    // Crear el objeto JSON con las claves exactas que espera el backend
     const passwordData = {
-      OldPassword: formData.currentPassword,
-      NewPassword: formData.newPassword,
+      oldPassword: formData.currentPassword,
+      newPassword: formData.newPassword,
     };
 
+    console.log(passwordData);
 
     try {
       // Enviar los datos al backend
       const response = await fetch(
-        `http://192.168.100.89:5096/api/usuarios/change-password/${userId}`,
+        `http://192.168.100.89:44444/api/usuarios/change-password/${userId}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Asegúrate de enviar el token en los encabezados
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(passwordData),
         }
@@ -107,20 +111,19 @@ const PasswordChange = () => {
         throw new Error("Error en la solicitud");
       }
 
-      // Obtener la respuesta como texto (ya que el backend devuelve solo un string)
-      const responseText = await response.text();
+      // Ahora parseamos la respuesta como JSON en lugar de texto
+      const responseData = await response.json();
 
-      // Mostrar la respuesta del servidor
-      // Si la respuesta es el string esperado
-      if (responseText === "Contraseña actualizada correctamente.") {
+      // Verificamos el mensaje en el objeto JSON de respuesta
+      if (responseData.mensaje === "Contraseña actualizada correctamente.") {
         setSuccess(true);
         setError(""); // Limpiar cualquier mensaje de error previo
 
-        // Esperar 2 segundos antes de redirigir al Sign-In
+        // Esperar 1 segundo antes de redirigir al Sign-In
         setTimeout(() => {
           handleLogout();
-          navigate("/signin"); // Asegúrate de tener la ruta correcta para SignIn
-        }, 2000); // 2000 ms = 2 segundos
+          navigate("/signin");
+        }, 1000);
       } else {
         setError("Error al cambiar la contraseña.");
       }

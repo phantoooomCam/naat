@@ -17,21 +17,11 @@ export default function PageNotFound() {
                 <img src={NAAT_image} alt="Logo" className="logo-img-home" />
               </Link>
             </div>
-            <ul className="nav-links">
-              <li>
-                <Link to="/" className={location.pathname === "/" ? "active" : ""}>Inicio</Link>
-              </li>
-              <li>
-                <Link to="/servicios" className={location.pathname === "/servicios" ? "active" : ""}>Servicios</Link>
-              </li>
-              <li>
-                <Link to="/contact" className={location.pathname === "/contact" ? "active" : ""}>Contacto</Link>
-              </li>
-            </ul>
+
           </div>
           <div className="nav-auth">
-            <Link to="/login" className="auth-button">Registrarse</Link>
-            <Link to="/signin" className="auth-button">Iniciar Sesión</Link>
+            <Link to="/registro" className="auth-button">Registrarse</Link>
+            <Link to="/" className="auth-button">Iniciar Sesión</Link>
           </div>
         </nav>
       </header>
@@ -47,14 +37,7 @@ export default function PageNotFound() {
       </div>
 
 
-      <footer className="homealt-footer">
-        <div className="footer-links">
-          <Link to="/politica-privacidad">Política de Privacidad</Link>
-          <Link to="/terminos">Términos y Condiciones</Link>
-          <Link to="/contacto">Contacto</Link>
-        </div>
-        <p className="p-home">2025 NA'AT. Todos los derechos reservados.</p>
-      </footer>
+
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { FaUser, FaEnvelope, FaLock, FaPhone } from "react-icons/fa";
 import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import NAAT from "../../assets/completo_blanco.png";
+import NAAT2 from "../../assets/naat_blanco.png";
 import SHA512 from "crypto-js/sha512";
 
 export default function SignIn() {
@@ -24,7 +25,7 @@ export default function SignIn() {
   // Funcion para el registro
   const handleRegister = async (e) => {
     e.preventDefault();
-  
+
     const userData = {
       nombre,
       apellidoPaterno,
@@ -33,10 +34,10 @@ export default function SignIn() {
       telefono,
       contraseña: claveRegistro,
     };
-  
+
     try {
       const response = await fetch(
-        "http://192.168.100.89:5096/api/usuarios/register",
+        "http://192.168.100.89:44444/api/usuarios/register",
         {
           method: "POST",
           headers: {
@@ -45,16 +46,16 @@ export default function SignIn() {
           body: JSON.stringify(userData),
         }
       );
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
         throw new Error(data.mensaje || "Error en el registro");
       }
-  
+
       // Cambiar el estado antes de redirigir
       setIsRegister(false);
-  
+
       // Redirigir después de 2 segundos
       navigate("/mensaje");
     } catch (error) {
@@ -62,7 +63,6 @@ export default function SignIn() {
       setError(error.message || "Hubo un problema con el registro");
     }
   };
-  
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -75,7 +75,7 @@ export default function SignIn() {
 
     try {
       const response = await fetch(
-        "http://192.168.100.89:5096/api/usuarios/login",
+        "http://192.168.100.89:44444/api/usuarios/login",
         {
           method: "POST",
           headers: {
@@ -94,7 +94,7 @@ export default function SignIn() {
         // Redirigir al dashboard si todo está bien
         navigate("/dashboard");
       } else {
-        throw new Error("Error en el inicio de sesión");
+        throw new Error("Su cuenta no ha sido activada");
       }
     } catch (error) {
       console.error("Error en la autenticación:", error);
@@ -185,6 +185,9 @@ export default function SignIn() {
         {/* Formulario de Login */}
         <div className="auth-form-box auth-form-box-register">
           <form onSubmit={handleLogin}>
+            <Link to="/">
+              <img src={NAAT2} alt="NAAT Logo" className="auth-signin-logo" />
+            </Link>
             <h1>Inicio de Sesión</h1>
             {error && <p className="error-message">{error}</p>}
             <div className="auth-input-box">
@@ -209,6 +212,13 @@ export default function SignIn() {
             </div>
             <div className="auth-forgot-link">
               <Link to="/forgotpasswd">¿Olvidaste tu contraseña?</Link>
+            </div>
+            <div className="btn-responsive">
+              <Link to="/registro">
+                <button type="button" className="auth-btn">
+                  REGISTRARSE
+                </button>
+              </Link>
             </div>
             <button type="submit" className="auth-btn">
               INICIAR SESIÓN

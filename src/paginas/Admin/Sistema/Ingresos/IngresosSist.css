@@ -85,3 +85,8 @@ h2 {
   align-self: center;
   font-weight: 600;
 }
+
+.inputedit{
+  padding: 10px;
+  margin-bottom: 10px;
+}

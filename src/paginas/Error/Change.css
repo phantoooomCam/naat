@@ -3,7 +3,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(90deg, #e2e2e2, #c9d6ff);
+  width: calc(100% - 218px); /* Asumiendo que el sidebar tiene 218px de ancho */
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .form-wrapper-change {
@@ -12,7 +14,7 @@
   border-radius: 20px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 550px;
+  max-width: 650px; /* Aumentado de 550px a 650px para hacerlo más grande */
 }
 
 .h2-change {
