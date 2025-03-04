@@ -1,11 +1,12 @@
 .content-wrapper {
   max-width: 100%;
   width: 90%;
-  margin: 20px auto;
+  margin: 70px auto;
   padding: 20px;
   background: white;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   border-radius: 12px;
+  
 }
 
 h2 {
@@ -354,4 +355,215 @@ td button {
 .form-nueva-organizacion input {
   flex: 1;
   padding: 8px;
+}
+
+
+/* Ajustes responsive adicionales */
+@media (max-width: 768px) {
+  .content-wrapper {
+    width: 95%; /* Changed from 100% to 95% */
+    margin: 40px auto; /* Added 'auto' to center the wrapper */
+    padding: 10px;
+    margin-left: 35px;
+  }
+  
+  /* Rest of the code remains the same */
+  .form-grid {
+    grid-template-columns: 1fr; /* Cambia a una sola columna */
+  }
+  
+  .table-container {
+    overflow-x: auto; /* Permite scroll horizontal en tablas */
+  }
+  
+  table {
+    min-width: 600px; /* Ancho mínimo para tablas */
+  }
+  
+  .search-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .search-input {
+    width: 100%;
+    margin-right: 0;
+  }
+  
+  .add-button {
+    width: 100%;
+  }
+  
+  .form-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .btn-edit,
+  .btn-cancel {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  table {
+    font-size: 0.9rem;
+  }
+  
+  th, td {
+    padding: 8px;
+  }
+}
+
+
+/* Ajustes responsive adicionales */
+@media (max-width: 768px) {
+  /* Otros estilos existentes... */
+  
+  .bg-green-500,
+  .bg-yellow-500,
+  .bg-red-500 {
+    padding: 6px 12px; /* Reducir el padding para hacer los botones más pequeños */
+    font-size: 0.9rem; /* Reducir el tamaño de fuente */
+    width: auto; /* Ajustar ancho automáticamente al contenido */
+  }
+}
+
+@media (max-width: 480px) {
+  .bg-green-500,
+  .bg-yellow-500,
+  .bg-red-500 {
+    padding: 5px 10px; /* Aún más pequeño para pantallas muy pequeñas */
+    font-size: 0.8rem; /* Reducir aún más el tamaño de fuente */
+  }
+}
+
+/* Ajustes responsive para formularios y barra de búsqueda */
+@media (max-width: 768px) {
+  /* Formulario general */
+  .form-container,
+  .form-nueva-organizacion,
+  .form-editar-organizacion {
+    width: 100%;
+    padding: 10px;
+  }
+
+  /* Grid de formularios */
+  .form-grid,
+  .grid-container {
+    grid-template-columns: 1fr; /* Cambiar a una sola columna */
+    gap: 10px;
+  }
+
+  /* Inputs y selects */
+  .form-input,
+  .form-select,
+  .search-bar,
+  .form-nueva-organizacion input,
+  .form-editar-organizacion input {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  /* Botones de formulario */
+  .form-actions,
+  .button-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .editar-btn,
+  .editar-btn2,
+  .bg-green-500,
+  .bg-yellow-500,
+  .bg-red-500 {
+    margin-bottom: 10px;
+  }
+
+  /* Barra de búsqueda */
+  .search-bar {
+    margin-bottom: 15px;
+    padding: 8px;
+  }
+
+  /* Contenedor de formulario */
+  .form-group {
+    margin-bottom: 10px;
+  }
+
+  /* Etiquetas */
+  label {
+    margin-bottom: 5px;
+  }
+}
+
+/* Ajustes para pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .content-wrapper {
+    padding: 10px;
+  }
+
+  .content-container {
+    padding: 5px;
+  }
+
+  .form-container,
+  .form-nueva-organizacion,
+  .form-editar-organizacion {
+    padding: 5px;
+  }
+
+  .form-input,
+  .form-select,
+  .search-bar {
+    font-size: 0.9rem;
+    padding: 6px;
+  }
+
+  .editar-btn,
+  .editar-btn2,
+  .bg-green-500,
+  .bg-yellow-500,
+  .bg-red-500 {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-nueva-organizacion {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form-nueva-organizacion input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+
+  .form-editar-organizacion input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+
+  .form-nueva-organizacion button,
+  .form-editar-organizacion button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-nueva-organizacion input,
+  .form-editar-organizacion input {
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+
+  .form-nueva-organizacion button,
+  .form-editar-organizacion button {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
 }

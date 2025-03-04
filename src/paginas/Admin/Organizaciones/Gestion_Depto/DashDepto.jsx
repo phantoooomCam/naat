@@ -9,9 +9,10 @@ const DashDepartamento = () => {
   const [formData, setFormData] = useState({
     idDepartamento: 0,
     nombreDepartamento: "",
-    idArea: 0,
-    idOrganizacion: 0,
+    idArea: "",
+    idOrganizacion: "",
   });
+
   const [areas, setAreas] = useState([]);
   const [organizaciones, setOrganizaciones] = useState([]);
   const [error, setError] = useState(null);
