@@ -5,17 +5,26 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 📌 Cuando el sidebar está cerrado, mover DashHome hacia la izquierda */
+.dash-home.collapsed {
+  margin-left: -192px; /* 🔹 Ajusta el margen negativo para mover a la izquierda */
+  transition: margin 0.3s ease-in-out;
 }
 
 .container {
   width: 100%;
   max-width: 1200px;
+  margin-top: 4rem;
 }
 
 .home-view h1 {
   color: #2c3e50;
   margin-bottom: 2rem;
   text-align: center;
+  font-size: 1.5 rem;
 }
 
 /* 📌 Configuración del Grid */
@@ -23,7 +32,7 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr); /* 3 columnas */
   grid-template-rows: repeat(3, auto);
-  gap: 1.5rem;
+  gap: 2rem;
   width: 100%;
   justify-items: center; /* Centrar las tarjetas en la fila */
 }
@@ -67,7 +76,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 1.5rem;
+  padding: 4rem;
   text-align: center;
   cursor: pointer;
   width: 450px; /* Todas las tarjetas tienen el mismo ancho */
@@ -79,25 +88,61 @@
   transform: translateY(-5px);
 }
 
-/* 📌 Ajustes en Tablets (≤1024px) */
-@media (max-width: 1024px) {
-  .cards-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .row-1, .row-2, .row-3 {
-    grid-template-columns: repeat(2, 1fr);
+/* 📌 Cuando el sidebar está cerrado, mover DashHome hacia la izquierda (solo en pantallas grandes) */
+@media (min-width: 1024px) {
+  .dash-home.collapsed {
+    margin-left: -192px; /* 🔹 Se desplaza hacia la izquierda cuando el sidebar está colapsado */
+    transition: margin 0.3s ease-in-out;
   }
 }
 
-/* 📌 Ajustes en Móviles (≤768px) */
-@media (max-width: 768px) {
+/* 📌 Ajustes en Móviles (≤1024px) */
+@media (max-width: 1024px) {
+  .cards-grid {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* 🔹 Centra las tarjetas */
+    gap: 1.5rem;
+  }
+
   .row-1, .row-2, .row-3 {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
   }
 
   .card {
-    width: 90%;
-    margin: 0 auto;
+    width: 85%; /* 🔹 Ajusta el ancho para que no ocupen toda la pantalla */
+    max-width: 400px; /* 🔹 Limita el tamaño máximo */
+    margin: 0 auto; /* 🔹 Centra las tarjetas */
+    padding: .5rem; /* 🔹 Reduce el padding */
   }
+
+  .dash-home {
+    margin-left: 45px !important; /* 🔹 Asegura que no se mueva */
+    width: 100%; /* 🔹 Usa todo el ancho */
+    transition: none; /* 🔹 No aplicar animaciones innecesarias */
+    flex-direction: column; /* 🔹 Ajusta el contenido verticalmente */
+    align-items: center; 
+    justify-content: center;
+  }
+
+   /* 📌 Cuando el sidebar está abierto en móviles, mover DashHome a la derecha */
+   .sidebar.open ~ .dash-home {
+    margin-left: 100px; /* 🔹 Se mueve a la derecha para compensar el sidebar */
+  }
+
+  /* 📌 Cuando el sidebar está cerrado, mantener centrado */
+  .sidebar.closed ~ .dash-home {
+    margin-left: 0; /* 🔹 Sin desplazamiento */
+  }
+
+  /* 🔹 Sidebar se sobrepone sobre DashHome en móviles */
+  .sidebar {
+    position: fixed;
+    z-index: 1000; /* 🔹 Asegurar que esté sobre DashHome */
+  }
+
 }
+
