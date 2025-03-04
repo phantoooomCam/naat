@@ -1,5 +1,5 @@
 .dash-home {
-  flex-grow: 1; /* Ocupar todo el espacio disponible */
+  flex-grow: 1;
   width: 100%;
   padding: 2rem;
   display: flex;
@@ -15,84 +15,89 @@
 .home-view h1 {
   color: #2c3e50;
   margin-bottom: 2rem;
+  text-align: center;
 }
 
+/* 📌 Configuración del Grid */
 .cards-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Dos columnas */
-  grid-template-rows: auto 1fr; /* Asegurar espacio suficiente */
-  gap: 1.5rem; /* Aumentar el espacio entre las tarjetas */
+  grid-template-columns: repeat(3, 1fr); /* 3 columnas */
+  grid-template-rows: repeat(3, auto);
+  gap: 1.5rem;
   width: 100%;
-  height: auto;
-  position: relative;
-  align-items: start;
+  justify-items: center; /* Centrar las tarjetas en la fila */
 }
 
-.card:nth-child(1) {
-  grid-column: 1 / 2;
-  grid-row: 1 / 2;
+/* 📌 Primera fila: 3 tarjetas */
+.row-1 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  width: 100%;
+  justify-content: center;
 }
 
-.card:nth-child(2) {
-  grid-column: 2 / 3;
-  grid-row: 1 / 2;
+/* 📌 Segunda fila: 2 tarjetas (centradas con respecto a la fila 1) */
+.row-2 {
+  display: flex;
+  justify-content: center; /* 🔹 Centra las tarjetas horizontalmente */
+  gap: 1.5rem;
+  width: 100%;
+  margin-top: 1.5rem; 
 }
 
-.card:nth-child(3) {
-  grid-column: 1 / 3; /* Ocupar ambas columnas */
-  grid-row: 2 / 3;
-  width: 50%; /* Ajustar el ancho de la tarjeta inferior */
-  margin: 0 auto; /* Centrar horizontalmente */
-  transform: none; /* Eliminar desplazamiento */
-  align-self: center; /* Asegurar que se centre en su fila */
+/* 📌 Tercera fila: 2 tarjetas (centradas con respecto a la fila 1) */
+.row-3 {
+  display: flex;
+  justify-content: center; /* 🔹 Centra las tarjetas horizontalmente */
+  gap: 1.5rem;
+  width: 100%;
+  margin-top: 1.5rem; 
 }
 
+
+/* 📌 Ajuste del tamaño de cada tarjeta */
 .card {
   border-radius: 12px;
   background: white;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease;
-  height: 250px; /* Aumentar altura para acomodar animaciones */
+  height: 250px;
   display: flex;
-  flex-direction: column; /* Para que los elementos se apilen */
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 1rem;
+  padding: 1.5rem;
   text-align: center;
   cursor: pointer;
+  width: 450px; /* Todas las tarjetas tienen el mismo ancho */
+  border-left: 4px solid #757A81;
 }
 
-/* Efecto hover */
+/* 📌 Efecto Hover */
 .card:hover {
   transform: translateY(-5px);
 }
 
-/* Colores para las tarjetas */
-.card.blue {
-  border-left: 4px solid #757A81;
-}
-.card.green {
-  border-left: 4px solid #757A81;
-}
-.card.orange {
-  border-left: 4px solid #757A81;
-}
-
-/* Ajustes para LottieFiles */
-.card h2 {
-  margin-bottom: .5rem;
-}
-
-.card .lottie-animation {
-  width: 300px; /* Reducir tamaño */
-  height: 300; /* Mantener proporción */
-}
-
-
-/* Responsivo: en móviles se apilan en 1 sola columna */
-@media (max-width: 768px) {
+/* 📌 Ajustes en Tablets (≤1024px) */
+@media (max-width: 1024px) {
   .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .row-1, .row-2, .row-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 📌 Ajustes en Móviles (≤768px) */
+@media (max-width: 768px) {
+  .row-1, .row-2, .row-3 {
     grid-template-columns: 1fr;
-    grid-template-rows: auto;
+  }
+
+  .card {
+    width: 90%;
+    margin: 0 auto;
   }
 }

@@ -12,8 +12,11 @@ const Sidebar = () => {
   const initialRender = useRef(true);
   
   // Estado para controlar si el sidebar está abierto o cerrado
-  // En móviles (<=390px), inicia cerrado; en pantallas grandes, inicia abierto
-  const [isOpen, setIsOpen] = useState(window.innerWidth > 390);
+  const [isOpen, setIsOpen] = useState(() => {
+    // Comprobamos si es un dispositivo móvil usando matchMedia
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    return JSON.parse(localStorage.getItem('sidebarState')) ?? window.innerWidth > 390;
+  });
   
   // Inicialización de estado desde localStorage para submenús expandidos
   const [expandedMenus, setExpandedMenus] = useState(() => {
@@ -53,23 +56,32 @@ const Sidebar = () => {
       label: 'Organizaciones',
       subItems: [
         { id: '/orga', label: 'Gestion Organización' },
-        { id: '/area', label: 'Gestion Area' },
-        { id: '/depto', label: 'Gestion Departamento' }
-         
+        { id: '/depto', label: 'Gestion Departamento' },
+        { id: '/area', label: 'Gestion Area' }   
       ]
     },
   ];
 
+  // Detectar si es un dispositivo móvil
+  const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+
   // Ajustar automáticamente según el tamaño de pantalla
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth <= 1024) {
-        setIsOpen(false); // En móviles, el sidebar siempre inicia cerrado
-      } else {
-        setIsOpen(true); // En pantallas grandes, inicia abierto
+      // No cambiamos el estado automáticamente al redimensionar
+      // para permitir que el usuario controle manualmente el sidebar
+      // Solo actualizamos en el montaje inicial
+      if (initialRender.current) {
+        if (isMobile()) {
+          setIsOpen(false);
+        } else {
+          setIsOpen(true);
+        }
+        initialRender.current = false;
       }
     };
   
+    // Eventos de touch para permitir gestos de deslizamiento
     let touchStartX = 0;
     let touchEndX = 0;
   
@@ -80,42 +92,47 @@ const Sidebar = () => {
     const handleTouchEnd = (event) => {
       touchEndX = event.changedTouches[0].clientX;
       const swipeDistance = touchEndX - touchStartX;
+      const threshold = 70; 
   
-      if (swipeDistance > 120 && !isOpen) {
-        setIsOpen(true); // Abrir sidebar con swipe derecho
-      } else if (swipeDistance < -120 && isOpen) {
+      // Solo activar swipe en el área izquierda de la pantalla para abrir
+      const isLeftEdgeSwipe = touchStartX < 50;
+      
+      if (swipeDistance > threshold && !isOpen && isLeftEdgeSwipe) {
+        setIsOpen(true); // Abrir sidebar con swipe derecho desde el borde
+      } else if (swipeDistance < -threshold && isOpen) {
         setIsOpen(false); // Cerrar sidebar con swipe izquierdo
       }
     };
   
     // Agregar eventos
     window.addEventListener('resize', handleResize);
-    window.addEventListener('touchstart', handleTouchStart);
-    window.addEventListener('touchend', handleTouchEnd);
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchend', handleTouchEnd);
+  
+    // Ejecutar una vez al inicio para ajustar según el tamaño inicial
+    handleResize();
   
     // Limpiar eventos al desmontar
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchend', handleTouchEnd);
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [isOpen]);
   
-
-  // Función para alternar el sidebar
+  // Función para alternar el sidebar (toggle)
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
 
   // Guardar en localStorage cada vez que cambia expandedMenus
   useEffect(() => {
-    // Evitar guardar en el primer renderizado para no sobrescribir el estado inicial
     if (initialRender.current) {
       initialRender.current = false;
       return;
     }
     try {
-      localStorage.setItem('expandedMenus', JSON.stringify(expandedMenus));
+      localStorage.setItem('sidebarState', JSON.stringify(isOpen));
     } catch (e) {
       console.error("Error guardando estado del menú:", e);
     }
@@ -145,14 +162,13 @@ const Sidebar = () => {
       event.preventDefault();
       event.stopPropagation();
     }
-    
-    // Si el sidebar está cerrado y se hace clic en un menú con submenús
-    if (!isOpen && menuId !== '/dashboard') {
-      // Abrir el sidebar
+  
+    const clickedItem = menuItems.find(item => item.id === menuId);
+  
+    // Si el sidebar está cerrado y se hace clic en un menú con submenús, abrirlo y expandir el submenú
+    if (!isOpen && clickedItem?.subItems) {
       setIsOpen(true);
-      
-      // Expandir solo este menú y colapsar los demás
-      setExpandedMenus([menuId]);
+      setExpandedMenus([menuId]); // Expande directamente el submenú seleccionado
     } else if (menuId === '/dashboard') {
       // Si es el menú de inicio, navegar directamente
       handleNavigation(menuId, event);
@@ -180,17 +196,18 @@ const Sidebar = () => {
     });
   };
   
-
   // Función para navegación manual
   const handleNavigation = (path, event) => {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
+    
+    // Navegar a la ruta deseada
     navigate(path);
     
-    // En móviles, cerrar el sidebar después de navegar
-    if (window.innerWidth <= 390) {
+    // En móviles, siempre cerrar el sidebar después de navegar
+    if (isMobile()) {
       setIsOpen(false);
     }
   };
@@ -208,71 +225,84 @@ const Sidebar = () => {
     return item.subItems?.some(subItem => isSubItemActive(subItem.id));
   };
 
+  // Aplicar clase adicional cuando estamos en móvil
+  const sidebarClass = `sidebar ${isOpen ? 'open' : 'closed'} ${isMobile() ? 'mobile' : ''}`;
+
   return (
-    <nav className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
-      <div className="sidebar-header">
+    <>
+      {/* Overlay para cerrar el sidebar en móviles al hacer clic fuera */}
+      {isOpen && isMobile() && (
         <div 
-          className="logo-wrapper"
-          onClick={toggleSidebar}
-          style={{ cursor: 'pointer' }}
-        >
-          <img 
-            src={NAAT} 
-            alt="NAAT Logo" 
-            className="top-logo"
-          />
-          {isOpen && <h1 className="dashboard-title">Dashboard</h1>}
+          className="sidebar-overlay" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+    
+      <nav className={sidebarClass}>
+        <div className="sidebar-header">
+          <div 
+            className="logo-wrapper"
+            onClick={toggleSidebar}
+            style={{ cursor: 'pointer' }}
+          >
+            <img 
+              src={NAAT} 
+              alt="NAAT Logo" 
+              className="top-logo"
+            />
+            {isOpen && <h1 className="dashboard-title">Dashboard</h1>}
+          </div>
         </div>
-      </div>
 
-      <div className="menu-items">
-        {menuItems.map((item) => (
-          <div key={item.id} className="menu-container">
-            {item.id === '/dashboard' ? (
-              <div 
-                className="menu-link"
-                onClick={(e) => handleNavigation(item.id, e)}
-              >
-                <button className={`menu-item ${isMenuActive(item) ? 'active' : ''}`}>
-                  <span className="icon">{item.icon}</span>
-                  {isOpen && <span className="label">{item.label}</span>}
-                </button>
-              </div>
-            ) : (
-              <div className="menu-wrapper">
-                <button
-                  className={`menu-item ${isMenuActive(item) ? 'active' : ''}`}
-                  onClick={(e) => handleMenuClick(item.id, e)}
-                >
-                  <span className="icon">{item.icon}</span>
-                  {isOpen && <span className="label">{item.label}</span>}
-                </button>
-              </div>
-            )}
-
-            {/* Submenús siempre renderizados pero con display condicional */}
-            <div 
-              className="sub-menu" 
-              style={{ display: expandedMenus.includes(item.id) ? 'block' : 'none' }}
-            >
-              {item.subItems?.map((subItem) => (
+        <div className="menu-items">
+          {menuItems.map((item) => (
+            <div key={item.id} className="menu-container">
+              {item.id === '/dashboard' ? (
                 <div 
-                  key={subItem.id} 
                   className="menu-link"
-                  onClick={(e) => handleNavigation(subItem.id, e)}
+                  onClick={(e) => handleNavigation(item.id, e)}
                 >
-                  <button
-                    className={`sub-menu-item ${isSubItemActive(subItem.id) ? 'active' : ''}`}
-                  >
-                    {isOpen && <span className="label">{subItem.label}</span>}
+                  <button className={`menu-item ${isMenuActive(item) ? 'active' : ''}`}>
+                    <span className="icon">{item.icon}</span>
+                    {isOpen && <span className="label">{item.label}</span>}
                   </button>
                 </div>
-              ))}
+              ) : (
+                <div className="menu-wrapper">
+                  <button
+                    className={`menu-item ${isMenuActive(item) ? 'active' : ''}`}
+                    onClick={(e) => handleMenuClick(item.id, e)}
+                  >
+                    <span className="icon">{item.icon}</span>
+                    {isOpen && <span className="label">{item.label}</span>}
+                  </button>
+                </div>
+              )}
+
+              {/* Submenús siempre renderizados pero con display condicional */}
+              <div 
+                className="sub-menu" 
+                style={{ display: expandedMenus.includes(item.id) ? 'block' : 'none' }}
+              >
+                {item.subItems?.map((subItem) => (
+                  <div 
+                    key={subItem.id} 
+                    className="menu-link"
+                    onClick={(e) => handleNavigation(subItem.id, e)}
+                  >
+                    <button
+                      className={`sub-menu-item ${isSubItemActive(subItem.id) ? 'active' : ''}`}
+                    >
+                      {isOpen && <span className="label">{subItem.label}</span>}
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-    </nav>
+          ))}
+        </div>
+      </nav>
+    </>
   );
 };
 
