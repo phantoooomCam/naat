@@ -69,65 +69,82 @@ const IngresoSist = () => {
   };
 
   return (
-    <div className="ingreso-sist">
-      <h2>Ingresos al Sistema</h2>
+    <div className="content-wrapper">
+      <div className="content-container">
+        <h2 className="h2-ingresos">Ingresos al Sistema</h2>
 
-      {/* Input de búsqueda */}
-      <input
-        type="text"
-        placeholder="Buscar por nombre o apellido..."
-        value={busqueda}
-        onChange={(e) => setBusqueda(e.target.value)}
-        className="filtro-input"
-      />
+        {/* Input de búsqueda */}
+        <input
+          type="text"
+          placeholder="Buscar por nombre o apellido..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          className="filtro-input"
+        />
 
-      {/* Mensajes de carga y error */}
-      {loading && <p>Cargando datos...</p>}
-      {error && <p className="error">{error}</p>}
+        {/* Mensajes de carga y error */}
+        {loading && <p>Cargando datos...</p>}
+        {error && <p className="error">{error}</p>}
 
-      {/* Tabla de ingresos */}
-      <table className="tabla-ingresos">
-        <thead>
-          <tr>
-            <th>ID Ingreso</th>
-            <th>ID Usuario</th>
-            <th>Nombre</th>
-            <th>Apellido Paterno</th>
-            <th>Apellido Materno</th>
-            <th>Fecha y Hora</th>
-            <th>Tipo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {datosPaginados.length > 0 ? (
-            datosPaginados.map((item) => (
-              <tr key={item.idIngreso}>
-                <td>{item.idIngreso}</td>
-                <td>{item.idUsuario}</td>
-                <td>{item.nombre}</td>
-                <td>{item.apellidoPaterno}</td>
-                <td>{item.apellidoMaterno || "N/A"}</td> {/* ✅ Mostrar "N/A" si es null */}
-                <td>{formatearFecha(item.hora)}</td> {/* ✅ Formatear la fecha */}
-                <td>{traducirTipo(item.tipo)}</td> {/* ✅ Aplicar traducción */}
+        {/* Tabla de ingresos */}
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Ingreso</th>
+                <th>ID Usuario</th>
+                <th>Nombre</th>
+                <th>Apellido Paterno</th>
+                <th>Apellido Materno</th>
+                <th>Fecha y Hora</th>
+                <th>Tipo</th>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="7">No se encontraron resultados</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {datosPaginados.length > 0 ? (
+                datosPaginados.map((item) => (
+                  <tr key={item.idIngreso}>
+                    <td>{item.idIngreso}</td>
+                    <td>{item.idUsuario}</td>
+                    <td>{item.nombre}</td>
+                    <td>{item.apellidoPaterno}</td>
+                    <td>{item.apellidoMaterno || "N/A"}</td>{" "}
+                    {/* ✅ Mostrar "N/A" si es null */}
+                    <td>{formatearFecha(item.hora)}</td>{" "}
+                    {/* ✅ Formatear la fecha */}
+                    <td>{traducirTipo(item.tipo)}</td>{" "}
+                    {/* ✅ Aplicar traducción */}
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7">No se encontraron resultados</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
 
-      {/* Controles de paginación */}
-      <div className="paginacion">
-        <button onClick={() => setPaginaActual(paginaActual - 1)} disabled={paginaActual === 1}>
-          ← Anterior
-        </button>
-        <span>Página {paginaActual} de {totalPaginas}</span>
-        <button onClick={() => setPaginaActual(paginaActual + 1)} disabled={paginaActual === totalPaginas}>
-          Siguiente →
-        </button>
+          {/* Controles de paginación */}
+          <div className="paginacion">
+            <button
+              onClick={() => setPaginaActual(paginaActual - 1)}
+              disabled={paginaActual === 1}
+              className="btn-anterior"
+            >
+              ← Anterior
+            </button>
+            <span>
+              Página {paginaActual} de {totalPaginas}
+            </span>
+            <button
+              onClick={() => setPaginaActual(paginaActual + 1)}
+              disabled={paginaActual === totalPaginas}
+              className="btn-siguiente"
+            >
+              Siguiente →
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

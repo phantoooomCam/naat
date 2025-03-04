@@ -14,7 +14,7 @@ const DashArea = () => {
   const [organizaciones, setOrganizaciones] = useState([]);
   const [error, setError] = useState(null);
 
-  const API_URL = "http://192.168.100.89:44444/api";
+  const API_URL = "https://naatintelligence.com:44445/api";
   const token = localStorage.getItem("token");
 
   // Obtener áreas

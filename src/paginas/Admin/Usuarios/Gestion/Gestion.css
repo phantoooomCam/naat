@@ -1,7 +1,7 @@
 .content-wrapper {
   max-width: 100%;
   width: 90%;
-  margin: 70px auto;
+  margin: 120px auto;
   padding: 20px;
   background: white;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
@@ -48,12 +48,12 @@ button {
 }
 
 .btn-edit {
-  background-color: #54a3d4;
+  background-color: #bbc2c7;
   border: none;
 }
 
 .btn-edit:hover {
-  background-color: #4a92c0;
+  background-color: ;
   border: none;
 }
 .btn-cancel {
@@ -64,25 +64,15 @@ button {
 button:hover {
   opacity: 0.9;
 }
-
-.bg-blue-500 {
-  background-color: #54a3d4;
-  border: none;
-}
-
-.bg-blue-500:hover {
-  background-color: #7592ad;
-  border: none;
-}
-
 .bg-yellow-500 {
-  background-color: #54a3d4;
+  background-color: #bbc2c7;
   border: none;
   cursor: pointer;
+  margin: 5px;
 }
 
 .bg-yellow-500:hover {
-  background-color: #4a92c0;
+  background-color: #949a9e;
   border: none;
 }
 
@@ -121,7 +111,7 @@ td {
 }
 
 th {
-  background-color: #2d98da;
+  background-color: #222a35;
   color: white;
   font-weight: bold;
 }
@@ -212,14 +202,14 @@ td button {
 
 .add-button {
   padding: 10px 15px;
-  background-color: #54a3d4;
+  background-color: #bbc2c7;
   color: black;
   border: none;
   cursor: pointer;
 }
 
 .add-button:hover {
-  background-color: #4a92c0;
+  background-color: #949a9e;
 }
 .gestion-form {
   display: flex;
@@ -310,13 +300,13 @@ td button {
 }
 
 .btn-edit {
-  background-color: #54a3d4;
+  background-color: #bbc2c7;
   color: black;
 
   border: none;
 }
 .btn-edit:hover {
-  background-color: #54a3d4;
+  background-color: #949a9e;
   color: black;
 
   border: none;
@@ -422,6 +412,8 @@ td button {
   
   .bg-green-500,
   .bg-yellow-500,
+  .btn-siguiente,
+  .btn-anterior,
   .bg-red-500 {
     padding: 6px 12px; /* Reducir el padding para hacer los botones más pequeños */
     font-size: 0.9rem; /* Reducir el tamaño de fuente */
@@ -432,6 +424,8 @@ td button {
 @media (max-width: 480px) {
   .bg-green-500,
   .bg-yellow-500,
+  .btn-siguiente,
+  .btn-anterior,
   .bg-red-500 {
     padding: 5px 10px; /* Aún más pequeño para pantallas muy pequeñas */
     font-size: 0.8rem; /* Reducir aún más el tamaño de fuente */
@@ -473,6 +467,8 @@ td button {
   }
 
   .editar-btn,
+  .btn-siguiente,
+  .btn-anterior,
   .editar-btn2,
   .bg-green-500,
   .bg-yellow-500,
@@ -521,6 +517,8 @@ td button {
   }
 
   .editar-btn,
+  .btn-siguiente,
+  .btn-anterior,
   .editar-btn2,
   .bg-green-500,
   .bg-yellow-500,

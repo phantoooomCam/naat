@@ -65,7 +65,7 @@ h2 {
 .paginacion button {
   padding: 8px 12px;
   border: none;
-  background: #2d98da;
+  background: #222a35;
   color: white;
   cursor: pointer;
   border-radius: 8px;
@@ -73,7 +73,7 @@ h2 {
 }
 
 .paginacion button:hover {
-  background: #1e7cb7;
+  background: #4b5058;
 }
 
 .paginacion button:disabled {
@@ -90,3 +90,31 @@ h2 {
   padding: 10px;
   margin-bottom: 10px;
 }
+
+@media (max-width: 768px) {
+  .h2-ingresos {
+    font-size: 1.6rem;
+    margin-top: 40px;
+  }
+  .paginacion {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .paginacion button {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+
+  .paginacion span {
+    font-size: 12px;
+    margin: 5px 0;
+  }
+}
+
+
+
+
+
+
+
