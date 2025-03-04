@@ -24,7 +24,7 @@ const HomeAlt = () => {
 
     try {
       const response = await fetch(
-        "https://naatintelligence.com:44445/api/usuarios/login",
+        "http://192.168.100.89:44444/api/usuarios/login",
         {
           method: "POST",
           headers: {

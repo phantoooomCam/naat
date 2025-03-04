@@ -37,7 +37,7 @@ export default function SignIn() {
 
     try {
       const response = await fetch(
-        "https://naatintelligence.com:44445/api/usuarios/register",
+        "http://192.168.100.89:44444/api/usuarios/register",
         {
           method: "POST",
           headers: {
@@ -75,7 +75,7 @@ export default function SignIn() {
 
     try {
       const response = await fetch(
-        "https://naatintelligence.com:44445/api/usuarios/login",
+        "http://192.168.100.89:44444/api/usuarios/login",
         {
           method: "POST",
           headers: {

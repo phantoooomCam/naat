@@ -6,7 +6,7 @@ const DashOrga = () => {
   const [filtro, setFiltro] = useState(""); // Estado para la barra de búsqueda
   const [nuevaOrganizacion, setNuevaOrganizacion] = useState(""); // Estado para el formulario
   const [organizacionEditar, setOrganizacionEditar] = useState(null); // Estado para la organización que se está editando
-  const API_URL = "https://naatintelligence.com:44445/api/organizaciones";
+  const API_URL = "http://192.168.100.89:44444/api/organizaciones";
   const token = localStorage.getItem("token");
 
   const obtenerOrganizaciones = async () => {

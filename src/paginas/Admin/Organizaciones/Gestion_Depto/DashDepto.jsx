@@ -17,7 +17,7 @@ const DashDepartamento = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const API_URL = "https://naatintelligence.com:44445/api";
+  const API_URL = "http://192.168.100.89:44444/api";
   const token = localStorage.getItem("token");
 
   // Obtener departamentos
