@@ -84,6 +84,7 @@ const GestionDash = () => {
     fetchUsers();
   }, []);
 
+  
   // Filtrado de usuarios
   useEffect(() => {
     const lowercasedSearchText = searchText.toLowerCase();
