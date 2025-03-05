@@ -2,12 +2,26 @@ import { useState, useEffect } from "react";
 import "../../Usuarios/Gestion/Gestion.css";
 
 const DashOrga = () => {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [organizaciones, setOrganizaciones] = useState([]);
-  const [filtro, setFiltro] = useState(""); // Estado para la barra de búsqueda
-  const [nuevaOrganizacion, setNuevaOrganizacion] = useState(""); // Estado para el formulario
-  const [organizacionEditar, setOrganizacionEditar] = useState(null); // Estado para la organización que se está editando
+  const [filtro, setFiltro] = useState("");
+  const [nuevaOrganizacion, setNuevaOrganizacion] = useState("");
+  const [organizacionEditar, setOrganizacionEditar] = useState(null);
   const API_URL = "http://192.168.100.89:44444/api/organizaciones";
   const token = localStorage.getItem("token");
+
+  // Observador del sidebar
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const sidebar = document.querySelector(".sidebar");
+      if (sidebar) {
+        setIsSidebarCollapsed(sidebar.classList.contains("closed"));
+      }
+    });
+
+    observer.observe(document.body, { attributes: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
 
   const obtenerOrganizaciones = async () => {
     try {
@@ -55,8 +69,8 @@ const DashOrga = () => {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
-      setNuevaOrganizacion(""); // Limpiar el input
-      obtenerOrganizaciones(); // Volver a cargar la lista
+      setNuevaOrganizacion("");
+      obtenerOrganizaciones();
     } catch (error) {
       console.error("Error al crear organización:", error);
     }
@@ -81,7 +95,6 @@ const DashOrga = () => {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
-      // Actualizar la lista tras la eliminación
       obtenerOrganizaciones();
     } catch (error) {
       console.error("Error al eliminar organización:", error);
@@ -90,19 +103,17 @@ const DashOrga = () => {
   };
 
   const editarOrganizacion = async (e, id, nuevoNombre) => {
-    e.preventDefault(); // Esto previene que el formulario se envíe y recargue la página
+    e.preventDefault();
 
     if (nuevoNombre.trim() === "") {
       alert("El nombre de la organización no puede estar vacío.");
       return;
     }
 
-    // Crear el objeto JSON con el id de la organización y el nuevo nombre
     const organizacionActualizada = {
-      idOrganizacion: id, // Agregar el id de la organización
+      idOrganizacion: id,
       nombreOrganizacion: nuevoNombre,
     };
-
 
     try {
       const response = await fetch(`${API_URL}/${id}`, {
@@ -111,14 +122,13 @@ const DashOrga = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(organizacionActualizada), // Enviar el JSON con el id y el nombre
+        body: JSON.stringify(organizacionActualizada),
       });
 
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
 
-      // Aquí puedes actualizar el estado directamente sin recargar la página
       setOrganizaciones((prevOrganizaciones) =>
         prevOrganizaciones.map((org) =>
           org.idOrganizacion === id
@@ -126,7 +136,7 @@ const DashOrga = () => {
             : org
         )
       );
-      setOrganizacionEditar(null); // Limpiar el formulario de edición
+      setOrganizacionEditar(null);
     } catch (error) {
       console.error("Error al editar organización:", error);
       alert("Error al editar la organización.");
@@ -134,7 +144,7 @@ const DashOrga = () => {
   };
 
   const seleccionarOrganizacion = (org) => {
-    setOrganizacionEditar(org); // Establecer la organización a editar
+    setOrganizacionEditar(org);
   };
 
   useEffect(() => {
@@ -146,91 +156,94 @@ const DashOrga = () => {
   );
 
   return (
-    <div className="content-wrapper">
-      <div className="content-container">
-        <h2>Lista de Organizaciones</h2>
+    <div className={`dash-gestion ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+      <div className="content-wrapper">
+        <div className="content-container">
+          <h2>Lista de Organizaciones</h2>
 
-        <input
-          type="text"
-          placeholder="Buscar organización..."
-          value={filtro}
-          onChange={(e) => setFiltro(e.target.value)}
-          className="search-bar"
-        />
-
-        <form onSubmit={crearOrganizacion} className="form-nueva-organizacion">
           <input
             type="text"
-            placeholder="Nombre de la nueva organización"
-            value={nuevaOrganizacion}
-            onChange={(e) => setNuevaOrganizacion(e.target.value)}
+            placeholder="Buscar organización..."
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            className="search-input"
           />
-          <button type="submit" className="bg-green-500">
-            Crear Organización
-          </button>
-        </form>
 
-        {/* Formulario para editar organización */}
-        {organizacionEditar && (
-          <form
-            onSubmit={(e) =>
-              editarOrganizacion(
-                e,
-                organizacionEditar.idOrganizacion,
-                organizacionEditar.nombreOrganizacion
-              )
-            }
-            className="form-editar-organizacion"
-          >
+          <form onSubmit={crearOrganizacion} className="form-nueva-organizacion">
             <input
               type="text"
-              placeholder="Nuevo nombre de la organización"
-              value={organizacionEditar.nombreOrganizacion}
-              onChange={(e) =>
-                setOrganizacionEditar({
-                  ...organizacionEditar,
-                  nombreOrganizacion: e.target.value,
-                })
-              }
+              placeholder="Nombre de la nueva organización"
+              value={nuevaOrganizacion}
+              onChange={(e) => setNuevaOrganizacion(e.target.value)}
+              className="inputedit"
             />
-            <button type="submit" className="editar-btn">
-              Editar Organización
+            <button type="submit" className="bg-green-500">
+              Crear Organización
             </button>
           </form>
-        )}
 
-        <div className="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {organizacionesFiltradas.map((org) => (
-                <tr key={org.idOrganizacion}>
-                  <td>{org.idOrganizacion}</td>
-                  <td>{org.nombreOrganizacion}</td>
-                  <td>
-                    <button
-                      className="bg-yellow-500"
-                      onClick={() => seleccionarOrganizacion(org)}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      className="bg-red-500"
-                      onClick={() => eliminarOrganizacion(org.idOrganizacion)}
-                    >
-                      Eliminar
-                    </button>
-                  </td>
+          {organizacionEditar && (
+            <form
+              onSubmit={(e) =>
+                editarOrganizacion(
+                  e,
+                  organizacionEditar.idOrganizacion,
+                  organizacionEditar.nombreOrganizacion
+                )
+              }
+              className="form-editar-organizacion"
+            >
+              <input
+                type="text"
+                placeholder="Nuevo nombre de la organización"
+                value={organizacionEditar.nombreOrganizacion}
+                onChange={(e) =>
+                  setOrganizacionEditar({
+                    ...organizacionEditar,
+                    nombreOrganizacion: e.target.value,
+                  })
+                }
+                className="inputedit"
+              />
+              <button type="submit" className="editar-btn">
+                Editar Organización
+              </button>
+            </form>
+          )}
+
+          <div className="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {organizacionesFiltradas.map((org) => (
+                  <tr key={org.idOrganizacion}>
+                    <td>{org.idOrganizacion}</td>
+                    <td>{org.nombreOrganizacion}</td>
+                    <td>
+                      <button
+                        className="bg-yellow-500"
+                        onClick={() => seleccionarOrganizacion(org)}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        className="bg-red-500"
+                        onClick={() => eliminarOrganizacion(org.idOrganizacion)}
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

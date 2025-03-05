@@ -1,35 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
-
-body {
-  font-family: 'Poppins', sans-serif;
-  background: #f4f6f9;
-  color: #333;
-}
-
-.ingreso-sist {
-  max-width: 100%; /* Hacer que el contenedor ocupe todo el ancho */
-  width: 90%; /* Ocupar el 90% del ancho de la pantalla */
-  margin: 140px auto;
-  padding: 20px;
-  background: white;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-  border-radius: 12px;
-}
-
-h2 {
+/* Estilos específicos para Ingresos */
+.h2-ingresos {
   text-align: center;
   margin-bottom: 15px;
   font-weight: 600;
   color: #2c3e50;
-}
-
-.filtro-input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 16px;
 }
 
 .tabla-ingresos {
@@ -86,16 +60,7 @@ h2 {
   font-weight: 600;
 }
 
-.inputedit{
-  padding: 10px;
-  margin-bottom: 10px;
-}
-
 @media (max-width: 768px) {
-  .h2-ingresos {
-    font-size: 1.6rem;
-    margin-top: 40px;
-  }
   .paginacion {
     flex-direction: row;
     align-items: flex-start;
@@ -111,10 +76,3 @@ h2 {
     margin: 5px 0;
   }
 }
-
-
-
-
-
-
-
