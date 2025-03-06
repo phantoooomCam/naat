@@ -65,6 +65,7 @@ const DashOrga = () => {
         body: JSON.stringify(nuevaOrg),
       });
 
+      console.log(response)
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
