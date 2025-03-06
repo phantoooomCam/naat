@@ -38,7 +38,7 @@ const Sidebar = () => {
       label: 'Usuarios',
       subItems: [
         { id: '/gestion', label: 'Gestionar Usuarios' },
-        { id: '/usuarios/listar', label: 'Solicitudes' }
+        { id: '/solicitudes', label: 'Solicitudes' }
       ]
     },
     {
@@ -46,7 +46,7 @@ const Sidebar = () => {
       icon: <FiSettings />,
       label: 'Sistema',
       subItems: [
-        { id: '/sistema/configuracion', label: 'Actividad' },
+        { id: '/actividad', label: 'Actividad' },
         { id: '/ingresos', label: 'Ingresos' }
       ]
     },
@@ -56,8 +56,9 @@ const Sidebar = () => {
       label: 'Organizaciones',
       subItems: [
         { id: '/orga', label: 'Gestion Organización' },
-        { id: '/depto', label: 'Gestion Departamento' },
-        { id: '/area', label: 'Gestion Area' }   
+        { id: '/area', label: 'Gestion Area' },
+        { id: '/depto', label: 'Gestion Departamento' }
+   
       ]
     },
   ];

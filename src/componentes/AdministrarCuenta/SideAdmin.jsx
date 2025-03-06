@@ -31,7 +31,7 @@ const SideAdmin = ({ isOpen, toggleSideAdmin }) => {
       icon: <AiOutlineIdcard />,  // Icono nuevo para Información Personal
       label: 'Información Personal',
       subItems: [
-        { id: '/gestion', label: 'Datos personales' },
+        { id: '/administrarcuenta', label: 'Datos personales' },
         { id: '/cambiarcontra', label: 'Cambiar contraseña' }
       ]
     },

@@ -10,12 +10,13 @@ import IngresoSist from "./paginas/Admin/Sistema/Ingresos/Ingresos";
 import Actividad from "./paginas/Admin/Sistema/Actividad/Actividad";
 import PasswordChange from "./paginas/Error/ChangePassword";
 import MensajeRegistro from "./paginas/Login-SignIn/MensajeRegistro";
-
+import Solicitud from "./paginas/Admin/Usuarios/Solicitud/Solicitud";
 
 import Gestion_Orga from "./paginas/Admin/Organizaciones/Gestion_Organizacion/Gestion_Orga";
 import Gestion_Depto from "./paginas/Admin/Organizaciones/Gestion_Depto/Gestion_Depto";
 import Gestion_Area from "./paginas/Admin/Organizaciones/Gestion_Area/Gestion_Area";
 
+import ActividadesGestion from "./paginas/Admin/Sistema/Actividad/Actividades";
 
 
 import AdministrarCuenta from "./componentes/AdministrarCuenta/Administrar";
@@ -33,8 +34,9 @@ function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/gestion" element={<Gestion />} />
+        <Route path="/solicitudes" element={<Solicitud />} />
         <Route path="/ingresos" element={<IngresoSist />} />
-        <Route path="/actividad" element={<Actividad />} />
+        <Route path="/actividad" element={<ActividadesGestion />} />
 
         <Route path="/orga" element={<Gestion_Orga />} />
         <Route path="/depto" element={<Gestion_Depto />} />

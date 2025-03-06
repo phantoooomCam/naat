@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import "./login-signin.css";
 import { FaUser, FaEnvelope, FaLock, FaPhone } from "react-icons/fa";
-import { FaGoogle, FaFacebookF, FaGithub, FaLinkedinIn } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import NAAT from "../../assets/completo_blanco.png";
 import NAAT2 from "../../assets/naat.png";
-import SHA512 from "crypto-js/sha512";
 
 export default function SignIn() {
   const [isRegister, setIsRegister] = useState(true);
@@ -22,9 +20,53 @@ export default function SignIn() {
   const [correoRegistro, setCorreoRegistro] = useState("");
   const [claveRegistro, setClaveRegistro] = useState("");
 
+  // Validations
+  const [validations, setValidations] = useState({
+    telefono: true,
+    correo: true,
+    clave: true
+  });
+
+  // Validate Phone Number (10 digits)
+  const validatePhoneNumber = (phone) => {
+    const phoneRegex = /^\d{10}$/;
+    return phoneRegex.test(phone);
+  };
+
+  // Validate Email Format
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Validate Password Strength
+  const validatePassword = (password) => {
+    // At least 8 characters, one uppercase, one lowercase, one special character
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return passwordRegex.test(password);
+  };
+
   // Funcion para el registro
   const handleRegister = async (e) => {
     e.preventDefault();
+
+    // Validate all fields before submission
+    const phoneValid = validatePhoneNumber(telefono);
+    const emailValid = validateEmail(correoRegistro);
+    const passwordValid = validatePassword(claveRegistro);
+
+    // Update validations state
+    setValidations({
+      telefono: phoneValid,
+      correo: emailValid,
+      clave: passwordValid
+    });
+
+    // Check if all validations pass
+    if (!phoneValid || !emailValid || !passwordValid) {
+      setError("Por favor, verifica los campos de registro.");
+      return;
+    }
 
     const userData = {
       nombre,
@@ -150,11 +192,15 @@ export default function SignIn() {
               <FaPhone className="auth-input-icon" />
               <input
                 type="tel"
-                placeholder="Tu teléfono"
+                placeholder="Tu teléfono (10 dígitos)"
                 required
                 value={telefono}
                 onChange={(e) => setTelefono(e.target.value)}
+                className={!validations.telefono && telefono ? "input-error" : ""}
               />
+              {!validations.telefono && telefono && (
+                <span className="error-text">Debe ser un número de 10 dígitos</span>
+              )}
             </div>
             <div className="auth-input-box">
               <FaEnvelope className="auth-input-icon" />
@@ -164,17 +210,28 @@ export default function SignIn() {
                 required
                 value={correoRegistro}
                 onChange={(e) => setCorreoRegistro(e.target.value)}
+                className={!validations.correo && correoRegistro ? "input-error" : ""}
               />
+              {!validations.correo && correoRegistro && (
+                <span className="error-text">Introduce un correo válido</span>
+              )}
             </div>
             <div className="auth-input-box">
               <FaLock className="auth-input-icon" />
               <input
                 type="password"
-                placeholder="Password"
+                placeholder="Password (8+ caracteres, mayúscula, minúscula, signo)"
                 required
                 value={claveRegistro}
                 onChange={(e) => setClaveRegistro(e.target.value)}
+                className={!validations.clave && claveRegistro ? "input-error" : ""}
               />
+              {!validations.clave && claveRegistro && (
+                <span className="error-text">
+                  La contraseña debe tener al menos 8 caracteres, 
+                  una mayúscula, una minúscula, un número y un signo
+                </span>
+              )}
             </div>
             <button type="submit" className="auth-btn">
               REGISTRARSE
