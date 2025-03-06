@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../../paginas/Admin/Componentes/Header"
 import SideAdmin from "./SideAdmin";
+import PerfilUsuario from "./Cambiarcontraseña/DatosPersonales";
 
 
 
@@ -20,6 +21,7 @@ function AdministrarCuenta() {
       />
       <main className={`main-content ${sideAdminOpen ? "" : "collapsed"}`}>
         <Header />
+        <PerfilUsuario/>
       </main>
        
 

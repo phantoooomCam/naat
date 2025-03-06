@@ -47,6 +47,8 @@ function App() {
         <Route path="/cambiarcontra" element={<Cambiar />} />
       </Route>
       <Route path="/changepasswd" element={<PasswordChange />} />
+
+
     </Routes>
   );
 }

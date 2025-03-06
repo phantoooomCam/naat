@@ -1,98 +1,193 @@
-.container-change {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: calc(100% - 218px); /* Asumiendo que el sidebar tiene 218px de ancho */
-  margin-left: auto;
-  margin-right: auto;
+/* Estilos base para el componente de cambio de contraseña */
+.password-container {
+  flex-grow: 1;
+  transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.form-wrapper-change {
-  background: rgb(255, 255, 255);
-  padding: 2rem;
-  border-radius: 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 650px; /* Aumentado de 550px a 650px para hacerlo más grande */
+.password-container.collapsed {
+  margin-left: -192px;
+  transition: margin 0.3s ease-in-out;
 }
 
-.h2-change {
-  text-align: center;
+.password-content {
+  max-width: 800px;
+  width: 90%;
+  margin: 120px auto;
+  padding: 30px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+}
+
+.password-header {
+  margin-bottom: 30px;
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 15px;
+}
+
+.password-header h2 {
   color: #333;
-  margin-bottom: 2rem;
-  font-size: 30px;
+  font-size: 1.8rem;
+  margin-bottom: 8px;
 }
 
-.password-form-change {
+.password-subtitle {
+  color: #666;
+  font-size: 1rem;
+}
+
+/* Card para cambio de contraseña */
+.password-card {
+  background-color: #f9fafc;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Formulario */
+.password-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 25px;
 }
 
-.input-group-change {
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.form-group label {
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #444;
+}
+
+.password-input-group {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.input-change {
-  width: 100%;
-  padding: 1.2rem 1.2rem 1.2rem 2rem;
-  background: #eee;
-  border: none;
+.password-input-group input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 1rem;
-  box-sizing: border-box;
-  height: 60px;
+  background-color: white;
+  transition: border-color 0.2s;
+  width: 100%;
 }
 
-.input-change:focus {
+.password-input-group input:focus {
+  border-color: #4c6aaf;
   outline: none;
+  box-shadow: 0 0 0 2px rgba(76, 106, 175, 0.1);
 }
 
-.toggle-password {
+.toggle-password-btn {
   position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-35%);
+  right: 12px;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0;
-  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.submit-button-change {
-  background-color: #222A35;
+.toggle-password-btn .icon {
+  width: 20px;
+  height: 20px;
+  color: #666;
+}
+
+/* Botones de acción */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+.btn-save-password {
+  background-color: #222a35;
   color: white;
-  padding: 0.75rem;
   border: none;
-  border-radius: 8px; font-size: 1rem;
+  padding: 12px 24px;
+  border-radius: 8px;
   cursor: pointer;
+  font-size: 1rem;
   transition: background-color 0.2s;
 }
 
-.submit-button-change:hover {
-  background: linear-gradient(90deg, #e2e2e2, #c9d6ff);;
+.btn-save-password:hover {
+  background-color: #333a44;
 }
 
-.error {
-  color: #dc3545;
-  text-align: center;
-  font-size: 0.875rem;
-  margin: 0;
+/* Mensaje de estado */
+.status-message {
+  padding: 12px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 1rem;
 }
 
-.success {
-  color: #28a745;
-  text-align: center;
-  font-size: 0.875rem;
-  margin: 0;
+.status-message.success {
+  background-color: #e7f7ed;
+  color: #2e7d32;
+  border-left: 4px solid #2e7d32;
 }
 
-/* Estilos responsivos */
+.status-message.error {
+  background-color: #fdeaea;
+  color: #d32f2f;
+  border-left: 4px solid #d32f2f;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .password-container {
+    margin-left: 45px !important;
+    width: 100%;
+    transition: none;
+  }
+  
+  .password-content {
+    width: 95%;
+    margin: 100px auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .password-content {
+    padding: 20px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .btn-save-password {
+    width: 100%;
+  }
+}
+
 @media (max-width: 480px) {
-  .form-wrapper {
-    padding: 1.5rem;
-    margin: 1rem;
+  .password-content {
+    padding: 20px 15px;
+    margin: 80px auto;
+  }
+  
+  .password-card {
+    padding: 15px;
+  }
+  
+  .password-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .form-group label {
+    font-size: 0.9rem;
   }
 }

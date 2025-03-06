@@ -44,6 +44,7 @@ const ActividadesSist = () => {
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
 
       const data = await response.json();
+      console.log(data)
       setActividades(data);
     } catch (error) {
       console.error("Error al obtener actividades:", error);
@@ -93,6 +94,7 @@ const ActividadesSist = () => {
               <thead>
                 <tr>
                   <th>ID Actividad</th>
+                  <th>Autor</th>
                   <th>Entidad</th>
                   <th>Acción</th>
                   <th>ID Usuario</th>
@@ -103,12 +105,13 @@ const ActividadesSist = () => {
               <tbody>
                 {datosPaginados.length > 0 ? (
                   datosPaginados.map((item) => (
-                    <tr key={item.id_actividad}>
-                      <td>{item.id_actividad}</td>
+                    <tr key={item.idActividad}>
+                      <td>{item.idActividad}</td>
+                      <td>{item.nombreAutor}</td>
                       <td>{item.entidad}</td>
                       <td>{item.accion}</td>
-                      <td>{item.id_usuario}</td>
-                      <td>{item.nombre_usuario || "N/A"}</td>
+                      <td>{item.idUsuario}</td>
+                      <td>{item.nombreUsuario || "N/A"}</td>
                       <td>{formatearFecha(item.fecha)}</td>
                     </tr>
                   ))

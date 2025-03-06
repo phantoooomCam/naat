@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import "./Change.css";
+import "./Change.css"; // Cambio del nombre del archivo CSS
 
 const PasswordChange = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +16,7 @@ const PasswordChange = () => {
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Recuperar el objeto del usuario desde el localStorage
   const usuario = JSON.parse(localStorage.getItem("user"));
@@ -23,6 +24,19 @@ const PasswordChange = () => {
 
   const token = localStorage.getItem("token"); // El token almacenado en localStorage
   const navigate = useNavigate();
+
+  // Observador para el sidebar
+  React.useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const sidebar = document.querySelector(".sidebar");
+      if (sidebar) {
+        setIsSidebarCollapsed(sidebar.classList.contains("closed"));
+      }
+    });
+
+    observer.observe(document.body, { attributes: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -54,7 +68,7 @@ const PasswordChange = () => {
       localStorage.removeItem("user");
 
       // ✅ Redirigir al usuario a la página de inicio de sesión
-      navigate("/signin");
+      navigate("/");
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     }
@@ -122,7 +136,7 @@ const PasswordChange = () => {
         // Esperar 1 segundo antes de redirigir al Sign-In
         setTimeout(() => {
           handleLogout();
-          navigate("/signin");
+          navigate("/");
         }, 1000);
       } else {
         setError("Error al cambiar la contraseña.");
@@ -134,64 +148,82 @@ const PasswordChange = () => {
   };
 
   return (
-    <div className="container-change">
-      <div className="form-wrapper-change">
-        <h2 className="h2-change">Cambiar Contraseña</h2>
-
-        <form onSubmit={handleSubmit} className="password-form-change">
-          <div className="input-group-change">
-            <input
-              className="input-change"
-              type={showPasswords.currentPassword ? "text" : "password"}
-              name="currentPassword"
-              value={formData.currentPassword}
-              onChange={handleChange}
-              placeholder="Contraseña actual"
-            />
-            <button
-              type="button"
-              onClick={() => togglePasswordVisibility("currentPassword")}
-              className="toggle-password"
-            >
-              {showPasswords.currentPassword ? (
-                <Eye className="w-5 h-5 text-black" />
-              ) : (
-                <EyeOff className="w-5 h-5 text-black" />
-              )}
-            </button>
+    <div className={`password-container ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+      <div className="password-content">
+        <div className="password-header">
+          <h2>Cambiar Contraseña</h2>
+          <p className="password-subtitle">Actualiza tu contraseña para mantener tu cuenta segura</p>
+        </div>
+        
+        {(error || success) && (
+          <div className={`status-message ${error ? 'error' : 'success'}`}>
+            {error || "¡Contraseña cambiada exitosamente!"}
           </div>
-
-          <div className="input-group-change">
-            <input
-              className="input-change"
-              type={showPasswords.newPassword ? "text" : "password"}
-              name="newPassword"
-              value={formData.newPassword}
-              onChange={handleChange}
-              placeholder="Nueva contraseña"
-            />
-            <button
-              type="button"
-              onClick={() => togglePasswordVisibility("newPassword")}
-              className="toggle-password"
-            >
-              {showPasswords.newPassword ? (
-                <Eye className="w-5 h-5 text-black" />
-              ) : (
-                <EyeOff className="w-5 h-5 text-black" />
-              )}
-            </button>
-          </div>
-
-          {error && <p className="error">{error}</p>}
-          {success && (
-            <p className="success">¡Contraseña cambiada exitosamente!</p>
-          )}
-
-          <button type="submit" className="submit-button-change">
-            Cambiar Contraseña
-          </button>
-        </form>
+        )}
+        
+        <div className="password-card">
+          <form onSubmit={handleSubmit} className="password-form">
+            <div className="form-group">
+              <label htmlFor="currentPassword">Contraseña Actual</label>
+              <div className="password-input-group">
+                <input
+                  type={showPasswords.currentPassword ? "text" : "password"}
+                  id="currentPassword"
+                  name="currentPassword"
+                  value={formData.currentPassword}
+                  onChange={handleChange}
+                  placeholder="Ingresa tu contraseña actual"
+                  required
+                />
+                <button
+                  type="button"
+                  className="toggle-password-btn"
+                  onClick={() => togglePasswordVisibility("currentPassword")}
+                  aria-label={showPasswords.currentPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                >
+                  {showPasswords.currentPassword ? (
+                    <Eye className="icon" />
+                  ) : (
+                    <EyeOff className="icon" />
+                  )}
+                </button>
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="newPassword">Nueva Contraseña</label>
+              <div className="password-input-group">
+                <input
+                  type={showPasswords.newPassword ? "text" : "password"}
+                  id="newPassword"
+                  name="newPassword"
+                  value={formData.newPassword}
+                  onChange={handleChange}
+                  placeholder="Ingresa tu nueva contraseña"
+                  required
+                />
+                <button
+                  type="button"
+                  className="toggle-password-btn"
+                  onClick={() => togglePasswordVisibility("newPassword")}
+                  aria-label={showPasswords.newPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                >
+                  {showPasswords.newPassword ? (
+                    <Eye className="icon" />
+                  ) : (
+                    <EyeOff className="icon" />
+                  )}
+                </button>
+              </div>
+            </div>
+            
+            <div className="form-actions">
+              <button type="submit" className="btn-save-password">
+                Actualizar Contraseña
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

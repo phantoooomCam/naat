@@ -1,0 +1,261 @@
+/* Estilos base para el componente de perfil */
+.perfil-container {
+    flex-grow: 1;
+    transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .perfil-container.collapsed {
+    margin-left: -192px;
+    transition: margin 0.3s ease-in-out;
+  }
+  
+  .perfil-content {
+    max-width: 800px;
+    width: 90%;
+    margin: 120px auto;
+    padding: 30px;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+  }
+  
+  .perfil-header {
+    margin-bottom: 30px;
+    border-bottom: 1px solid #f0f0f0;
+    padding-bottom: 15px;
+  }
+  
+  .perfil-header h2 {
+    color: #333;
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+  }
+  
+  .perfil-subtitle {
+    color: #666;
+    font-size: 1rem;
+  }
+  
+  /* Card de perfil */
+  .perfil-card {
+    background-color: #f9fafc;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Vista de información de perfil */
+  .perfil-view {
+    display: flex;
+    align-items: flex-start;
+    gap: 30px;
+  }
+  
+  .perfil-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #222a35;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+  
+  .perfil-info {
+    flex-grow: 1;
+  }
+  
+  .perfil-info h3 {
+    font-size: 1.4rem;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  .info-row {
+    display: flex;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .info-label {
+    flex-basis: 35%;
+    color: #666;
+    font-weight: 500;
+  }
+  
+  .info-value {
+    flex-basis: 65%;
+    color: #333;
+  }
+  
+  .btn-edit-perfil {
+    background-color: #222a35;
+    color: white;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 15px;
+    transition: background-color 0.2s;
+  }
+  
+  .btn-edit-perfil:hover {
+    background-color: #333a44;
+  }
+  
+  /* Formulario de edición */
+  .perfil-form {
+    padding: 10px;
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .form-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .form-group label {
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #444;
+  }
+  
+  .form-group input {
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: white;
+    transition: border-color 0.2s;
+  }
+  
+  .form-group input:focus {
+    border-color: #222a35;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(76, 106, 175, 0.1);
+  }
+  
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 30px;
+  }
+  
+  .btn-cancel-perfil, .btn-save-perfil {
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+  }
+  
+  .btn-cancel-perfil {
+    background-color: #f1f1f1;
+    color: #333;
+    border: 1px solid #ddd;
+  }
+  
+  .btn-cancel-perfil:hover {
+    background-color: #e5e5e5;
+  }
+  
+  .btn-save-perfil {
+    background-color: #222a35;
+    color: white;
+    border: none;
+  }
+  
+  .btn-save-perfil:hover {
+    background-color: #333a44;
+  }
+  
+  /* Mensaje de estado */
+  .status-message {
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 1rem;
+  }
+  
+  .status-message.success {
+    background-color: #e7f7ed;
+    color: #2e7d32;
+    border-left: 4px solid #2e7d32;
+  }
+  
+  .status-message.error {
+    background-color: #fdeaea;
+    color: #d32f2f;
+    border-left: 4px solid #d32f2f;
+  }
+  
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .perfil-container {
+      margin-left: 45px !important;
+      width: 100%;
+      transition: none;
+    }
+    
+    .perfil-content {
+      width: 95%;
+      margin: 100px auto;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .form-row {
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .perfil-view {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    
+    .info-row {
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .info-label, .info-value {
+      flex-basis: 100%;
+    }
+    
+    .form-actions {
+      flex-direction: column-reverse;
+    }
+    
+    .btn-cancel-perfil, .btn-save-perfil {
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .perfil-content {
+      padding: 20px 15px;
+    }
+    
+    .perfil-card {
+      padding: 15px;
+    }
+    
+    .perfil-header h2 {
+      font-size: 1.5rem;
+    }
+  }
