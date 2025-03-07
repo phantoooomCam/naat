@@ -13,7 +13,7 @@ export default function PageNotFound() {
         <nav className="homealt-nav">
           <div className="nav-left">
             <div className="nav-logo">
-              <Link to="/dashboard">
+              <Link to="/">
                 <img src={NAAT_image} alt="Logo" className="logo-img-home" />
               </Link>
             </div>
@@ -67,7 +67,7 @@ export default function PageNotFound() {
           </div> */}
           
           <div style={{ marginTop: '2rem' }}>
-            <Link to="/dashboard" style={{ 
+            <Link to="/" style={{ 
               backgroundColor: '#222a35', 
               color: 'white', 
               padding: '1rem 2rem', 
