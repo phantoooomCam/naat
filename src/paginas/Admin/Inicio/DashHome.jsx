@@ -53,7 +53,7 @@ const HomeView = ({ isSidebarCollapsed }) => {
           />
         </div>
 
-        <div className="card" onClick={() => navigate("*")}>
+        <div className="card" onClick={() => navigate("/solicitudes")}>
           <h2>Solicitudes</h2>
           <DotLottieReact
             src="https://lottie.host/4c20add5-f72e-487d-82b6-ab25fa94a43c/ufeVT3x9Lw.lottie"
