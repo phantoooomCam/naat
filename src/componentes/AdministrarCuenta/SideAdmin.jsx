@@ -1,65 +1,139 @@
-import { FiHome, FiUsers, FiSettings, FiHelpCircle } from 'react-icons/fi';
-import { AiOutlineIdcard } from 'react-icons/ai';
-import { FaCreditCard, FaMoneyBillWave } from 'react-icons/fa';
-import { BiSupport } from 'react-icons/bi'
+import { FiHome, FiUsers, FiSettings, FiHelpCircle } from "react-icons/fi";
+import { AiOutlineIdcard } from "react-icons/ai";
+import { FaCreditCard, FaMoneyBillWave } from "react-icons/fa";
+import { BiSupport } from "react-icons/bi";
 import { BiLogIn } from "react-icons/bi";
-import PropTypes from 'prop-types';
+import PropTypes from "prop-types";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useState, useEffect, useRef } from 'react';
-import '../../paginas/Admin/Componentes/Sidebar.css';
-import NAAT from '../../../src/assets/completo_blanco.png';
+import { useState, useEffect, useRef } from "react";
+import "../../paginas/Admin/Componentes/Sidebar.css";
+import NAAT from "../../../src/assets/completo_blanco.png";
 
-const SideAdmin = ({ isOpen, toggleSideAdmin }) => {
+const SideAdmin = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const initialRender = useRef(true);
-  
-  // Inicialización de estado desde localStorage
+
+  // Estado para controlar si el sidebar está abierto o cerrado
+  const [isOpen, setIsOpen] = useState(() => {
+    // Comprobamos si es un dispositivo móvil usando matchMedia
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    return (
+      JSON.parse(localStorage.getItem("sidebarState")) ??
+      window.innerWidth > 390
+    );
+  });
+
+  // Inicialización de estado desde localStorage para submenús expandidos
   const [expandedMenus, setExpandedMenus] = useState(() => {
     try {
-      const saved = localStorage.getItem('expandedMenus');
+      const saved = localStorage.getItem("expandedMenus");
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       console.error("Error cargando estado del menú:", e);
       return [];
     }
   });
+
+  // Estructura del menú
   const menuItems = [
-    { id: '/dashboard', icon: <FiHome />, label: 'Inicio' },
+    { id: "/dashboard", icon: <FiHome />, label: "Inicio" },
     {
-      id: 'usuarios',
-      icon: <AiOutlineIdcard />,  // Icono nuevo para Información Personal
-      label: 'Información Personal',
+      id: "usuarios",
+      icon: <AiOutlineIdcard />, // Icono nuevo para Información Personal
+      label: "Información Personal",
       subItems: [
-        { id: '/administrarcuenta', label: 'Datos personales' },
-        { id: '/cambiarcontra', label: 'Cambiar contraseña' }
-      ]
+        { id: "/administrarcuenta", label: "Datos personales" },
+        { id: "/cambiarcontra", label: "Cambiar contraseña" },
+      ],
     },
     {
-      id: 'sistema',
-      icon: <FaMoneyBillWave />,  // Icono nuevo para Pagos
-      label: 'Pagos',
+      id: "sistema",
+      icon: <FaMoneyBillWave />, // Icono nuevo para Pagos
+      label: "Pagos",
       subItems: [
-        { id: '/sistema/configuracion', label: 'Créditos' },
-        { id: '/ingresos', label: 'Historial' }
-      ]
+        { id: "/sistema/configuracion", label: "Créditos" },
+        { id: "/ingresos", label: "Historial" },
+      ],
     },
     {
-      id: 'ayuda',
-      icon: <BiSupport />,  // Icono nuevo para Ayuda
-      label: 'Ayuda',
+      id: "ayuda",
+      icon: <BiSupport />, // Icono nuevo para Ayuda
+      label: "Ayuda",
     },
   ];
 
+  // Detectar si es un dispositivo móvil
+  const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
+
+  // Ajustar automáticamente según el tamaño de pantalla
+  useEffect(() => {
+    const handleResize = () => {
+      // No cambiamos el estado automáticamente al redimensionar
+      // para permitir que el usuario controle manualmente el sidebar
+      // Solo actualizamos en el montaje inicial
+      if (initialRender.current) {
+        if (isMobile()) {
+          setIsOpen(false);
+        } else {
+          setIsOpen(true);
+        }
+        initialRender.current = false;
+      }
+    };
+
+    // Eventos de touch para permitir gestos de deslizamiento
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    const handleTouchStart = (event) => {
+      touchStartX = event.touches[0].clientX;
+    };
+
+    const handleTouchEnd = (event) => {
+      touchEndX = event.changedTouches[0].clientX;
+      const swipeDistance = touchEndX - touchStartX;
+      const threshold = 70;
+
+      // Solo activar swipe en el área izquierda de la pantalla para abrir
+      const isLeftEdgeSwipe = touchStartX < 50;
+
+      if (swipeDistance > threshold && !isOpen && isLeftEdgeSwipe) {
+        setIsOpen(true); // Abrir sidebar con swipe derecho desde el borde
+      } else if (swipeDistance < -threshold && isOpen) {
+        setIsOpen(false); // Cerrar sidebar con swipe izquierdo
+      }
+    };
+
+    // Agregar eventos
+    window.addEventListener("resize", handleResize);
+    document.addEventListener("touchstart", handleTouchStart);
+    document.addEventListener("touchend", handleTouchEnd);
+
+    // Ejecutar una vez al inicio para ajustar según el tamaño inicial
+    handleResize();
+
+    // Limpiar eventos al desmontar
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      document.removeEventListener("touchstart", handleTouchStart);
+      document.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [isOpen]);
+
+  // Función para alternar el sidebar (toggle)
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
+
   // Guardar en localStorage cada vez que cambia expandedMenus
   useEffect(() => {
-    // Evitar guardar en el primer renderizado para no sobrescribir el estado inicial
     if (initialRender.current) {
       initialRender.current = false;
       return;
     }
     try {
-      localStorage.setItem('expandedMenus', JSON.stringify(expandedMenus));
+      localStorage.setItem("sidebarState", JSON.stringify(isOpen));
     } catch (e) {
       console.error("Error guardando estado del menú:", e);
     }
@@ -70,18 +144,42 @@ const SideAdmin = ({ isOpen, toggleSideAdmin }) => {
     if (expandedMenus.length === 0) {
       const currentPath = location.pathname;
       const menusToExpand = [];
-      
-      menuItems.forEach(item => {
-        if (item.subItems?.some(subItem => currentPath.startsWith(subItem.id))) {
+
+      menuItems.forEach((item) => {
+        if (
+          item.subItems?.some((subItem) => currentPath.startsWith(subItem.id))
+        ) {
           menusToExpand.push(item.id);
         }
       });
-      
+
       if (menusToExpand.length > 0) {
         setExpandedMenus(menusToExpand);
       }
     }
-  }, []);
+  }, [expandedMenus.length, location.pathname, menuItems]);
+
+  // Función para manejar clic en menú cuando el sidebar está cerrado
+  const handleMenuClick = (menuId, event) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    const clickedItem = menuItems.find((item) => item.id === menuId);
+
+    // Si el sidebar está cerrado y se hace clic en un menú con submenús, abrirlo y expandir el submenú
+    if (!isOpen && clickedItem?.subItems) {
+      setIsOpen(true);
+      setExpandedMenus([menuId]); // Expande directamente el submenú seleccionado
+    } else if (menuId === "/dashboard") {
+      // Si es el menú de inicio, navegar directamente
+      handleNavigation(menuId, event);
+    } else {
+      // Si el sidebar ya está abierto, comportamiento normal de toggle
+      toggleSubMenu(menuId, event);
+    }
+  };
 
   // Función para alternar menú manualmente
   const toggleSubMenu = (menuId, event) => {
@@ -89,13 +187,15 @@ const SideAdmin = ({ isOpen, toggleSideAdmin }) => {
       event.preventDefault();
       event.stopPropagation();
     }
-    
-    setExpandedMenus(prevMenus => {
+
+    setExpandedMenus((prevMenus) => {
+      // Si el menú ya está abierto, se cierra
       if (prevMenus.includes(menuId)) {
-        return prevMenus.filter(id => id !== menuId);
-      } else {
-        return [...prevMenus, menuId];
+        return [];
       }
+
+      // Si otro menú estaba abierto, se cierra
+      return [menuId];
     });
   };
 
@@ -105,93 +205,115 @@ const SideAdmin = ({ isOpen, toggleSideAdmin }) => {
       event.preventDefault();
       event.stopPropagation();
     }
+
+    // Navegar a la ruta deseada
     navigate(path);
+
+    // En móviles, siempre cerrar el sidebar después de navegar
+    if (isMobile()) {
+      setIsOpen(false);
+    }
   };
 
   // Verificar si un subítem está activo
   const isSubItemActive = (subItemId) => {
-    return location.pathname === subItemId || location.pathname.startsWith(subItemId);
+    return (
+      location.pathname === subItemId || location.pathname.startsWith(subItemId)
+    );
   };
 
   // Verificar si un menú principal está activo
   const isMenuActive = (item) => {
-    if (item.id === '/dashboard') {
+    if (item.id === "/dashboard") {
       return location.pathname === item.id;
     }
-    return item.subItems?.some(subItem => isSubItemActive(subItem.id));
+    return item.subItems?.some((subItem) => isSubItemActive(subItem.id));
   };
 
+  // Aplicar clase adicional cuando estamos en móvil
+  const sidebarClass = `sidebar ${isOpen ? "open" : "closed"} ${
+    isMobile() ? "mobile" : ""
+  }`;
+
   return (
-    <nav className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
-      <div className="sidebar-header">
-        <div 
-          className="logo-wrapper"
-          onClick={toggleSideAdmin}
-          style={{ cursor: 'pointer' }}
-        >
-          <img 
-            src={NAAT} 
-            alt="NAAT Logo" 
-            className="top-logo"
-          />
-          {isOpen && <h1 className="dashboard-title">Mi cuenta</h1>}
+    <>
+      {/* Overlay para cerrar el sidebar en móviles al hacer clic fuera */}
+      {isOpen && isMobile() && (
+        <div className="sidebar-overlay" onClick={() => setIsOpen(false)} />
+      )}
+
+      <nav className={sidebarClass}>
+        <div className="sidebar-header">
+          <div
+            className="logo-wrapper"
+            onClick={toggleSidebar}
+            style={{ cursor: "pointer" }}
+          >
+            <img src={NAAT} alt="NAAT Logo" className="top-logo" />
+            {isOpen && <h1 className="dashboard-title">Dashboard</h1>}
+          </div>
         </div>
-      </div>
 
-      <div className="menu-items">
-        {menuItems.map((item) => (
-          <div key={item.id} className="menu-container">
-            {item.id === '/dashboard' ? (
-              <div 
-                className="menu-link"
-                onClick={(e) => handleNavigation(item.id, e)}
-              >
-                <button className={`menu-item ${isMenuActive(item) ? 'active' : ''}`}>
-                  <span className="icon">{item.icon}</span>
-                  {isOpen && <span className="label">{item.label}</span>}
-                </button>
-              </div>
-            ) : (
-              <div className="menu-wrapper">
-                <button
-                  className={`menu-item ${isMenuActive(item) ? 'active' : ''}`}
-                  onClick={(e) => toggleSubMenu(item.id, e)}
-                >
-                  <span className="icon">{item.icon}</span>
-                  {isOpen && <span className="label">{item.label}</span>}
-                </button>
-              </div>
-            )}
-
-            {/* Submenús siempre renderizados pero con display condicional */}
-            <div 
-              className="sub-menu" 
-              style={{ display: expandedMenus.includes(item.id) ? 'block' : 'none' }}
-            >
-              {item.subItems?.map((subItem) => (
-                <div 
-                  key={subItem.id} 
+        <div className="menu-items">
+          {menuItems.map((item) => (
+            <div key={item.id} className="menu-container">
+              {item.id === "/dashboard" ? (
+                <div
                   className="menu-link"
-                  onClick={(e) => handleNavigation(subItem.id, e)}
+                  onClick={(e) => handleNavigation(item.id, e)}
                 >
                   <button
-                    className={`sub-menu-item ${isSubItemActive(subItem.id) ? 'active' : ''}`}
+                    className={`menu-item ${
+                      isMenuActive(item) ? "active" : ""
+                    }`}
                   >
-                    {isOpen && <span className="label">{subItem.label}</span>}
+                    <span className="icon">{item.icon}</span>
+                    {isOpen && <span className="label">{item.label}</span>}
                   </button>
                 </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </nav>
-  );
-};
+              ) : (
+                <div className="menu-wrapper">
+                  <button
+                    className={`menu-item ${
+                      isMenuActive(item) ? "active" : ""
+                    }`}
+                    onClick={(e) => handleMenuClick(item.id, e)}
+                  >
+                    <span className="icon">{item.icon}</span>
+                    {isOpen && <span className="label">{item.label}</span>}
+                  </button>
+                </div>
+              )}
 
-SideAdmin.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  toggleSideAdmin: PropTypes.func.isRequired,
+              {/* Submenús siempre renderizados pero con display condicional */}
+              <div
+                className="sub-menu"
+                style={{
+                  display: expandedMenus.includes(item.id) ? "block" : "none",
+                }}
+              >
+                {item.subItems?.map((subItem) => (
+                  <div
+                    key={subItem.id}
+                    className="menu-link"
+                    onClick={(e) => handleNavigation(subItem.id, e)}
+                  >
+                    <button
+                      className={`sub-menu-item ${
+                        isSubItemActive(subItem.id) ? "active" : ""
+                      }`}
+                    >
+                      {isOpen && <span className="label">{subItem.label}</span>}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </nav>
+    </>
+  );
 };
 
 export default SideAdmin;
