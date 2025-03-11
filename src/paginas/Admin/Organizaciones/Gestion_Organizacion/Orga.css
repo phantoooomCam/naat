@@ -1,12 +1,8 @@
 .editar-btn {
   margin-top: 10px;
-  background-color: #bbc2c7;
+  background-color: #54a3d4;
   border: none;
   cursor: pointer;
-}
-.editar-btn:hover{
-  background-color: #83878a;
-
 }
 
 .editar-btn2{
