@@ -26,8 +26,20 @@ const GestionDash = () => {
   const [searchText, setSearchText] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
-  const usuario = JSON.parse(localStorage.getItem("user"));
-  const token = localStorage.getItem("token");
+  // ✅ Función para verificar autenticación
+  const checkAuth = async () => {
+    try {
+      const response = await fetch("http://192.168.100.89:44444/api/usuarios/me", {
+        method: "GET",
+        credentials: "include",
+      });
+
+      if (!response.ok) return null;
+      return await response.json();
+    } catch (error) {
+      return null;
+    }
+  };
 
   // Observador para el sidebar
   useEffect(() => {
@@ -42,19 +54,19 @@ const GestionDash = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Fetch usuarios
+  // ✅ Función para obtener usuarios
   const fetchUsers = async () => {
     setLoading(true);
     setError(null);
     try {
       const response = await fetch(
-        "http://192.168.100.89:44444/api/usuarios/?inicio=1&cantidad=10",
+        "http://192.168.100.89:44444/api/usuarios",
         {
           method: "GET",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
           },
         }
       );
@@ -80,11 +92,20 @@ const GestionDash = () => {
     }
   };
 
+  // ✅ useEffect modificado para manejar autenticación
   useEffect(() => {
-    fetchUsers();
+    const authenticateAndFetchUsers = async () => {
+      const user = await checkAuth();
+      if (!user) {
+        window.location.href = "/login";
+        return;
+      }
+      await fetchUsers();
+    };
+
+    authenticateAndFetchUsers();
   }, []);
 
-  
   // Filtrado de usuarios
   useEffect(() => {
     const lowercasedSearchText = searchText.toLowerCase();
@@ -110,9 +131,9 @@ const GestionDash = () => {
         `http://192.168.100.89:44444/api/usuarios/${formData.id_usuario}`,
         {
           method: "PUT",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
           },
           body: JSON.stringify(formData),
         }
@@ -124,7 +145,7 @@ const GestionDash = () => {
       }
 
       setIsEditing(false);
-      window.location.reload();
+      fetchUsers();
     } catch (error) {
       setError(error.message);
     }
@@ -153,9 +174,7 @@ const GestionDash = () => {
         `http://192.168.100.89:44444/api/usuarios/${id}`,
         {
           method: "DELETE",
-          headers: {
-            Authorization: token ? `Bearer ${token}` : "",
-          },
+          credentials: "include",
         }
       );
 
@@ -166,7 +185,6 @@ const GestionDash = () => {
 
       setUsers(users.filter((user) => user.id !== id));
       setFilteredUsers(filteredUsers.filter((user) => user.id !== id));
-      window.location.reload();
     } catch (error) {
       setError(error.message);
     }
@@ -194,9 +212,9 @@ const GestionDash = () => {
         "http://192.168.100.89:44444/api/usuarios/register",
         {
           method: "POST",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
           },
           body: JSON.stringify(userToCreate),
         }

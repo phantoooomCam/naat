@@ -4,6 +4,7 @@ import { FaUser, FaEnvelope, FaLock, FaPhone } from "react-icons/fa";
 import { Link, useNavigate } from "react-router-dom";
 import NAAT from "../../assets/completo_blanco.png";
 import NAAT2 from "../../assets/naat.png";
+import { apiRequest } from "../../config/api";
 
 export default function SignIn() {
   const [isRegister, setIsRegister] = useState(true);
@@ -78,28 +79,15 @@ export default function SignIn() {
     };
 
     try {
-      const response = await fetch(
-        "http://192.168.100.89:44444/api/usuarios/register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(userData),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.mensaje || "Error en el registro");
+      // ✅ Usar apiRequest en lugar de fetch
+      const data = await apiRequest("usuarios/register", "POST", userData);
+  
+      if (data?.mensaje) { 
+        setIsRegister(false);
+        navigate("/mensaje");
+      } else {
+        throw new Error("Error en el registro");
       }
-
-      // Cambiar el estado antes de redirigir
-      setIsRegister(false);
-
-      // Redirigir después de 2 segundos
-      navigate("/mensaje");
     } catch (error) {
       console.error(error);
       setError(error.message || "Hubo un problema con el registro");
@@ -109,43 +97,34 @@ export default function SignIn() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-
+  
     const requestBody = {
       correo: usuario,
       contraseña: clave,
     };
-
+  
     try {
-      const response = await fetch(
-        "http://192.168.100.89:44444/api/usuarios/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
-        }
-      );
-
-
-      const data = await response.json();
-
-
-      if (data.token) {
-        // Almacenar el token y la información del usuario en el localStorage
-        localStorage.setItem("token", data.token);
+      // ✅ Usar apiRequest para enviar las credenciales
+      const data = await apiRequest("usuarios/login", "POST", requestBody);
+  
+      if (data?.usuario) {
+        // ✅ Guardar el usuario en localStorage
         localStorage.setItem("user", JSON.stringify(data.usuario));
-
-        // Redirigir al dashboard si todo está bien
+  
+        // ⚠️ No necesitamos guardar las cookies manualmente, el backend ya las envía con `HttpOnly`
+        console.log("Inicio de sesión exitoso. Redirigiendo...");
+  
+        // ✅ Redirigir al dashboard
         navigate("/dashboard");
       } else {
-        throw new Error("Su cuenta no ha sido activada");
+        throw new Error(data.mensaje || "Credenciales incorrectas");
       }
     } catch (error) {
       console.error("Error en la autenticación:", error);
       setError(error.message || "Hubo un problema con la conexión al servidor");
     }
   };
+  
 
   useEffect(() => {
     document.body.classList.add("auth-body");
@@ -231,7 +210,7 @@ export default function SignIn() {
               />
               {!validations.clave && claveRegistro && (
                 <span className="error-text">
-                  La contraseña debe tener al menos 8 caracteres, 
+                  La contraseña debe tener al menos 8 caracteres,
                   una mayúscula, una minúscula, un número y un signo
                 </span>
               )}
