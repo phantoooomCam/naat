@@ -10,14 +10,14 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const initialRender = useRef(true);
-  
+
   // Estado para controlar si el sidebar está abierto o cerrado
   const [isOpen, setIsOpen] = useState(() => {
     // Comprobamos si es un dispositivo móvil usando matchMedia
     const isMobile = window.matchMedia('(max-width: 768px)').matches;
     return JSON.parse(localStorage.getItem('sidebarState')) ?? window.innerWidth > 390;
   });
-  
+
   // Inicialización de estado desde localStorage para submenús expandidos
   const [expandedMenus, setExpandedMenus] = useState(() => {
     try {
@@ -28,6 +28,13 @@ const Sidebar = () => {
       return [];
     }
   });
+
+  // Limpiar el estado guardado cuando se desmonta el componente
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem('expandedMenus');
+    };
+  }, []);
 
   // Estructura del menú
   const menuItems = [
@@ -58,7 +65,7 @@ const Sidebar = () => {
         { id: '/orga', label: 'Gestion Organización' },
         { id: '/area', label: 'Gestion Area' },
         { id: '/depto', label: 'Gestion Departamento' }
-   
+
       ]
     },
   ];
@@ -81,38 +88,38 @@ const Sidebar = () => {
         initialRender.current = false;
       }
     };
-  
+
     // Eventos de touch para permitir gestos de deslizamiento
     let touchStartX = 0;
     let touchEndX = 0;
-  
+
     const handleTouchStart = (event) => {
       touchStartX = event.touches[0].clientX;
     };
-  
+
     const handleTouchEnd = (event) => {
       touchEndX = event.changedTouches[0].clientX;
       const swipeDistance = touchEndX - touchStartX;
-      const threshold = 70; 
-  
+      const threshold = 70;
+
       // Solo activar swipe en el área izquierda de la pantalla para abrir
       const isLeftEdgeSwipe = touchStartX < 50;
-      
+
       if (swipeDistance > threshold && !isOpen && isLeftEdgeSwipe) {
         setIsOpen(true); // Abrir sidebar con swipe derecho desde el borde
       } else if (swipeDistance < -threshold && isOpen) {
         setIsOpen(false); // Cerrar sidebar con swipe izquierdo
       }
     };
-  
+
     // Agregar eventos
     window.addEventListener('resize', handleResize);
     document.addEventListener('touchstart', handleTouchStart);
     document.addEventListener('touchend', handleTouchEnd);
-  
+
     // Ejecutar una vez al inicio para ajustar según el tamaño inicial
     handleResize();
-  
+
     // Limpiar eventos al desmontar
     return () => {
       window.removeEventListener('resize', handleResize);
@@ -120,42 +127,56 @@ const Sidebar = () => {
       document.removeEventListener('touchend', handleTouchEnd);
     };
   }, [isOpen]);
-  
+
   // Función para alternar el sidebar (toggle)
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
 
-  // Guardar en localStorage cada vez que cambia expandedMenus
+  // Guardar en localStorage cuando cambien los estados relevantes
   useEffect(() => {
-    if (initialRender.current) {
-      initialRender.current = false;
-      return;
-    }
-    try {
-      localStorage.setItem('sidebarState', JSON.stringify(isOpen));
-    } catch (e) {
-      console.error("Error guardando estado del menú:", e);
-    }
-  }, [expandedMenus]);
-
-  // Expandir menús iniciales solo una vez
-  useEffect(() => {
-    if (expandedMenus.length === 0) {
-      const currentPath = location.pathname;
-      const menusToExpand = [];
-      
-      menuItems.forEach(item => {
-        if (item.subItems?.some(subItem => currentPath.startsWith(subItem.id))) {
-          menusToExpand.push(item.id);
-        }
-      });
-      
-      if (menusToExpand.length > 0) {
-        setExpandedMenus(menusToExpand);
+    if (!initialRender.current) {
+      try {
+        localStorage.setItem('expandedMenus', JSON.stringify(expandedMenus));
+        localStorage.setItem('sidebarState', JSON.stringify(isOpen));
+      } catch (e) {
+        console.error("Error guardando estado del menú:", e);
       }
+    } else {
+      initialRender.current = false;
     }
-  }, [expandedMenus.length, location.pathname, menuItems]);
+  }, [expandedMenus, isOpen]);
+
+  // // Expandir menús iniciales solo cuando cambie la ruta
+  // useEffect(() => {
+  //   const currentPath = location.pathname;
+
+  //   // Si ya hay menús expandidos y no estamos en la ruta de inicio
+  //   if (currentPath !== '/dashboard') {
+  //     // Verificar si algún subítem de algún menú coincide con la ruta actual
+  //     let shouldExpandMenu = false;
+  //     let menuToExpand = null;
+
+  //     menuItems.forEach(item => {
+  //       if (item.subItems?.some(subItem => currentPath.startsWith(subItem.id))) {
+  //         shouldExpandMenu = true;
+  //         menuToExpand = item.id;
+  //       }
+  //     });
+
+  //     // Solo expandimos el menú si estamos específicamente seleccionando un subítem
+  //     // y no si solo estamos navegando a una sección principal
+  //     if (shouldExpandMenu && menuToExpand) {
+  //       setExpandedMenus([menuToExpand]);
+  //     } else {
+  //       // En caso contrario, cerramos todos los menús
+  //       setExpandedMenus([]);
+  //     }
+  //   } else {
+  //     // Si estamos en la página de inicio, cerramos todos los menús
+  //     setExpandedMenus([]);
+  //   }
+  // }, [location.pathname, menuItems]);
 
   // Función para manejar clic en menú cuando el sidebar está cerrado
   const handleMenuClick = (menuId, event) => {
@@ -163,13 +184,14 @@ const Sidebar = () => {
       event.preventDefault();
       event.stopPropagation();
     }
-  
+
     const clickedItem = menuItems.find(item => item.id === menuId);
-  
+
     // Si el sidebar está cerrado y se hace clic en un menú con submenús, abrirlo y expandir el submenú
     if (!isOpen && clickedItem?.subItems) {
       setIsOpen(true);
       setExpandedMenus([menuId]); // Expande directamente el submenú seleccionado
+      localStorage.setItem('expandedMenus', JSON.stringify([menuId]));
     } else if (menuId === '/dashboard') {
       // Si es el menú de inicio, navegar directamente
       handleNavigation(menuId, event);
@@ -185,33 +207,34 @@ const Sidebar = () => {
       event.preventDefault();
       event.stopPropagation();
     }
-  
-    setExpandedMenus((prevMenus) => {
-      // Si el menú ya está abierto, se cierra
-      if (prevMenus.includes(menuId)) {
-        return [];
-      }
-      
-      // Si otro menú estaba abierto, se cierra
-      return [menuId];
-    });
+
+    setExpandedMenus(prevMenus =>
+      prevMenus.includes(menuId) ? [] : [menuId]
+    );
   };
-  
+
   // Función para navegación manual
   const handleNavigation = (path, event) => {
     if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
-    
+
+    // Cerrar todos los submenús antes de navegar
+    setExpandedMenus([]);
+
+    // Actualizar localStorage con el array vacío
+    localStorage.setItem('expandedMenus', JSON.stringify([]));
+
     // Navegar a la ruta deseada
     navigate(path);
-    
+
     // En móviles, siempre cerrar el sidebar después de navegar
     if (isMobile()) {
       setIsOpen(false);
     }
   };
+
 
   // Verificar si un subítem está activo
   const isSubItemActive = (subItemId) => {
@@ -233,22 +256,22 @@ const Sidebar = () => {
     <>
       {/* Overlay para cerrar el sidebar en móviles al hacer clic fuera */}
       {isOpen && isMobile() && (
-        <div 
-          className="sidebar-overlay" 
+        <div
+          className="sidebar-overlay"
           onClick={() => setIsOpen(false)}
         />
       )}
-    
+
       <nav className={sidebarClass}>
         <div className="sidebar-header">
-          <div 
+          <div
             className="logo-wrapper"
             onClick={toggleSidebar}
             style={{ cursor: 'pointer' }}
           >
-            <img 
-              src={NAAT} 
-              alt="NAAT Logo" 
+            <img
+              src={NAAT}
+              alt="NAAT Logo"
               className="top-logo"
             />
             {isOpen && <h1 className="dashboard-title">Dashboard</h1>}
@@ -259,7 +282,7 @@ const Sidebar = () => {
           {menuItems.map((item) => (
             <div key={item.id} className="menu-container">
               {item.id === '/dashboard' ? (
-                <div 
+                <div
                   className="menu-link"
                   onClick={(e) => handleNavigation(item.id, e)}
                 >
@@ -281,13 +304,13 @@ const Sidebar = () => {
               )}
 
               {/* Submenús siempre renderizados pero con display condicional */}
-              <div 
-                className="sub-menu" 
+              <div
+                className="sub-menu"
                 style={{ display: expandedMenus.includes(item.id) ? 'block' : 'none' }}
               >
                 {item.subItems?.map((subItem) => (
-                  <div 
-                    key={subItem.id} 
+                  <div
+                    key={subItem.id}
                     className="menu-link"
                     onClick={(e) => handleNavigation(subItem.id, e)}
                   >
