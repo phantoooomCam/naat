@@ -19,7 +19,7 @@ const GestionDash = () => {
     telefono: "",
     contraseña: "",
     usuario: "",
-    organizacion: "",
+    idOrganizacion: 0,
     nivel: 5,
     rol: "Lector",
   });
@@ -29,6 +29,33 @@ const GestionDash = () => {
 
   const usuario = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
+
+  //Organizaciones
+
+  const [organizaciones, setOrganizaciones] = useState([]);
+
+  const fetchOrganizaciones = async () => {
+    try {
+      const response = await fetch(
+        "http://192.168.100.89:44444/api/organizaciones",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        }
+      );
+
+      if (!response.ok)
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+
+      const data = await response.json();
+      setOrganizaciones(data);
+    } catch (error) {
+      console.error("Error al obtener organizaciones:", error);
+    }
+  };
 
   // Observador para el sidebar
   useEffect(() => {
@@ -60,7 +87,8 @@ const GestionDash = () => {
         }
       );
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
 
       const text = await response.text();
       if (!text) throw new Error("No se recibieron datos del servidor");
@@ -83,9 +111,9 @@ const GestionDash = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchOrganizaciones();
   }, []);
 
-  
   // Filtrado de usuarios
   useEffect(() => {
     const lowercasedSearchText = searchText.toLowerCase();
@@ -99,8 +127,13 @@ const GestionDash = () => {
 
   // Handlers
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: name === "idOrganizacion" ? Number(value) || 0 : value, 
+    });
   };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -118,11 +151,12 @@ const GestionDash = () => {
           body: JSON.stringify(formData),
         }
       );
-      console.log(token)
-      console.log(formData)
+      console.log(formData);
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Error al actualizar: ${response.status} - ${errorText}`);
+        throw new Error(
+          `Error al actualizar: ${response.status} - ${errorText}`
+        );
       }
 
       setIsEditing(false);
@@ -141,7 +175,7 @@ const GestionDash = () => {
       correo: user.correo,
       telefono: user.telefono,
       nivel: user.nivel,
-      organizacion: user.organizacion,
+      idOrganizacion: user.idOrganizacion,
       rol: user.rol,
     });
     setIsEditing(true);
@@ -186,8 +220,8 @@ const GestionDash = () => {
       telefono: formData.telefono,
       contraseña: formData.contraseña,
       usuario: formData.usuario,
-      organizacion: formData.organizacion,
-      nivel: formData.nivel,
+      idOrganizacion: formData.idOrganizacion,
+      nivel: parseInt(formData.nivel, 10),
       rol: formData.rol,
     };
 
@@ -219,7 +253,7 @@ const GestionDash = () => {
         telefono: "",
         contraseña: "",
         usuario: "",
-        organizacion: "",
+        organizacion: 0,
         nivel: 5,
         rol: "Lector",
       });
@@ -230,7 +264,7 @@ const GestionDash = () => {
 
   if (loading) {
     return (
-      <div className={`dash-gestion ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+      <div className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
         <div className="content-wrapper">
           <div className="content-container">
             <h2>Cargando usuarios...</h2>
@@ -242,7 +276,7 @@ const GestionDash = () => {
 
   if (error) {
     return (
-      <div className={`dash-gestion ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+      <div className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
         <div className="content-wrapper">
           <div className="content-container">
             <h2>Error al cargar usuarios</h2>
@@ -257,7 +291,7 @@ const GestionDash = () => {
   }
 
   return (
-    <div className={`dash-gestion ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+    <div className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
       <div className="content-wrapper">
         <div className="content-container">
           <h2>Gestión de Usuarios</h2>
@@ -352,14 +386,22 @@ const GestionDash = () => {
                 </div>
                 <div>
                   <label>Organización</label>
-                  <input
-                    type="text"
-                    name="organizacion"
-                    placeholder="Ingresa Organización"
-                    value={formData.organizacion ?? ""}
+                  <select
+                    name="idOrganizacion" // 
+                    value={formData.idOrganizacion || ""}
                     onChange={handleChange}
                     className="inputedit"
-                  />
+                  >
+                    <option value="">Seleccione una organización</option>
+                    {organizaciones.map((org) => (
+                      <option
+                        key={org.idOrganizacion}
+                        value={org.idOrganizacion}
+                      >
+                        {org.nombreOrganizacion}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label>Rol</label>
@@ -458,7 +500,16 @@ const GestionDash = () => {
                             }
                           })()}
                         </td>
-                        <td>{user.nombreOrganizacion}</td>
+                        <td>
+                          {(() => {
+                            const org = organizaciones.find(
+                              (o) => o.idOrganizacion == user.organizacion
+                            );
+                            return org
+                              ? org.nombreOrganizacion
+                              : user.nombreOrganizacion || "-";
+                          })()}
+                        </td>
                         <td>{user.rol}</td>
                         <td>
                           <button
