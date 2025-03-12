@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "./Gestion.css";
+import { body } from "framer-motion/client";
 
 const GestionDash = () => {
   // Estados para el colapso de sidebar
@@ -117,7 +118,8 @@ const GestionDash = () => {
           body: JSON.stringify(formData),
         }
       );
-
+      console.log(token)
+      console.log(formData)
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Error al actualizar: ${response.status} - ${errorText}`);
