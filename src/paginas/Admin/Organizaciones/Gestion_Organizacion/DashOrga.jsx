@@ -228,7 +228,7 @@ const DashOrga = () => {
                     <td>{org.nombreOrganizacion}</td>
                     <td>
                       <button
-                        className="bg-yellow-500"
+                        className="bg-green-500"
                         onClick={() => seleccionarOrganizacion(org)}
                       >
                         Editar

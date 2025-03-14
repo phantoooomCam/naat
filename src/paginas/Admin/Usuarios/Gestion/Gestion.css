@@ -4,11 +4,25 @@
   width: 90%;
   margin: 120px auto;
   padding: 20px;
-  background: white;
+  background: rgb(255, 255, 255);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   border-radius: 12px;
 }
-
+.content-wrapper.editing-mode {
+  max-width: 800px;
+  width: 90%;
+  margin: 120px auto;
+  padding: 30px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+}
+.gestion-form.editing-mode {
+  background-color: #f9fafc;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
 h2 {
   color: #333;
   font-size: 1.4rem;
@@ -33,8 +47,8 @@ h2 {
   flex-direction: column;
 }
 
-.inputedit, 
-input, 
+.inputedit,
+input,
 select {
   padding: 8px;
   margin-top: 5px;
@@ -58,33 +72,107 @@ button {
   transition: all 0.3s;
   cursor: pointer;
 }
-
-.btn-edit, 
+.btn-edit,
 .bg-green-500 {
-  background-color: #bbc2c7;
-  color: black;
-  border: none;
-  margin-top: 10px;
+  background-color: #f1f1f1;
+  color: #333;
+  border: 1px solid #ddd;
 }
 
-.btn-edit:hover, 
+.btn-edit:hover,
 .bg-green-500:hover {
-  background-color: #949a9e;
+  background-color: #e5e5e5;
 }
 
-.btn-cancel, 
+.btn-cancel,
 .bg-red-500 {
-  background-color: #f16464;
-  color: black;
+  background-color: #222a35;
+  color: rgb(253, 64, 64);
   border: none;
-  margin-top: 10px;
+}
+/* Estilos generales para los botones de acción */
+.td-btn {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 10px;
 }
 
-.btn-cancel:hover, 
+/* Anula las propiedades heredadas y fuerza los botones a ser circulares */
+.td-btn button {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  min-width: unset !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+  transition: background-color 0.3s ease;
+  overflow: hidden;
+}
+
+/* Estilo para el botón de editar (verde) */
+.td-btn button.bg-green-400 {
+  background-color: #f1f1f1 !important;
+  color: #333 !important;
+  border: 1px solid #ddd !important;
+}
+
+.td-btn button.bg-green-400:hover {
+  background-color: #e5e5e5 !important;
+}
+
+/* Estilo para el botón de eliminar (rojo) */
+.td-btn button.bg-red-400 {
+  background-color: #222a35 !important;
+  color: rgb(253, 64, 64) !important;
+  border: none !important;
+}
+
+.td-btn button.bg-red-400:hover {
+  background-color: #1a202c !important;
+}
+
+/* Asegura que los iconos dentro de los botones estén centrados */
+.td-btn button svg,
+.td-btn button img {
+  width: 20px !important;
+  height: 20px !important;
+  display: block !important;
+  margin: 0 auto !important;
+}
+
+/* Ajusta el padding de la celda de la tabla si es necesario */
+td.td-btn {
+  padding: 8px !important;
+  text-align: center !important;
+}
+
+.td-btn button svg {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Asegúrate de que los iconos dentro de los botones también estén centrados y proporcionados */
+.td-btn button svg,
+.td-btn button img {
+  width: 20px;
+  height: 20px;
+  display: block;
+  margin: 0 auto;
+}
+
+
+.btn-cancel:hover,
 .bg-red-500:hover {
-  background-color: #d95454;
+  background-color: #333a44;
 }
-
+.btn-yellow-500 {
+  border: none;
+}
 .form-buttons {
   display: flex;
   justify-content: flex-end;
@@ -104,7 +192,8 @@ table {
   font-size: 1rem;
 }
 
-th, td {
+th,
+td {
   padding: 14px;
   text-align: left;
 }
@@ -156,7 +245,7 @@ tr:hover {
     width: 100%;
     transition: none;
   }
-  
+
   .content-wrapper {
     width: 95%;
     margin: 120px auto;
@@ -168,23 +257,23 @@ tr:hover {
   .form-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .table-container {
     overflow-x: auto;
   }
-  
+
   table {
     min-width: 600px;
   }
-  
+
   .search-container {
     flex-direction: column;
   }
-  
+
   .form-buttons {
     flex-direction: column;
   }
-  
+
   button {
     width: 100%;
     padding: 6px 12px;
@@ -196,13 +285,14 @@ tr:hover {
   table {
     font-size: 0.9rem;
   }
-  
-  th, td {
+
+  th,
+  td {
     padding: 8px;
   }
-  
-  .inputedit, 
-  input, 
+
+  .inputedit,
+  input,
   select {
     font-size: 0.9rem;
   }

@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import "./Gestion.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 const GestionDash = () => {
   // Estados para el colapso de sidebar
@@ -63,18 +65,15 @@ const GestionDash = () => {
     }
   };
 
-  const fetchAreas = async() =>{
-    try{
-      const response = await fetch(
-        "http://192.168.100.89:44444/api/areas",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-        }
-      );
+  const fetchAreas = async () => {
+    try {
+      const response = await fetch("http://192.168.100.89:44444/api/areas", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      });
       if (!response.ok)
         throw new Error(`Error ${response.status}: ${response.statusText}`);
 
@@ -85,28 +84,27 @@ const GestionDash = () => {
     }
   };
 
-  const fetchDepartamentos = async() =>{
-    try{
+  const fetchDepartamentos = async () => {
+    try {
       const response = await fetch(
         "http://192.168.100.89:44444/api/departamentos",
         {
-          method : "GET",
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: token ? `Bearer ${token}` : "",
           },
         }
       );
-      if(!response.ok)
+      if (!response.ok)
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       const data = await response.json();
       setDepartamentos(data);
-    }
-    catch (error){
-      console.error("Error al obtener departamentos: ",error)
+    } catch (error) {
+      console.error("Error al obtener departamentos: ", error);
     }
   };
-  
+
   // Observador para el sidebar
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -181,15 +179,15 @@ const GestionDash = () => {
   useEffect(() => {
     if (formData.idOrganizacion) {
       const areasDeOrganizacion = areas.filter(
-        area => area.idOrganizacion === parseInt(formData.idOrganizacion)
+        (area) => area.idOrganizacion === parseInt(formData.idOrganizacion)
       );
       setFilteredAreas(areasDeOrganizacion);
-      
+
       // Reset área seleccionada si la organización cambia
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         idArea: 0,
-        idDepartamento: 0
+        idDepartamento: 0,
       }));
     } else {
       setFilteredAreas([]);
@@ -200,14 +198,14 @@ const GestionDash = () => {
   useEffect(() => {
     if (formData.idArea) {
       const departamentosDeArea = departamentos.filter(
-        depto => depto.idArea === parseInt(formData.idArea)
+        (depto) => depto.idArea === parseInt(formData.idArea)
       );
       setFilteredDepartamentos(departamentosDeArea);
-      
+
       // Reset departamento seleccionado si el área cambia
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        idDepartamento: 0
+        idDepartamento: 0,
       }));
     } else {
       setFilteredDepartamentos([]);
@@ -217,10 +215,13 @@ const GestionDash = () => {
   // Handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
-    let numValue = name === "idOrganizacion" || name === "idArea" || name === "idDepartamento" 
-      ? Number(value) || 0 
-      : value;
-    
+    let numValue =
+      name === "idOrganizacion" ||
+      name === "idArea" ||
+      name === "idDepartamento"
+        ? Number(value) || 0
+        : value;
+
     setFormData({
       ...formData,
       [name]: numValue,
@@ -273,7 +274,7 @@ const GestionDash = () => {
       rol: user.rol,
       contraseña: "",
     };
-    
+
     setFormData(userData);
     setIsEditing(true);
   };
@@ -342,8 +343,9 @@ const GestionDash = () => {
         throw new Error(`Error al crear: ${response.status} - ${errorText}`);
       }
 
-      setIsCreating(false);
       fetchUsers();
+
+      // Limpiar el formulario
       setFormData({
         nombre: "",
         apellidoPaterno: "",
@@ -358,9 +360,31 @@ const GestionDash = () => {
         nivel: 5,
         rol: "Lector",
       });
+
+      // Cerrar el formulario
+      setIsCreating(false);
     } catch (error) {
       setError(error.message);
     }
+  };
+
+  // Función para abrir el formulario y limpiarlo
+  const handleOpenCreateForm = () => {
+    setFormData({
+      nombre: "",
+      apellidoPaterno: "",
+      apellidoMaterno: "",
+      correo: "",
+      telefono: "",
+      contraseña: "",
+      usuario: "",
+      idOrganizacion: 0,
+      idArea: 0,
+      idDepartamento: 0,
+      nivel: 5,
+      rol: "Lector",
+    });
+    setIsCreating(true); // Mostrar el formulario
   };
 
   if (loading) {
@@ -393,14 +417,25 @@ const GestionDash = () => {
 
   return (
     <div className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
-      <div className="content-wrapper">
+      <div
+        className={`content-wrapper ${
+          isEditing || isCreating ? "editing-mode" : ""
+        }`}
+      >
         <div className="content-container">
-          <h2>Gestión de Usuarios</h2>
-  
+          <div className="perfil-header">
+            <h2>Gestion de Usuarios</h2>
+            <p className="perfil-subtitle">
+              Gestiona la informacion de los Usuarios
+            </p>
+          </div>
+
           {isEditing || isCreating ? (
             <form
               onSubmit={isCreating ? handleCreate : handleSubmit}
-              className="gestion-form"
+              className={`gestion-form ${
+                isEditing || isCreating ? "editing-mode" : ""
+              }`}
             >
               <div className="form-grid">
                 <div>
@@ -515,10 +550,7 @@ const GestionDash = () => {
                   >
                     <option value="">Seleccione un área</option>
                     {filteredAreas.map((ar) => (
-                      <option
-                        key={ar.idArea}
-                        value={ar.idArea}
-                      >
+                      <option key={ar.idArea} value={ar.idArea}>
                         {ar.nombreArea}
                       </option>
                     ))}
@@ -557,7 +589,7 @@ const GestionDash = () => {
                   </select>
                 </div>
               </div>
-  
+
               <div className="form-buttons">
                 <button type="submit" className="btn-edit">
                   {isCreating ? "Agregar" : "Actualizar"}
@@ -594,7 +626,7 @@ const GestionDash = () => {
                   </button>
                 </div>
               </form>
-  
+
               <div className="table-container">
                 <table>
                   <thead>
@@ -674,18 +706,24 @@ const GestionDash = () => {
                           })()}
                         </td>
                         <td>{user.rol}</td>
-                        <td>
+                        <td className="td-btn">
                           <button
                             onClick={() => handleEdit(user)}
-                            className="bg-yellow-500"
+                            className="bg-green-400"
                           >
-                            Editar
+                            <FontAwesomeIcon
+                              icon={faPencilAlt}
+                              className="w-6 h-6"
+                            />
                           </button>
                           <button
                             onClick={() => handleDelete(user.id)}
-                            className="bg-red-500"
+                            className="bg-red-400"
                           >
-                            Eliminar
+                            <FontAwesomeIcon
+                              icon={faTrash}
+                              className="w-6 h-6"
+                            />
                           </button>
                         </td>
                       </tr>
