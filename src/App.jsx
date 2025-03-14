@@ -18,9 +18,10 @@ import Gestion_Area from "./paginas/Admin/Organizaciones/Gestion_Area/Gestion_Ar
 
 import ActividadesGestion from "./paginas/Admin/Sistema/Actividad/Actividades";
 
-
 import AdministrarCuenta from "./componentes/AdministrarCuenta/Administrar";
 import Cambiar from "./componentes/AdministrarCuenta/Cambiarcontraseña/Cambiar";
+
+import Home_Organizacion from "./paginas/AdminOrganizacion/Home_Organizacion/Home_Organizacion";
 
 import ProtectedRoute from "./componentes/ProtectedRoute";
 
@@ -31,8 +32,8 @@ function App() {
       <Route path="/registro" element={<Login />} />
       <Route path="/mensaje" element={<MensajeRegistro />} />
       <Route path="*" element={<PageNotFound />} />
+      
       <Route element={<ProtectedRoute />}>
-        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/gestion" element={<Gestion />} />
         <Route path="/solicitudes" element={<Solicitud />} />
         <Route path="/ingresos" element={<IngresoSist />} />
@@ -42,13 +43,15 @@ function App() {
         <Route path="/depto" element={<Gestion_Depto />} />
         <Route path="/area" element={<Gestion_Area />} />
 
-
         <Route path="/administrarcuenta" element={<AdministrarCuenta />} />
         <Route path="/cambiarcontra" element={<Cambiar />} />
+
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/home_org" element={<Home_Organizacion />} />
       </Route>
+      
+
       <Route path="/changepasswd" element={<PasswordChange />} />
-
-
     </Routes>
   );
 }

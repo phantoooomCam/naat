@@ -137,14 +137,20 @@ export default function SignIn() {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.usuario));
 
-        // Redirigir al dashboard si todo está bien
-        navigate("/dashboard");
+        if (data.usuario.nivel === 1) {
+          navigate("/dashboard");
+        } else if (data.usuario.nivel === 2) {
+          navigate("/home_org");
+        } else {
+          navigate("/");
+        }
       } else {
-        throw new Error("Su cuenta no ha sido activada");
+        // Manejo de errores
+        setError("Credenciales inválidas");
       }
     } catch (error) {
-      console.error("Error en la autenticación:", error);
-      setError(error.message || "Hubo un problema con la conexión al servidor");
+      console.error("Error en el inicio de sesión:", error);
+      setError("Error al intentar iniciar sesión");
     }
   };
 

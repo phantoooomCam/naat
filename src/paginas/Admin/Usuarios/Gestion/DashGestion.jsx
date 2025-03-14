@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import "./Gestion.css";
-import { body } from "framer-motion/client";
 
 const GestionDash = () => {
   // Estados para el colapso de sidebar
@@ -22,17 +21,24 @@ const GestionDash = () => {
     idOrganizacion: 0,
     nivel: 5,
     rol: "Lector",
+    idArea: 0,
+    idDepartamento: 0,
   });
   const [isEditing, setIsEditing] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
+  // Estados para opciones filtradas
+  const [filteredAreas, setFilteredAreas] = useState([]);
+  const [filteredDepartamentos, setFilteredDepartamentos] = useState([]);
+
   const usuario = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
   //Organizaciones
-
   const [organizaciones, setOrganizaciones] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [departamentos, setDepartamentos] = useState([]);
 
   const fetchOrganizaciones = async () => {
     try {
@@ -57,6 +63,50 @@ const GestionDash = () => {
     }
   };
 
+  const fetchAreas = async() =>{
+    try{
+      const response = await fetch(
+        "http://192.168.100.89:44444/api/areas",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        }
+      );
+      if (!response.ok)
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+
+      const data = await response.json();
+      setAreas(data);
+    } catch (error) {
+      console.error("Error al obtener areas:", error);
+    }
+  };
+
+  const fetchDepartamentos = async() =>{
+    try{
+      const response = await fetch(
+        "http://192.168.100.89:44444/api/departamentos",
+        {
+          method : "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        }
+      );
+      if(!response.ok)
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      const data = await response.json();
+      setDepartamentos(data);
+    }
+    catch (error){
+      console.error("Error al obtener departamentos: ",error)
+    }
+  };
+  
   // Observador para el sidebar
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -112,6 +162,8 @@ const GestionDash = () => {
   useEffect(() => {
     fetchUsers();
     fetchOrganizaciones();
+    fetchAreas();
+    fetchDepartamentos();
   }, []);
 
   // Filtrado de usuarios
@@ -125,15 +177,55 @@ const GestionDash = () => {
     setFilteredUsers(filtered);
   }, [searchText, users]);
 
+  // Filtrar áreas basadas en la organización seleccionada
+  useEffect(() => {
+    if (formData.idOrganizacion) {
+      const areasDeOrganizacion = areas.filter(
+        area => area.idOrganizacion === parseInt(formData.idOrganizacion)
+      );
+      setFilteredAreas(areasDeOrganizacion);
+      
+      // Reset área seleccionada si la organización cambia
+      setFormData(prev => ({
+        ...prev,
+        idArea: 0,
+        idDepartamento: 0
+      }));
+    } else {
+      setFilteredAreas([]);
+    }
+  }, [formData.idOrganizacion, areas]);
+
+  // Filtrar departamentos basados en el área seleccionada
+  useEffect(() => {
+    if (formData.idArea) {
+      const departamentosDeArea = departamentos.filter(
+        depto => depto.idArea === parseInt(formData.idArea)
+      );
+      setFilteredDepartamentos(departamentosDeArea);
+      
+      // Reset departamento seleccionado si el área cambia
+      setFormData(prev => ({
+        ...prev,
+        idDepartamento: 0
+      }));
+    } else {
+      setFilteredDepartamentos([]);
+    }
+  }, [formData.idArea, departamentos]);
+
   // Handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let numValue = name === "idOrganizacion" || name === "idArea" || name === "idDepartamento" 
+      ? Number(value) || 0 
+      : value;
+    
     setFormData({
       ...formData,
-      [name]: name === "idOrganizacion" ? Number(value) || 0 : value, 
+      [name]: numValue,
     });
   };
-  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -167,7 +259,7 @@ const GestionDash = () => {
   };
 
   const handleEdit = (user) => {
-    setFormData({
+    const userData = {
       id_usuario: user.id,
       nombre: user.nombre,
       apellidoPaterno: user.apellidoPaterno,
@@ -175,9 +267,14 @@ const GestionDash = () => {
       correo: user.correo,
       telefono: user.telefono,
       nivel: user.nivel,
-      idOrganizacion: user.idOrganizacion,
+      idOrganizacion: user.organizacion || 0,
+      idArea: user.area || 0,
+      idDepartamento: user.departamento || 0,
       rol: user.rol,
-    });
+      contraseña: "",
+    };
+    
+    setFormData(userData);
     setIsEditing(true);
   };
 
@@ -221,6 +318,8 @@ const GestionDash = () => {
       contraseña: formData.contraseña,
       usuario: formData.usuario,
       idOrganizacion: formData.idOrganizacion,
+      idArea: formData.idArea,
+      idDepartamento: formData.idDepartamento,
       nivel: parseInt(formData.nivel, 10),
       rol: formData.rol,
     };
@@ -253,7 +352,9 @@ const GestionDash = () => {
         telefono: "",
         contraseña: "",
         usuario: "",
-        organizacion: 0,
+        idOrganizacion: 0,
+        idArea: 0,
+        idDepartamento: 0,
         nivel: 5,
         rol: "Lector",
       });
@@ -295,7 +396,7 @@ const GestionDash = () => {
       <div className="content-wrapper">
         <div className="content-container">
           <h2>Gestión de Usuarios</h2>
-
+  
           {isEditing || isCreating ? (
             <form
               onSubmit={isCreating ? handleCreate : handleSubmit}
@@ -387,7 +488,7 @@ const GestionDash = () => {
                 <div>
                   <label>Organización</label>
                   <select
-                    name="idOrganizacion" // 
+                    name="idOrganizacion"
                     value={formData.idOrganizacion || ""}
                     onChange={handleChange}
                     className="inputedit"
@@ -399,6 +500,46 @@ const GestionDash = () => {
                         value={org.idOrganizacion}
                       >
                         {org.nombreOrganizacion}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label>Area</label>
+                  <select
+                    name="idArea"
+                    value={formData.idArea || ""}
+                    onChange={handleChange}
+                    className="inputedit"
+                    disabled={!formData.idOrganizacion}
+                  >
+                    <option value="">Seleccione un área</option>
+                    {filteredAreas.map((ar) => (
+                      <option
+                        key={ar.idArea}
+                        value={ar.idArea}
+                      >
+                        {ar.nombreArea}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label>Departamento</label>
+                  <select
+                    name="idDepartamento"
+                    value={formData.idDepartamento || ""}
+                    onChange={handleChange}
+                    className="inputedit"
+                    disabled={!formData.idArea}
+                  >
+                    <option value="">Seleccione un departamento</option>
+                    {filteredDepartamentos.map((depto) => (
+                      <option
+                        key={depto.idDepartamento}
+                        value={depto.idDepartamento}
+                      >
+                        {depto.nombreDepartamento}
                       </option>
                     ))}
                   </select>
@@ -416,7 +557,7 @@ const GestionDash = () => {
                   </select>
                 </div>
               </div>
-
+  
               <div className="form-buttons">
                 <button type="submit" className="btn-edit">
                   {isCreating ? "Agregar" : "Actualizar"}
@@ -453,7 +594,7 @@ const GestionDash = () => {
                   </button>
                 </div>
               </form>
-
+  
               <div className="table-container">
                 <table>
                   <thead>
@@ -466,6 +607,8 @@ const GestionDash = () => {
                       <th>Telefono</th>
                       <th>Nivel</th>
                       <th>Organización</th>
+                      <th>Area</th>
+                      <th>Departamento</th>
                       <th>Rol</th>
                       <th>Acciones</th>
                     </tr>
@@ -508,6 +651,26 @@ const GestionDash = () => {
                             return org
                               ? org.nombreOrganizacion
                               : user.nombreOrganizacion || "-";
+                          })()}
+                        </td>
+                        <td>
+                          {(() => {
+                            const area = areas.find(
+                              (a) => a.idArea == user.area
+                            );
+                            return area
+                              ? area.nombreArea
+                              : user.nombreArea || "-";
+                          })()}
+                        </td>
+                        <td>
+                          {(() => {
+                            const departamento = departamentos.find(
+                              (d) => d.idDepartamento == user.departamento
+                            );
+                            return departamento
+                              ? departamento.nombreDepartamento
+                              : user.nombreDepartamento || "-";
                           })()}
                         </td>
                         <td>{user.rol}</td>
