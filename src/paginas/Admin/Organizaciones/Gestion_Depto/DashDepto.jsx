@@ -1,19 +1,22 @@
 import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faTrash } from "@fortawesome/free-solid-svg-icons";
 import "../../Usuarios/Gestion/Gestion.css";
 
 const DashDepartamento = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [departamentos, setDepartamentos] = useState([]);
-  const [departamentoSeleccionado, setDepartamentoSeleccionado] = useState(null);
-  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [filtro, setFiltro] = useState("");
+  const [areas, setAreas] = useState([]);
+  const [organizaciones, setOrganizaciones] = useState([]);
   const [formData, setFormData] = useState({
     idDepartamento: 0,
     nombreDepartamento: "",
     idArea: "",
     idOrganizacion: "",
   });
-  const [areas, setAreas] = useState([]);
-  const [organizaciones, setOrganizaciones] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -89,8 +92,28 @@ const DashDepartamento = () => {
     }
   };
 
-  const crearDepartamento = async () => {
+  const crearDepartamento = async (e) => {
+    e.preventDefault();
     setLoading(true);
+    
+    if (!formData.nombreDepartamento.trim()) {
+      setError("El nombre del departamento no puede estar vacío");
+      setLoading(false);
+      return;
+    }
+    
+    if (!formData.idOrganizacion) {
+      setError("Debe seleccionar una organización");
+      setLoading(false);
+      return;
+    }
+    
+    if(!formData.idArea) {
+      setError("Debe seleccionar un área");
+      setLoading(false);
+      return;
+    }
+
     try {
       const dataToSend = {
         idDepartamento: 0,
@@ -109,10 +132,10 @@ const DashDepartamento = () => {
       });
 
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-      
+
       resetearFormulario();
       obtenerDepartamentos();
-      setMostrarFormulario(false);
+      setIsCreating(false);
       setError(null);
     } catch (error) {
       console.error("Error al crear el departamento:", error);
@@ -122,8 +145,28 @@ const DashDepartamento = () => {
     }
   };
 
-  const actualizarDepartamento = async () => {
+  const actualizarDepartamento = async (e) => {
+    e.preventDefault();
     setLoading(true);
+    
+    if (!formData.nombreDepartamento.trim()) {
+      setError("El nombre del departamento no puede estar vacío");
+      setLoading(false);
+      return;
+    }
+    
+    if (!formData.idOrganizacion) {
+      setError("Debe seleccionar una organización");
+      setLoading(false);
+      return;
+    }
+    
+    if(!formData.idArea) {
+      setError("Debe seleccionar un área");
+      setLoading(false);
+      return;
+    }
+
     try {
       const dataToSend = {
         idDepartamento: parseInt(formData.idDepartamento, 10),
@@ -145,7 +188,7 @@ const DashDepartamento = () => {
 
       resetearFormulario();
       obtenerDepartamentos();
-      setMostrarFormulario(false);
+      setIsEditing(false);
       setError(null);
     } catch (error) {
       console.error("Error al actualizar el departamento:", error);
@@ -156,27 +199,28 @@ const DashDepartamento = () => {
   };
 
   const eliminarDepartamento = async (id) => {
-    if (window.confirm("¿Está seguro que desea eliminar este departamento?")) {
-      setLoading(true);
-      try {
-        const response = await fetch(`${API_URL}/departamentos/${id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+    const confirmar = window.confirm("¿Está seguro que desea eliminar este departamento?");
+    if (!confirmar) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/departamentos/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-        
-        obtenerDepartamentos();
-        setError(null);
-      } catch (error) {
-        console.error("Error al eliminar el departamento:", error);
-        setError("Error al eliminar el departamento. Intente nuevamente.");
-      } finally {
-        setLoading(false);
-      }
+      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+      
+      obtenerDepartamentos();
+      setError(null);
+    } catch (error) {
+      console.error("Error al eliminar el departamento:", error);
+      setError("Error al eliminar el departamento. Intente nuevamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -196,25 +240,14 @@ const DashDepartamento = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.nombreDepartamento.trim()) return setError("El nombre del departamento no puede estar vacío");
-    if (!formData.idOrganizacion) return setError("Debe seleccionar una organización");
-    if (!formData.idArea) return setError("Debe seleccionar un área");
-    
-    setError(null);
-    departamentoSeleccionado ? actualizarDepartamento() : crearDepartamento();
-  };
-
-  const prepararEdicion = (departamento) => {
-    setDepartamentoSeleccionado(departamento);
+  const seleccionarDepartamento = (departamento) => {
     setFormData({
       idDepartamento: departamento.idDepartamento,
       nombreDepartamento: departamento.nombreDepartamento,
       idArea: departamento.idArea,
       idOrganizacion: departamento.idOrganizacion,
     });
-    setMostrarFormulario(true);
+    setIsEditing(true);
   };
 
   const resetearFormulario = () => {
@@ -224,12 +257,11 @@ const DashDepartamento = () => {
       idArea: "",
       idOrganizacion: "",
     });
-    setDepartamentoSeleccionado(null);
   };
 
-  const mostrarFormularioNuevo = () => {
+  const handleOpenCreateForm = () => {
     resetearFormulario();
-    setMostrarFormulario(true);
+    setIsCreating(true);
   };
 
   useEffect(() => {
@@ -238,153 +270,238 @@ const DashDepartamento = () => {
     obtenerAreas();
   }, []);
 
+  const departamentosFiltrados = departamentos.filter((departamento) =>
+    departamento.nombreDepartamento.toLowerCase().includes(filtro.toLowerCase())
+  );
+
   return (
-    <div className={`dash-gestion ${isSidebarCollapsed ? 'collapsed' : ''}`}>
-      <div className="content-wrapper">
+    <div className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
+      <div className={`content-wrapper ${isEditing || isCreating ? "editing-mode" : ""}`}>
         <div className="content-container">
-          <div className="header-actions">
-            <h2>Gestión de Departamentos</h2>
-            <button
-              className="bg-green-500"
-              onClick={mostrarFormularioNuevo}
-              disabled={loading}
-            >
-              {loading ? "Procesando..." : "Agregar Departamento"}
-            </button>
+          <div className="perfil-header">
+            <h2>Lista de Departamentos</h2>
+            <p className="perfil-subtitle">
+              Gestiona la información de los departamentos
+            </p>
           </div>
 
           {error && <div className="error-message">{error}</div>}
 
-          {mostrarFormulario && (
-            <div className="form-container">
-              <h3>
-                {departamentoSeleccionado ? "Editar Departamento" : "Agregar Departamento"}
-              </h3>
-              <form onSubmit={handleSubmit}>
-                <div className="form-grid">
-                  <div className="form-group">
-                    <label>Organización:</label>
-                    <select
-                      name="idOrganizacion"
-                      value={formData.idOrganizacion}
-                      onChange={handleChange}
-                      required
-                      disabled={loading}
-                    >
-                      <option value="">Seleccione una organización</option>
-                      {organizaciones.map((org) => (
-                        <option key={org.idOrganizacion} value={org.idOrganizacion}>
-                          {org.nombreOrganizacion}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Área:</label>
-                    <select
-                      name="idArea"
-                      value={formData.idArea}
-                      onChange={handleChange}
-                      required
-                      disabled={!formData.idOrganizacion || loading}
-                    >
-                      <option value="">Seleccione un área</option>
-                      {areasFiltradas().map((area) => (
-                        <option key={area.idArea} value={area.idArea}>
-                          {area.nombreArea}
-                        </option>
-                      ))}
-                    </select>
-                    {formData.idOrganizacion && areasFiltradas().length === 0 && (
-                      <p className="warning">No hay áreas disponibles para esta organización</p>
-                    )}
-                  </div>
-
-                  <div className="form-group full-width">
-                    <label>Nombre del Departamento:</label>
-                    <input
-                      type="text"
-                      name="nombreDepartamento"
-                      value={formData.nombreDepartamento}
-                      onChange={handleChange}
-                      required
-                      disabled={loading}
-                      placeholder="Nombre del departamento"
-                    />
-                  </div>
-                </div>
-
-                <div className="form-buttons">
-                  <button type="submit" className="btn-edit" disabled={loading}>
-                    {loading ? "Procesando..." : departamentoSeleccionado ? "Actualizar" : "Guardar"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-cancel"
-                    onClick={() => {
-                      setMostrarFormulario(false);
-                      resetearFormulario();
-                    }}
+          {isEditing ? (
+            <form onSubmit={actualizarDepartamento} className="gestion-form editing-mode">
+              <div className="form-grid">
+                <div>
+                  <label>Organización</label>
+                  <select
+                    name="idOrganizacion"
+                    value={formData.idOrganizacion}
+                    onChange={handleChange}
+                    className="inputedit"
                     disabled={loading}
                   >
-                    Cancelar
+                    <option value="">Seleccione una organización</option>
+                    {organizaciones.map((org) => (
+                      <option key={org.idOrganizacion} value={org.idOrganizacion}>
+                        {org.nombreOrganizacion}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label>Área</label>
+                  <select
+                    name="idArea"
+                    value={formData.idArea}
+                    onChange={handleChange}
+                    className="inputedit"
+                    disabled={!formData.idOrganizacion || loading}
+                  >
+                    <option value="">Seleccione un área</option>
+                    {areasFiltradas().map((area) => (
+                      <option key={area.idArea} value={area.idArea}>
+                        {area.nombreArea}
+                      </option>
+                    ))}
+                  </select>
+                  {formData.idOrganizacion && areasFiltradas().length === 0 && (
+                    <p className="warning">No hay áreas disponibles para esta organización</p>
+                  )}
+                </div>
+                <div>
+                  <label>Nombre del Departamento</label>
+                  <input
+                    type="text"
+                    name="nombreDepartamento"
+                    placeholder="Nombre del departamento"
+                    value={formData.nombreDepartamento}
+                    onChange={handleChange}
+                    className="inputedit"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+              <div className="form-buttons">
+                <button type="submit" className="btn-edit" disabled={loading}>
+                  {loading ? "Procesando..." : "Actualizar"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => {
+                    setIsEditing(false);
+                    resetearFormulario();
+                  }}
+                  disabled={loading}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          ) : isCreating ? (
+            <form onSubmit={crearDepartamento} className="gestion-form editing-mode">
+              <div className="form-grid">
+                <div>
+                  <label>Organización</label>
+                  <select
+                    name="idOrganizacion"
+                    value={formData.idOrganizacion}
+                    onChange={handleChange}
+                    className="inputedit"
+                    disabled={loading}
+                  >
+                    <option value="">Seleccione una organización</option>
+                    {organizaciones.map((org) => (
+                      <option key={org.idOrganizacion} value={org.idOrganizacion}>
+                        {org.nombreOrganizacion}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label>Área</label>
+                  <select
+                    name="idArea"
+                    value={formData.idArea}
+                    onChange={handleChange}
+                    className="inputedit"
+                    disabled={!formData.idOrganizacion || loading}
+                  >
+                    <option value="">Seleccione un área</option>
+                    {areasFiltradas().map((area) => (
+                      <option key={area.idArea} value={area.idArea}>
+                        {area.nombreArea}
+                      </option>
+                    ))}
+                  </select>
+                  {formData.idOrganizacion && areasFiltradas().length === 0 && (
+                    <p className="warning">No hay áreas disponibles para esta organización</p>
+                  )}
+                </div>
+                <div>
+                  <label>Nombre del Departamento</label>
+                  <input
+                    type="text"
+                    name="nombreDepartamento"
+                    placeholder="Nombre del departamento"
+                    value={formData.nombreDepartamento}
+                    onChange={handleChange}
+                    className="inputedit"
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+              <div className="form-buttons">
+                <button type="submit" className="btn-edit" disabled={loading}>
+                  {loading ? "Procesando..." : "Crear"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => setIsCreating(false)}
+                  disabled={loading}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <form className="gestion-form">
+                <div className="search-container">
+                  <input
+                    type="text"
+                    placeholder="Buscar departamento..."
+                    value={filtro}
+                    onChange={(e) => setFiltro(e.target.value)}
+                    className="search-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleOpenCreateForm}
+                    className="bg-green-500 add-button"
+                    disabled={loading}
+                  >
+                    Agregar
                   </button>
                 </div>
               </form>
-            </div>
-          )}
 
-          {loading && !mostrarFormulario && <div className="loading">Cargando datos...</div>}
-
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nombre</th>
-                  <th>Organización</th>
-                  <th>Área</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {departamentos.map((departamento) => {
-                  const organizacion = organizaciones.find(
-                    (org) => org.idOrganizacion === departamento.idOrganizacion
-                  );
-                  const area = areas.find(
-                    (area) => area.idArea === departamento.idArea
-                  );
-
-                  return (
-                    <tr key={departamento.idDepartamento}>
-                      <td>{departamento.idDepartamento}</td>
-                      <td>{departamento.nombreDepartamento}</td>
-                      <td>{organizacion?.nombreOrganizacion || "-"}</td>
-                      <td>{area?.nombreArea || "-"}</td>
-                      <td>
-                        <button
-                          className="bg-yellow-500"
-                          onClick={() => prepararEdicion(departamento)}
-                          disabled={loading}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          className="bg-red-500"
-                          onClick={() => eliminarDepartamento(departamento.idDepartamento)}
-                          disabled={loading}
-                        >
-                          Eliminar
-                        </button>
-                      </td>
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nombre</th>
+                      <th>Organización</th>
+                      <th>Área</th>
+                      <th>Acciones</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {departamentosFiltrados.map((departamento) => {
+                      const organizacion = organizaciones.find(
+                        (org) => org.idOrganizacion === departamento.idOrganizacion
+                      );
+                      const area = areas.find(
+                        (area) => area.idArea === departamento.idArea
+                      );
+                      
+                      return (
+                        <tr key={departamento.idDepartamento}>
+                          <td>{departamento.idDepartamento}</td>
+                          <td>{departamento.nombreDepartamento}</td>
+                          <td>{organizacion?.nombreOrganizacion || "-"}</td>
+                          <td>{area?.nombreArea || "-"}</td>
+                          <td className="td-btn">
+                            <button
+                              onClick={() => seleccionarDepartamento(departamento)}
+                              className="bg-green-400"
+                              disabled={loading}
+                            >
+                              <FontAwesomeIcon
+                                icon={faPencilAlt}
+                                className="w-6 h-6"
+                              />
+                            </button>
+                            <button
+                              onClick={() => eliminarDepartamento(departamento.idDepartamento)}
+                              className="bg-red-400"
+                              disabled={loading}
+                            >
+                              <FontAwesomeIcon
+                                icon={faTrash}
+                                className="w-6 h-6"
+                              />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

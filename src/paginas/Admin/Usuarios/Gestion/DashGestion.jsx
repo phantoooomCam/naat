@@ -30,6 +30,10 @@ const GestionDash = () => {
   const [searchText, setSearchText] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
+  // Estados para la paginación
+  const [paginaActual, setPaginaActual] = useState(1);
+  const registrosPorPagina = 5;
+
   // Estados para opciones filtradas
   const [filteredAreas, setFilteredAreas] = useState([]);
   const [filteredDepartamentos, setFilteredDepartamentos] = useState([]);
@@ -173,6 +177,7 @@ const GestionDash = () => {
         .includes(lowercasedSearchText)
     );
     setFilteredUsers(filtered);
+    setPaginaActual(1); // Reset a la primera página cuando se filtra
   }, [searchText, users]);
 
   // Filtrar áreas basadas en la organización seleccionada
@@ -211,6 +216,12 @@ const GestionDash = () => {
       setFilteredDepartamentos([]);
     }
   }, [formData.idArea, departamentos]);
+
+  // Paginación
+  const indexUltimo = paginaActual * registrosPorPagina;
+  const indexPrimero = indexUltimo - registrosPorPagina;
+  const usersPaginados = filteredUsers.slice(indexPrimero, indexUltimo);
+  const totalPaginas = Math.ceil(filteredUsers.length / registrosPorPagina);
 
   // Handlers
   const handleChange = (e) => {
@@ -646,7 +657,7 @@ const GestionDash = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((user) => (
+                    {usersPaginados.map((user) => (
                       <tr key={user.id}>
                         <td>{user.id}</td>
                         <td>{user.nombre}</td>
@@ -730,6 +741,27 @@ const GestionDash = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Paginación */}
+              <div className="paginacion">
+                <button
+                  onClick={() => setPaginaActual(paginaActual - 1)}
+                  disabled={paginaActual === 1}
+                  className="btn-anterior"
+                >
+                  ← Anterior
+                </button>
+                <span>
+                  Página {paginaActual} de {totalPaginas || 1}
+                </span>
+                <button
+                  onClick={() => setPaginaActual(paginaActual + 1)}
+                  disabled={paginaActual === totalPaginas || totalPaginas === 0}
+                  className="btn-siguiente"
+                >
+                  Siguiente →
+                </button>
               </div>
             </>
           )}

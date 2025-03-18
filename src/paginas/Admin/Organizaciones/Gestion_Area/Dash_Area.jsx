@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faTrash } from "@fortawesome/free-solid-svg-icons";
 import "../../Usuarios/Gestion/Gestion.css";
 
 const DashArea = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [areas, setAreas] = useState([]);
-  const [areaSeleccionada, setAreaSeleccionada] = useState(null);
-  const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [filtro, setFiltro] = useState("");
+  const [organizaciones, setOrganizaciones] = useState([]);
   const [formData, setFormData] = useState({
     idArea: 0,
     nombreArea: "",
     idOrganizacion: 0,
   });
-  const [organizaciones, setOrganizaciones] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -70,8 +73,22 @@ const DashArea = () => {
     }
   };
 
-  const crearArea = async () => {
+  const crearArea = async (e) => {
+    e.preventDefault();
     setLoading(true);
+    
+    if (!formData.nombreArea.trim()) {
+      setError("El nombre del área no puede estar vacío");
+      setLoading(false);
+      return;
+    }
+    
+    if (!formData.idOrganizacion) {
+      setError("Debe seleccionar una organización");
+      setLoading(false);
+      return;
+    }
+
     try {
       const dataToSend = {
         idArea: 0,
@@ -92,7 +109,7 @@ const DashArea = () => {
 
       resetearFormulario();
       obtenerAreas();
-      setMostrarFormulario(false);
+      setIsCreating(false);
       setError(null);
     } catch (error) {
       console.error("Error al crear el área:", error);
@@ -102,8 +119,22 @@ const DashArea = () => {
     }
   };
 
-  const actualizarArea = async () => {
+  const actualizarArea = async (e) => {
+    e.preventDefault();
     setLoading(true);
+    
+    if (!formData.nombreArea.trim()) {
+      setError("El nombre del área no puede estar vacío");
+      setLoading(false);
+      return;
+    }
+    
+    if (!formData.idOrganizacion) {
+      setError("Debe seleccionar una organización");
+      setLoading(false);
+      return;
+    }
+
     try {
       const dataToSend = {
         idArea: parseInt(formData.idArea, 10),
@@ -124,7 +155,7 @@ const DashArea = () => {
 
       resetearFormulario();
       obtenerAreas();
-      setMostrarFormulario(false);
+      setIsEditing(false);
       setError(null);
     } catch (error) {
       console.error("Error al actualizar el área:", error);
@@ -135,27 +166,28 @@ const DashArea = () => {
   };
 
   const eliminarArea = async (id) => {
-    if (window.confirm("¿Está seguro que desea eliminar esta área?")) {
-      setLoading(true);
-      try {
-        const response = await fetch(`${API_URL}/areas/${id}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+    const confirmar = window.confirm("¿Está seguro que desea eliminar esta área?");
+    if (!confirmar) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/areas/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-        
-        obtenerAreas();
-        setError(null);
-      } catch (error) {
-        console.error("Error al eliminar el área:", error);
-        setError("Error al eliminar el área. Intente nuevamente.");
-      } finally {
-        setLoading(false);
-      }
+      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+      
+      obtenerAreas();
+      setError(null);
+    } catch (error) {
+      console.error("Error al eliminar el área:", error);
+      setError("Error al eliminar el área. Intente nuevamente.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,23 +196,13 @@ const DashArea = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.nombreArea.trim()) return setError("El nombre del área no puede estar vacío");
-    if (!formData.idOrganizacion) return setError("Debe seleccionar una organización");
-    
-    setError(null);
-    areaSeleccionada ? actualizarArea() : crearArea();
-  };
-
-  const prepararEdicion = (area) => {
-    setAreaSeleccionada(area);
+  const seleccionarArea = (area) => {
     setFormData({
       idArea: area.idArea,
       nombreArea: area.nombreArea,
       idOrganizacion: area.idOrganizacion,
     });
-    setMostrarFormulario(true);
+    setIsEditing(true);
   };
 
   const resetearFormulario = () => {
@@ -189,12 +211,11 @@ const DashArea = () => {
       nombreArea: "",
       idOrganizacion: 0,
     });
-    setAreaSeleccionada(null);
   };
 
-  const mostrarFormularioNuevo = () => {
+  const handleOpenCreateForm = () => {
     resetearFormulario();
-    setMostrarFormulario(true);
+    setIsCreating(true);
   };
 
   useEffect(() => {
@@ -202,46 +223,45 @@ const DashArea = () => {
     obtenerOrganizaciones();
   }, []);
 
+  const areasFiltradas = areas.filter((area) =>
+    area.nombreArea.toLowerCase().includes(filtro.toLowerCase())
+  );
+
   return (
-    <div className={`dash-gestion ${isSidebarCollapsed ? 'collapsed' : ''}`}>
-      <div className="content-wrapper">
+    <div className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
+      <div className={`content-wrapper ${isEditing || isCreating ? "editing-mode" : ""}`}>
         <div className="content-container">
-          <div className="header-actions">
+          <div className="perfil-header">
             <h2>Lista de Áreas</h2>
-            <button
-              className="bg-green-500"
-              onClick={mostrarFormularioNuevo}
-              disabled={loading}
-            >
-              {loading ? "Procesando..." : "Agregar Área"}
-            </button>
+            <p className="perfil-subtitle">
+              Gestiona la información de las áreas
+            </p>
           </div>
 
           {error && <div className="error-message">{error}</div>}
 
-          {mostrarFormulario && (
-            <div className="form-container">
-              <h3>{areaSeleccionada ? "Editar Área" : "Agregar Área"}</h3>
-              <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                  <label>Nombre del Área:</label>
+          {isEditing ? (
+            <form onSubmit={actualizarArea} className="gestion-form editing-mode">
+              <div className="form-grid">
+                <div>
+                  <label>Nombre del Área</label>
                   <input
                     type="text"
                     name="nombreArea"
+                    placeholder="Nombre del área"
                     value={formData.nombreArea}
                     onChange={handleChange}
-                    required
+                    className="inputedit"
                     disabled={loading}
                   />
                 </div>
-
-                <div className="form-group">
-                  <label>Organización:</label>
+                <div>
+                  <label>Organización</label>
                   <select
                     name="idOrganizacion"
                     value={formData.idOrganizacion}
                     onChange={handleChange}
-                    required
+                    className="inputedit"
                     disabled={loading}
                   >
                     <option value="">Seleccione una organización</option>
@@ -252,70 +272,144 @@ const DashArea = () => {
                     ))}
                   </select>
                 </div>
-
-                <div className="form-buttons">
-                  <button type="submit" className="btn-edit" disabled={loading}>
-                    {areaSeleccionada ? "Actualizar" : "Guardar"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-cancel"
-                    onClick={() => {
-                      setMostrarFormulario(false);
-                      resetearFormulario();
-                    }}
+              </div>
+              <div className="form-buttons">
+                <button type="submit" className="btn-edit" disabled={loading}>
+                  {loading ? "Procesando..." : "Actualizar"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => {
+                    setIsEditing(false);
+                    resetearFormulario();
+                  }}
+                  disabled={loading}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          ) : isCreating ? (
+            <form onSubmit={crearArea} className="gestion-form editing-mode">
+              <div className="form-grid">
+                <div>
+                  <label>Nombre del Área</label>
+                  <input
+                    type="text"
+                    name="nombreArea"
+                    placeholder="Nombre del área"
+                    value={formData.nombreArea}
+                    onChange={handleChange}
+                    className="inputedit"
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <label>Organización</label>
+                  <select
+                    name="idOrganizacion"
+                    value={formData.idOrganizacion}
+                    onChange={handleChange}
+                    className="inputedit"
                     disabled={loading}
                   >
-                    Cancelar
+                    <option value="">Seleccione una organización</option>
+                    {organizaciones.map((org) => (
+                      <option key={org.idOrganizacion} value={org.idOrganizacion}>
+                        {org.nombreOrganizacion}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="form-buttons">
+                <button type="submit" className="btn-edit" disabled={loading}>
+                  {loading ? "Procesando..." : "Crear"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={() => setIsCreating(false)}
+                  disabled={loading}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <form className="gestion-form">
+                <div className="search-container">
+                  <input
+                    type="text"
+                    placeholder="Buscar área..."
+                    value={filtro}
+                    onChange={(e) => setFiltro(e.target.value)}
+                    className="search-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleOpenCreateForm}
+                    className="bg-green-500 add-button"
+                    disabled={loading}
+                  >
+                    Agregar
                   </button>
                 </div>
               </form>
-            </div>
-          )}
 
-          <div className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nombre</th>
-                  <th>Organización</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {areas.map((area) => {
-                  const organizacion = organizaciones.find(
-                    (org) => org.idOrganizacion === area.idOrganizacion
-                  );
-                  
-                  return (
-                    <tr key={area.idArea}>
-                      <td>{area.idArea}</td>
-                      <td>{area.nombreArea}</td>
-                      <td>{organizacion?.nombreOrganizacion || "-"}</td>
-                      <td>
-                        <button
-                          className="bg-yellow-500"
-                          onClick={() => prepararEdicion(area)}
-                          disabled={loading}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          className="bg-red-500"
-                          onClick={() => eliminarArea(area.idArea)}
-                          disabled={loading}
-                        >
-                          Eliminar
-                        </button>
-                      </td>
+              <div className="table-container">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Nombre</th>
+                      <th>Organización</th>
+                      <th>Acciones</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {areasFiltradas.map((area) => {
+                      const organizacion = organizaciones.find(
+                        (org) => org.idOrganizacion === area.idOrganizacion
+                      );
+                      
+                      return (
+                        <tr key={area.idArea}>
+                          <td>{area.idArea}</td>
+                          <td>{area.nombreArea}</td>
+                          <td>{organizacion?.nombreOrganizacion || "-"}</td>
+                          <td className="td-btn">
+                            <button
+                              onClick={() => seleccionarArea(area)}
+                              className="bg-green-400"
+                              disabled={loading}
+                            >
+                              <FontAwesomeIcon
+                                icon={faPencilAlt}
+                                className="w-6 h-6"
+                              />
+                            </button>
+                            <button
+                              onClick={() => eliminarArea(area.idArea)}
+                              className="bg-red-400"
+                              disabled={loading}
+                            >
+                              <FontAwesomeIcon
+                                icon={faTrash}
+                                className="w-6 h-6"
+                              />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

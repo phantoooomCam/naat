@@ -37,17 +37,17 @@ export const menu={
       ],
       2:[
         { id: '/home_org', icon: <FiHome />, label: 'Inicio' },
-        { id: '/gestion_org', icon: <FiUsers />, label: 'Gestion Usuarios' },
+        { id: '/gestion', icon: <FiUsers />, label: 'Gestion Usuarios' },
         {
           id: 'sistema',
           icon: <FiSettings />,
           label: 'Sistema',
           subItems: [
             { id: '/actividad', label: 'Actividad' },
-            { id: '/ingresos_org', label: 'Ingresos' }
+            { id: '/ingresos', label: 'Ingresos' }
           ]
         },
-        { id: '/areas_org', icon: <SlOrganization />, label: 'Areas' },
-        { id: '/deptos_org', icon:<VscOrganization />, label: 'Departamenos' },
+        { id: '/area', icon: <SlOrganization />, label: 'Areas' },
+        { id: '/depto', icon:<VscOrganization />, label: 'Departamenos' },
       ]
 }

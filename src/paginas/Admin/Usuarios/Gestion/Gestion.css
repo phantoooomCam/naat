@@ -93,7 +93,7 @@ button {
 /* Estilos generales para los botones de acción */
 .td-btn {
   display: flex;
-  justify-content: space-around;
+  justify-content: flex-start;
   align-items: center;
   gap: 10px;
 }
