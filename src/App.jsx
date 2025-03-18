@@ -24,6 +24,7 @@ import Cambiar from "./componentes/AdministrarCuenta/Cambiarcontraseña/Cambiar"
 import Home_Organizacion from "./paginas/AdminOrganizacion/Home_Organizacion/Home_Organizacion";
 import Home_Area from "./paginas/AdminOrganizacion/Areas_Organizacion/Home_Area";
 import Home_Depto from "./paginas/AdminOrganizacion/Departamentos_organizacion/Home_Depto";
+import Home_Analista from "./paginas/Analista/Home_Analista";
 
 import ProtectedRoute from "./componentes/ProtectedRoute";
 
@@ -52,6 +53,7 @@ function App() {
         <Route path="/home_org" element={<Home_Organizacion />} />
         <Route path="/home_area" element={<Home_Area />} />
         <Route path="/home_depto" element={<Home_Depto />} />
+        <Route path="/home_analista" element={<Home_Analista />} />
       </Route>
       
 

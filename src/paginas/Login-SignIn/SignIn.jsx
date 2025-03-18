@@ -148,6 +148,9 @@ export default function SignIn() {
         else if(data.usuario.nivel===4){
           navigate("/home_depto")
         }
+        else if(data.usuario.nivel===5){
+          navigate("/home_analista")
+        }
         else {
           navigate("/");
         }
