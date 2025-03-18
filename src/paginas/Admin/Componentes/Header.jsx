@@ -8,6 +8,18 @@ const Header = () => {
   const nombre = usuario?.nombre || "Usuario";
   const apellido = usuario?.apellidoPaterno || "Apellido";
   const idUsuario = usuario?.idUsuario || null;
+  const niveles = {
+    1: "Super Administrador",
+    2: "Administrador Organizacion",
+    3: "Jefe Area",
+    4: "Jefe Departamento",
+    5: "Analista",
+  };
+
+  // 🔹 Asegurar que nivel sea un número antes de buscar en el mapeo
+  const nivel = Number(usuario?.nivel) || 0;
+  const nivelNombre = niveles[nivel] || "Desconocido";
+
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true); // 🔹 Estado para el sidebar
   const profileRef = useRef(null);
@@ -16,29 +28,32 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       const token = localStorage.getItem("token");
-  
+
       if (!token) {
         console.error("Error: No hay token almacenado.");
         return;
       }
-  
-      const response = await fetch("http://192.168.100.89:44444/api/usuarios/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-  
+
+      const response = await fetch(
+        "http://192.168.100.89:44444/api/usuarios/logout",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.mensaje || "Error al cerrar sesión.");
       }
-  
+
       // ✅ Eliminar el token y la información del usuario del almacenamiento local
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-  
+
       // ✅ Redirigir al usuario a la página de inicio de sesión
       navigate("/");
     } catch (error) {
@@ -103,7 +118,7 @@ const Header = () => {
               <h3>
                 {nombre} {apellido}
               </h3>
-              <p className="role">Administrador</p>
+              <p className="role">{nivelNombre}</p>
               <Link to="/administrarcuenta" className="link-contra">
                 Administrar Cuenta
               </Link>

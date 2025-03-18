@@ -1,94 +1,106 @@
+/* General */
 .dash-home {
   flex-grow: 1;
   width: 100%;
-  padding: 2rem;
+  padding: 3rem;
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
+  background: #f8f8f8;
   transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 📌 Cuando el sidebar está cerrado, mover DashHome hacia la izquierda */
 .dash-home.collapsed {
-  margin-left: -192px; /* 🔹 Ajusta el margen negativo para mover a la izquierda */
+  margin-left: -192px;
   transition: margin 0.3s ease-in-out;
 }
 
 .container {
   width: 100%;
-  max-width: 1200px;
-  margin-top: 4rem;
+  max-width: 1400px;
 }
 
+/* Encabezado */
 .home-view h1 {
-  color: #2c3e50;
+  color: #34495e;
   margin-bottom: 2rem;
-  text-align: center;
-  font-size: 1.5 rem;
+  text-align: left;
+  font-size: 2rem;
+  font-weight: 700;
 }
 
-/* 📌 Configuración del Grid */
-.cards-grid {
+/* Diseño de tarjetas en cuadrícula */
+.dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 columnas */
-  grid-template-rows: repeat(3, auto);
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2rem;
-  width: 100%;
-  justify-items: center; /* Centrar las tarjetas en la fila */
-}
-
-/* 📌 Primera fila: 3 tarjetas */
-.row-1 {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  width: 100%;
   justify-content: center;
 }
 
-/* 📌 Segunda fila: 2 tarjetas (centradas con respecto a la fila 1) */
-.row-2 {
-  display: flex;
-  justify-content: center; /* 🔹 Centra las tarjetas horizontalmente */
-  gap: 1.5rem;
-  width: 100%;
-  margin-top: 1.5rem; 
-}
-
-/* 📌 Tercera fila: 2 tarjetas (centradas con respecto a la fila 1) */
-.row-3 {
-  display: flex;
-  justify-content: center; /* 🔹 Centra las tarjetas horizontalmente */
-  gap: 1.5rem;
-  width: 100%;
-  margin-top: 1.5rem; 
-}
-
-
-/* 📌 Ajuste del tamaño de cada tarjeta */
+/* Estilo de las tarjetas */
 .card {
-  border-radius: 12px;
+  position: relative;
+  border-radius: 16px;
   background: white;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease;
-  height: 250px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 180px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
-  padding: 4rem;
-  text-align: center;
+  align-items: flex-start;
+  padding: 2rem;
   cursor: pointer;
-  width: 450px; /* Todas las tarjetas tienen el mismo ancho */
-  border-left: 4px solid #757A81;
+  border-left: 5px solid #3498db;
+  overflow: hidden; /* Evita que el contenido se salga */
+  text-overflow: ellipsis;
 }
 
-/* 📌 Efecto Hover */
+/* Efecto Hover */
 .card:hover {
   transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
-/* 📌 Cuando el sidebar está cerrado, mover DashHome hacia la izquierda (solo en pantallas grandes) */
+/* Iconos alineados en la parte superior derecha */
+.card .icon {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  font-size: 2.2rem;
+  color: #3498db;
+}
+
+/* Contenedor de contenido para alinear mejor el texto */
+.card-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Título de la tarjeta */
+.card h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin: 0;
+  padding-bottom: 5px;
+  max-width: 80%; /* Evita que se expanda demasiado */
+}
+
+/* Descripción */
+.card p {
+  font-size: 1rem;
+  color: #7f8c8d;
+  margin-top: 5px;
+  max-width: 80%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Corta el texto si es muy largo */
+}
+
 @media (min-width: 1024px) {
   .dash-home.collapsed {
     margin-left: -192px; /* 🔹 Se desplaza hacia la izquierda cuando el sidebar está colapsado */
@@ -98,6 +110,10 @@
 
 /* 📌 Ajustes en Móviles (≤1024px) */
 @media (max-width: 1024px) {
+  .home-view h1{
+    font-size: 25px;
+    margin-top: 50px;
+  }
   .cards-grid {
     display: flex;
     flex-direction: column;

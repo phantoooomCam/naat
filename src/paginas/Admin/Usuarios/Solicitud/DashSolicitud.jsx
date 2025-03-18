@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faTrash } from "@fortawesome/free-solid-svg-icons";
 import "../Gestion/Gestion.css";
 
 const DashSolicitud = () => {
@@ -477,12 +479,15 @@ const DashSolicitud = () => {
                         </td>
                         {/* <td>{user.nombreOrganizacion}</td>
                         <td>{user.rol}</td> */}
-                        <td>
+                        <td className="td-btn">
                           <button
                             onClick={() => handleEdit(user)}
-                            className="bg-yellow-500"
+                            className="bg-green-400"
                           >
-                            Editar
+                            <FontAwesomeIcon
+                              icon={faPencilAlt}
+                              className="w-6 h-6"
+                            />
                           </button>
                         </td>
                       </tr>

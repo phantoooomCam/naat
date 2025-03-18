@@ -11,7 +11,7 @@ import {
   FaTasks,
   FaLayerGroup,
 } from "react-icons/fa";
-const DashHome_Organizacion = ({ activeView }) => {
+const DashHome_Depto = ({ activeView }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
@@ -48,30 +48,11 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const dashboardCards = [
     { id: 1, title: "Gestión Usuarios", route: "/gestion", icon: <FaUsers /> },
     {
-      id: 3,
-      title: "Actividad del Sistema",
-      route: "/actividad",
-      icon: <FaChartLine />,
-    },
-    {
       id: 4,
       title: "Ingresos del Sistema",
       route: "/ingresos",
       icon: <FaSignInAlt />,
-    }, // Cambio aquí
-    {
-      id: 5,
-      title: "Gestión Organización",
-      route: "/orga",
-      icon: <FaBuilding />,
-    },
-    {
-      id: 6,
-      title: "Gestión Departamento",
-      route: "/depto",
-      icon: <FaTasks />,
-    },
-    { id: 7, title: "Gestión Área", route: "/area", icon: <FaLayerGroup /> },
+    }, 
   ];
 
   return (
@@ -96,7 +77,7 @@ const HomeView = ({ isSidebarCollapsed }) => {
   );
 };
 
-DashHome_Organizacion.propTypes = {
+DashHome_Depto.propTypes = {
   activeView: PropTypes.string.isRequired,
 };
 
@@ -104,4 +85,4 @@ HomeView.propTypes = {
   isSidebarCollapsed: PropTypes.bool,
 };
 
-export default DashHome_Organizacion;
+export default DashHome_Depto;

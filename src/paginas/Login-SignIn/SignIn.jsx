@@ -141,7 +141,14 @@ export default function SignIn() {
           navigate("/dashboard");
         } else if (data.usuario.nivel === 2) {
           navigate("/home_org");
-        } else {
+        } 
+        else if(data.usuario.nivel === 3){
+          navigate("/home_area")
+        }
+        else if(data.usuario.nivel===4){
+          navigate("/home_depto")
+        }
+        else {
           navigate("/");
         }
       } else {

@@ -49,5 +49,32 @@ export const menu={
         },
         { id: '/area', icon: <SlOrganization />, label: 'Areas' },
         { id: '/depto', icon:<VscOrganization />, label: 'Departamenos' },
+      ],
+      3:[
+        { id: '/home_area', icon: <FiHome />, label: 'Inicio' },
+        { id: '/gestion', icon: <FiUsers />, label: 'Gestion Usuarios' },
+        {
+          id: 'sistema',
+          icon: <FiSettings />,
+          label: 'Sistema',
+          subItems: [
+            { id: '/actividad', label: 'Actividad' },
+            { id: '/ingresos', label: 'Ingresos' }
+          ]
+        },
+        { id: '/depto', icon:<VscOrganization />, label: 'Departamenos' },
+      ],
+      4:[
+        { id: '/home_depto', icon: <FiHome />, label: 'Inicio' },
+        { id: '/gestion', icon: <FiUsers />, label: 'Gestion Usuarios' },
+        {
+          id: 'sistema',
+          icon: <FiSettings />,
+          label: 'Sistema',
+          subItems: [
+            { id: '/ingresos', label: 'Ingresos' }
+          ]
+        },
       ]
+
 }

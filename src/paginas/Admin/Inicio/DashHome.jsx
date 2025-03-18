@@ -1,9 +1,8 @@
 import PropTypes from 'prop-types';
 import './DashHome.css';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from 'react';
-
+import { FaUsers, FaClipboardList, FaChartLine, FaSignInAlt, FaBuilding, FaTasks, FaLayerGroup } from 'react-icons/fa';
 const DashHome = ({ activeView }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -38,80 +37,33 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const nombre = usuario?.nombre || "Usuario";
   const navigate = useNavigate();
 
+  // Datos de las tarjetas con iconos
+  const dashboardCards = [
+    { id: 1, title: "Gestión Usuarios", route: "/gestion", icon: <FaUsers /> },
+    { id: 2, title: "Solicitudes", route: "/solicitudes", icon: <FaClipboardList /> },
+    { id: 3, title: "Actividad del Sistema", route: "/actividad", icon: <FaChartLine /> },
+    { id: 4, title: "Ingresos del Sistema", route: "/ingresos", icon: <FaSignInAlt /> },  // Cambio aquí
+    { id: 5, title: "Gestión Organización", route: "/orga", icon: <FaBuilding /> },
+    { id: 6, title: "Gestión Departamento", route: "/depto", icon: <FaTasks /> },
+    { id: 7, title: "Gestión Área", route: "/area", icon: <FaLayerGroup /> },
+  ];
+
   return (
     <div className="home-view">
       <h1>Bienvenido, {nombre} al Panel de Control</h1>
-
-      {/* Primera fila: 3 tarjetas */}
-      <div className="row-1">
-        <div className="card" onClick={() => navigate("/gestion")}>
-          <h2>Gestión Usuarios</h2>
-          <DotLottieReact
-            src="https://lottie.host/00b12e36-f691-4b85-8546-6f70be161665/9PEhlcnxOD.lottie"
-            loop autoplay
-            className="lottie-animation"
-          />
-        </div>
-
-        <div className="card" onClick={() => navigate("*")}>
-          <h2>Solicitudes</h2>
-          <DotLottieReact
-            src="https://lottie.host/4c20add5-f72e-487d-82b6-ab25fa94a43c/ufeVT3x9Lw.lottie"
-            loop autoplay
-            className="lottie-animation"
-          />
-        </div>
-
-        <div className="card" onClick={() => navigate("/actividad")}>
-          <h2>Actividad del Sistema</h2>
-          <DotLottieReact
-            src="https://lottie.host/50b978f9-5c84-4593-9ddb-31a9057ffa98/vv8BHKSnq5.lottie"
-            loop autoplay
-            className="lottie-animation"
-          />
-        </div>
-      </div>
-
-      {/* Segunda fila: 2 tarjetas */}
-      <div className="row-2">
-        <div className="card" onClick={() => navigate("/ingresos")}>
-          <h2>Ingresos del Sistema</h2>
-          <DotLottieReact
-            src="https://lottie.host/8f61c385-b27f-40ca-a081-618703f087ec/ciho3IyxhD.lottie"
-            loop autoplay
-            className="lottie-animation"
-          />
-        </div>
-
-        <div className="card" onClick={() => navigate("/orga")}>
-          <h2>Gestión Organización</h2>
-          <DotLottieReact
-            src="https://lottie.host/1497fda5-bd8a-4e9d-955c-c4c34c62aaca/SXaSgg3pev.lottie"
-            loop autoplay
-            className="lottie-animation"
-          />
-        </div>
-      </div>
-
-      {/* Tercera fila: 2 tarjetas */}
-      <div className="row-3">
-        <div className="card" onClick={() => navigate("/depto")}>
-          <h2>Gestión Departamento</h2>
-          <DotLottieReact
-            src="https://lottie.host/28841a49-8ec4-4d38-97af-ab8a4692405b/g6wjbQGXEQ.lottie"
-            loop autoplay
-            className="lottie-animation"
-          />
-        </div>
-
-        <div className="card" onClick={() => navigate("/area")}>
-          <h2>Gestión Área</h2>
-          <DotLottieReact
-            src="https://lottie.host/a0a69e2c-5eda-4b41-a4c7-2db4b25cfff9/bXKfcsi9v3.lottie"
-            loop autoplay
-            className="lottie-animation"
-          />
-        </div>
+      
+      <div className="dashboard-grid">
+        {dashboardCards.map(card => (
+          <div 
+            key={card.id} 
+            className="card"
+            onClick={() => navigate(card.route)}
+          >
+            <span className="icon">{card.icon}</span>
+            <h2>{card.title}</h2>
+            <p>Administrar {card.title.toLowerCase()}.</p>
+          </div>
+        ))}
       </div>
     </div>
   );

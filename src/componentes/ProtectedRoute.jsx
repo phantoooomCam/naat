@@ -9,7 +9,7 @@ const ProtectedRoute = () => {
   }
 
   const user = JSON.parse(userData); // Convertir el JSON a objeto
-  const dashboardLevels = [1, 2]; // Solo estos niveles pueden acceder al dashboard
+  const dashboardLevels = [1, 2, 3,4]; // Solo estos niveles pueden acceder al dashboard
 
   if (dashboardLevels.includes(user.nivel)) {
     return <Outlet />; // Permitir acceso a las rutas protegidas

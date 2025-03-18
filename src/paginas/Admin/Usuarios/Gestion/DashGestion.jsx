@@ -128,7 +128,7 @@ const GestionDash = () => {
     setError(null);
     try {
       const response = await fetch(
-        "http://192.168.100.89:44444/api/usuarios/?inicio=1&cantidad=10",
+        "http://192.168.100.89:44444/api/usuarios/",
         {
           method: "GET",
           headers: {
@@ -338,7 +338,7 @@ const GestionDash = () => {
 
     try {
       const response = await fetch(
-        "http://192.168.100.89:44444/api/usuarios/register",
+        "http://192.168.100.89:44444/api/usuarios/crear-usuario",
         {
           method: "POST",
           headers: {
