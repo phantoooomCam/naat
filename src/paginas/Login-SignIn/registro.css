@@ -252,3 +252,19 @@
   }
 } 
 
+.auth-input-box {
+  position: relative;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #666;
+}
+
+.auth-password-toggle:hover {
+  color: #333;
+}

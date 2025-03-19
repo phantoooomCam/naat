@@ -129,7 +129,7 @@ const PasswordChange = () => {
       const responseData = await response.json();
 
       // Verificamos el mensaje en el objeto JSON de respuesta
-      if (responseData.mensaje === "Contraseña actualizada correctamente.") {
+      if (responseData.mensaje === "Usuario actualizado exitosamente") {
         setSuccess(true);
         setError(""); // Limpiar cualquier mensaje de error previo
 

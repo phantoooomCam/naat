@@ -275,3 +275,20 @@
     font-size: 0.7em;
   }
 }
+
+.auth-input-box {
+  position: relative;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  right: 15px;
+  top: 55%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #222a35;
+}
+
+.auth-password-toggle:hover {
+  color: #222a35;
+}

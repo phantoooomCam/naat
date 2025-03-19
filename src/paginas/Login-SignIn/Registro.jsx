@@ -6,6 +6,8 @@ import { Link, useNavigate } from "react-router-dom";
 import NAAT from "../../assets/completo_blanco.png";
 import NAAT2 from "../../assets/naat.png";
 import SHA512 from "crypto-js/sha512";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 export default function SignIn() {
   const [isRegister, setIsRegister] = useState(false);
@@ -21,6 +23,10 @@ export default function SignIn() {
   const [telefono, setTelefono] = useState("");
   const [correoRegistro, setCorreoRegistro] = useState("");
   const [claveRegistro, setClaveRegistro] = useState("");
+
+  // States del icono contraseña
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
 
   // Funcion para el registro
   const handleRegister = async (e) => {
@@ -170,18 +176,25 @@ export default function SignIn() {
               />
             </div>
             <div className="auth-input-box">
-              <FaLock className="auth-input-icon" />
               <input
-                type="password"
+                type={showRegisterPassword ? "text" : "password"}
                 placeholder="Password"
                 required
                 value={claveRegistro}
                 onChange={(e) => setClaveRegistro(e.target.value)}
               />
+              <span
+                className="auth-password-toggle"
+                onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+              >
+                <FontAwesomeIcon
+                  icon={showRegisterPassword ? faEyeSlash : faEye}
+                />
+              </span>
             </div>
-              <button type="submit" className="auth-btn" onClick={handleRegister}>
-                REGISTRARSE
-              </button>
+            <button type="submit" className="auth-btn" onClick={handleRegister}>
+              REGISTRARSE
+            </button>
           </form>
         </div>
 
@@ -201,14 +214,19 @@ export default function SignIn() {
               />
             </div>
             <div className="auth-input-box">
-              <FaLock className="auth-input-icon" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={clave}
                 onChange={(e) => setClave(e.target.value)}
                 required
               />
+              <span
+                className="auth-password-toggle"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+              </span>
             </div>
             <div className="auth-forgot-link">
               <Link to="/forgotpasswd">¿Olvidaste tu contraseña?</Link>

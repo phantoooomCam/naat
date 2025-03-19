@@ -50,7 +50,7 @@ const HomeView = ({ isSidebarCollapsed }) => {
 
   return (
     <div className="home-view">
-      <h1>Bienvenido, {nombre} al Panel de Control</h1>
+      <h1>Bienvenido {nombre}, al Panel de Control</h1>
       
       <div className="dashboard-grid">
         {dashboardCards.map(card => (
