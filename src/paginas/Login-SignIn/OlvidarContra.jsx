@@ -36,12 +36,12 @@ export default function ForgotPassword() {
     }
 
     try {
-      const response = await fetch("https://tu-api.com/recuperar-contrasena", {
+      const response = await fetch("http://192.168.100.89:44444/api/usuarios/olvidepassword", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email: usuario }),
+        body: JSON.stringify({ correo: usuario }),
       });
 
 
@@ -50,6 +50,7 @@ export default function ForgotPassword() {
 
       if (response.ok) {
         setMensaje("Correo enviado con éxito. Revisa tu bandeja de entrada.");
+        localStorage.setItem("resetToken", data.token); // Guarda el token
       } else {
         setError(data.error || "Hubo un problema al enviar el correo.");
       }
