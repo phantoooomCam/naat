@@ -316,7 +316,7 @@ export default function SignIn() {
               </span>
             </div>
             <div className="auth-forgot-link">
-              <Link to="/forgotpasswd">¿Olvidaste tu contraseña?</Link>
+              <Link to="/forgot_password">¿Olvidaste tu contraseña?</Link>
             </div>
 
             <button type="submit" className="auth-btn">

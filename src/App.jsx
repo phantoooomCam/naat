@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./paginas/Login-SignIn/Registro";
 import SignIn from "./paginas/Login-SignIn/SignIn";
 import PageNotFound from "./paginas/Error/PageNotFound";
+import ForgotPassword from "./paginas/Login-SignIn/OlvidarContra";
 import HomeAlt from "./paginas/HomeAlt/HomeAlt";
 import Dashboard from "./paginas/Admin/Inicio/dashboard";
 import Gestion from "./paginas/Admin/Usuarios/Gestion/Gestion";
@@ -35,6 +36,7 @@ function App() {
       <Route path="/registro" element={<Login />} />
       <Route path="/mensaje" element={<MensajeRegistro />} />
       <Route path="*" element={<PageNotFound />} />
+      <Route path="forgot_password" element={<ForgotPassword />} />
       
       <Route element={<ProtectedRoute />}>
         <Route path="/gestion" element={<Gestion />} />
