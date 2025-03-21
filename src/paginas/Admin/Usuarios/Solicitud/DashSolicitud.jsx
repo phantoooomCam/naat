@@ -28,6 +28,9 @@ const DashSolicitud = () => {
   const [searchText, setSearchText] = useState("");
   const [isCreating, setIsCreating] = useState(false);
 
+  const [mensaje, setMensaje] = useState(null);
+  const [mensajeTipo, setMensajeTipo] = useState("success"); // o "error"
+
   const usuario = JSON.parse(localStorage.getItem("user"));
   const token = localStorage.getItem("token");
 
@@ -125,6 +128,7 @@ const DashSolicitud = () => {
     if (!formData.id_usuario) return;
 
     try {
+      // Actualiza el usuario con el nuevo nivel
       const response = await fetch(
         `http://192.168.100.89:44444/api/usuarios/${formData.id_usuario}`,
         {
@@ -143,6 +147,32 @@ const DashSolicitud = () => {
           `Error al actualizar: ${response.status} - ${errorText}`
         );
       }
+
+      // ✅ Llama al endpoint de activación para notificar por correo
+      const activarResponse = await fetch(
+        "http://192.168.100.89:44444/api/usuarios/activar",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+          body: JSON.stringify({ idUsuario: formData.id_usuario }),
+        }
+      );
+
+      const activarResult = await activarResponse.json();
+
+      if (!activarResponse.ok) {
+        setMensaje(activarResult.mensaje || "Error al activar el usuario.");
+        setMensajeTipo("error");
+        return;
+      }
+
+      // Muestra mensaje opcional
+      setMensaje(activarResult.mensaje || "Usuario activado correctamente.");
+      setMensajeTipo("success");
+      // "Usuario activado correctamente. Se ha enviado un correo de bienvenida."
 
       setIsEditing(false);
       window.location.reload();
