@@ -57,31 +57,49 @@ const PerfilUsuario = () => {
   };
   
   // Handler para guardar los cambios
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Simulación de guardado exitoso (aquí conectarías con tu backend)
-    setTimeout(() => {
-      // Actualizar localStorage para simular persistencia
+  
+    try {
+      const token = localStorage.getItem("token");
+  
+      const response = await fetch("http://192.168.100.89:44444/api/usuarios/perfil", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(perfilData)
+      });
+  
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.mensaje || "Error al actualizar el perfil");
+      }
+  
       const usuario = JSON.parse(localStorage.getItem("user")) || {};
       localStorage.setItem("user", JSON.stringify({
         ...usuario,
         ...perfilData
       }));
-      
+  
       setStatusMessage({
         type: "success",
         message: "Perfil actualizado correctamente"
       });
-      
       setIsEditing(false);
-      
-      // Limpiar mensaje después de 3 segundos
+  
       setTimeout(() => {
         setStatusMessage({ type: "", message: "" });
       }, 3000);
-    }, 800);
+    } catch (error) {
+      setStatusMessage({
+        type: "error",
+        message: error.message
+      });
+    }
   };
+  
   
   // Handler para cancelar la edición
   const handleCancel = () => {

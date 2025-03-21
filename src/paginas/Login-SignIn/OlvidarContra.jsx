@@ -50,7 +50,6 @@ export default function ForgotPassword() {
 
       if (response.ok) {
         setMensaje("Correo enviado con éxito. Revisa tu bandeja de entrada.");
-        localStorage.setItem("resetToken", data.token); // Guarda el token
       } else {
         setError(data.error || "Hubo un problema al enviar el correo.");
       }

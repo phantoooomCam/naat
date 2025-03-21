@@ -16,7 +16,7 @@ export default function ResetPassword({ token: propToken }) {
   const navigate = useNavigate(); // ✅ Hook para redirección
 
   // Obtener el token desde la prop o desde localStorage
-  const token = propToken || localStorage.getItem("resetToken");
+  const token = new URLSearchParams(window.location.search).get("token");
 
   useEffect(() => {
     document.body.classList.add("auth-body");
