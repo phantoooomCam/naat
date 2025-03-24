@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import "../../SuperAdmin_Funciones/Inicio/DashHome.css";
+import { LuBookHeadphones } from "react-icons/lu";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
@@ -46,25 +47,8 @@ const HomeView = ({ isSidebarCollapsed }) => {
 
   // Datos de las tarjetas con iconos
   const dashboardCards = [
-    // { id: 1, title: "Gestión Usuarios", route: "/gestion", icon: <FaUsers /> },
-    // {
-    //   id: 3,
-    //   title: "Actividad del Sistema",
-    //   route: "/actividad",
-    //   icon: <FaChartLine />,
-    // },
-    // {
-    //   id: 4,
-    //   title: "Ingresos del Sistema",
-    //   route: "/ingresos",
-    //   icon: <FaSignInAlt />,
-    // }, // Cambio aquí
-    // {
-    //   id: 6,
-    //   title: "Gestión Departamento",
-    //   route: "/depto",
-    //   icon: <FaTasks />,
-    // },
+     { id: 1, title: "Sabanas", route: "/sabana", icon: <LuBookHeadphones /> }
+
   ];
 
   return (
