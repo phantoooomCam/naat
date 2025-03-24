@@ -38,6 +38,10 @@ import Home_Analista from "./paginas/Vistas_Usuarios/Analista/Home_Analista";
 // Componentes
 import ProtectedRoute from "./componentes/ProtectedRoute";
 
+
+// Funciones Analista
+import Sabana from "./paginas/Vistas_Usuarios/Analista/Sabana/Sabana";
+
 function App() {
   return (
     <Routes>
@@ -71,6 +75,10 @@ function App() {
         <Route path="/home_area" element={<Home_Area />} />
         <Route path="/home_depto" element={<Home_Depto />} />
         <Route path="/home_analista" element={<Home_Analista />} />
+
+      {/* Funciones Analista */}
+      <Route path="/sabana" element={<Sabana />} />
+
       </Route>
       
 

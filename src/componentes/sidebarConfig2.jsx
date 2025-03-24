@@ -110,6 +110,32 @@ export const menu={
               icon: <BiSupport />, // Icono nuevo para Ayuda
               label: "Ayuda",
             },
+      ],
+      5:[
+        { id: '/home_analista', icon: <FiHome />, label: 'Inicio' },
+        {
+              id: "usuarios",
+              icon: <AiOutlineIdcard />, // Icono nuevo para Información Personal
+              label: "Información Personal",
+              subItems: [
+                { id: "/administrarcuenta", label: "Datos personales" },
+                { id: "/cambiarcontra", label: "Cambiar contraseña" },
+              ],
+            },
+            {
+              id: "sistema",
+              icon: <FaMoneyBillWave />, // Icono nuevo para Pagos
+              label: "Pagos",
+              subItems: [
+                { id: "/sistema/configuracion", label: "Créditos" },
+                { id: "/ingresos", label: "Historial" },
+              ],
+            },
+            {
+              id: "ayuda",
+              icon: <BiSupport />, // Icono nuevo para Ayuda
+              label: "Ayuda",
+            },
       ]
 
 }

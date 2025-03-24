@@ -1,4 +1,5 @@
 import { FiHome, FiUsers, FiSettings, FiHelpCircle } from 'react-icons/fi';
+import { LuBookHeadphones } from "react-icons/lu";
 import { SlOrganization } from "react-icons/sl";
 import { VscOrganization } from "react-icons/vsc";
 
@@ -75,6 +76,10 @@ export const menu={
             { id: '/ingresos', label: 'Ingresos' }
           ]
         },
+      ],
+      5:[
+        { id: '/home_analista', icon: <FiHome />, label: 'Inicio' },
+        { id: '/sabana', icon: <LuBookHeadphones />, label: 'Sabanas' },
       ]
 
 }
