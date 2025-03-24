@@ -4,10 +4,10 @@ import { Link, useNavigate } from "react-router-dom";
 
 import Header from "../../../componentes/Header";
 import Sidebar from "../../../componentes/Sidebar";
-import DashHome_Depto from "./DashHome_Depto";
-import "../../SuperAdmin_Funciones/Usuarios/Gestion/Gestion.css"
+import Dash_Analista from "./Dash_Analista";
+import "../../../paginas/SuperAdmin_Funciones/Usuarios/Gestion/Gestion.css";
 
-function Home_Depto() {
+function Home_Analista() {
     const [activeView, setActiveView] = useState("inicio");
     const [sidebarOpen, setSidebarOpen] = useState(true);
   
@@ -21,11 +21,11 @@ function Home_Depto() {
         />
         <main className={`main-content ${sidebarOpen ? "" : "collapsed"}`}>
           <Header />
-          <DashHome_Depto activeView={activeView} />
+          <Dash_Analista activeView={activeView} />
         </main>
       </div>
     );
   }
   
-  export default Home_Depto;
+  export default Home_Analista;
   

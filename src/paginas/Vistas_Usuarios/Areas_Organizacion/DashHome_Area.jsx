@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import "../../Admin/Inicio/DashHome.css";
+import "../../SuperAdmin_Funciones/Inicio/DashHome.css";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {

@@ -1,37 +1,47 @@
 import { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./paginas/Login-SignIn/Registro";
-import SignIn from "./paginas/Login-SignIn/SignIn";
-import PageNotFound from "./paginas/Error/PageNotFound";
-import ForgotPassword from "./paginas/Login-SignIn/OlvidarContra";
-import ResetPassword from "./paginas/Login-SignIn/Resetpassword";
-import HomeAlt from "./paginas/HomeAlt/HomeAlt";
-import Dashboard from "./paginas/Admin/Inicio/dashboard";
-import Gestion from "./paginas/Admin/Usuarios/Gestion/Gestion";
-import IngresoSist from "./paginas/Admin/Sistema/Ingresos/Ingresos";
-import PasswordChange from "./paginas/Error/ChangePassword";
-import MensajeRegistro from "./paginas/Login-SignIn/MensajeRegistro";
-import Solicitud from "./paginas/Admin/Usuarios/Solicitud/Solicitud";
 
-import Gestion_Orga from "./paginas/Admin/Organizaciones/Gestion_Organizacion/Gestion_Orga";
-import Gestion_Depto from "./paginas/Admin/Organizaciones/Gestion_Depto/Gestion_Depto";
-import Gestion_Area from "./paginas/Admin/Organizaciones/Gestion_Area/Gestion_Area";
+// -----------------------------------------------------Principales_NoProtegidas
+//Rutas NO Protegidas 
+import SignIn from "./paginas/Princiales_NoProtegidas/SignIn";
+import Login from "./paginas/Princiales_NoProtegidas/Registro";
+import MensajeRegistro from "./paginas/Princiales_NoProtegidas/MensajeRegistro";
+import PageNotFound from "./paginas/Princiales_NoProtegidas/PageNotFound";
+import ForgotPassword from "./paginas/Princiales_NoProtegidas/OlvidarContra";
+import ResetPassword from "./paginas/Princiales_NoProtegidas/Resetpassword";
 
-import ActividadesGestion from "./paginas/Admin/Sistema/Actividad/Actividades";
+// -----------------------------------------------------SuperAdmin_Funciones
+// Rutas de SuperAdmin
+import Dashboard from "./paginas/SuperAdmin_Funciones/Inicio/dashboard";
+import Gestion from "./paginas/SuperAdmin_Funciones/Usuarios/Gestion/Gestion";
+import Solicitud from "./paginas/SuperAdmin_Funciones/Usuarios/Solicitud/Solicitud";
+import IngresoSist from "./paginas/SuperAdmin_Funciones/Sistema/Ingresos/Ingresos";
+import ActividadesGestion from "./paginas/SuperAdmin_Funciones/Sistema/Actividad/Actividades";
+// CRUD's Organizacion/Area/Departamento
+import Gestion_Orga from "./paginas/SuperAdmin_Funciones/Organizaciones/Gestion_Organizacion/Gestion_Orga";
+import Gestion_Depto from "./paginas/SuperAdmin_Funciones/Organizaciones/Gestion_Depto/Gestion_Depto";
+import Gestion_Area from "./paginas/SuperAdmin_Funciones/Organizaciones/Gestion_Area/Gestion_Area";
 
-import AdministrarCuenta from "./componentes/AdministrarCuenta/Administrar";
-import Cambiar from "./componentes/AdministrarCuenta/Cambiarcontraseña/Cambiar";
+// -----------------------------------------------------Editar_Perfil
+// Personalizar Perfil c/Usuario
+import AdministrarCuenta from "./paginas/Editar_Perfil/Administrar";
+import Cambiar from "./paginas/Editar_Perfil/Cambiar";
 
-import Home_Organizacion from "./paginas/AdminOrganizacion/Home_Organizacion/Home_Organizacion";
-import Home_Area from "./paginas/AdminOrganizacion/Areas_Organizacion/Home_Area";
-import Home_Depto from "./paginas/AdminOrganizacion/Departamentos_organizacion/Home_Depto";
-import Home_Analista from "./paginas/Analista/Home_Analista";
 
+// Vista Home Usuarios
+import Home_Organizacion from "./paginas/Vistas_Usuarios/Home_Organizacion/Home_Organizacion";
+import Home_Area from "./paginas/Vistas_Usuarios/Areas_Organizacion/Home_Area";
+import Home_Depto from "./paginas/Vistas_Usuarios/Departamentos_organizacion/Home_Depto";
+import Home_Analista from "./paginas/Vistas_Usuarios/Analista/Home_Analista";
+
+
+// Componentes
 import ProtectedRoute from "./componentes/ProtectedRoute";
 
 function App() {
   return (
     <Routes>
+      {/* Rutas NO Protegidas */}
       <Route path="/" element={<SignIn />} />
       <Route path="/registro" element={<Login />} />
       <Route path="/mensaje" element={<MensajeRegistro />} />
@@ -40,19 +50,23 @@ function App() {
       <Route path="/reset-password" element={<ResetPassword  />} />
       
       <Route element={<ProtectedRoute />}>
+      {/* RUtas de SuperAdmin */}
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/gestion" element={<Gestion />} />
         <Route path="/solicitudes" element={<Solicitud />} />
         <Route path="/ingresos" element={<IngresoSist />} />
         <Route path="/actividad" element={<ActividadesGestion />} />
 
+      {/* Rutas de CRUD's Organizacion/Area/Departamento */}
         <Route path="/orga" element={<Gestion_Orga />} />
         <Route path="/depto" element={<Gestion_Depto />} />
         <Route path="/area" element={<Gestion_Area />} />
 
+      {/* Personalizar Perfil c/Usuario */}
         <Route path="/administrarcuenta" element={<AdministrarCuenta />} />
         <Route path="/cambiarcontra" element={<Cambiar />} />
 
-        <Route path="/dashboard" element={<Dashboard />} />
+      {/* Vistas Home Usuarios */}
         <Route path="/home_org" element={<Home_Organizacion />} />
         <Route path="/home_area" element={<Home_Area />} />
         <Route path="/home_depto" element={<Home_Depto />} />
@@ -60,7 +74,6 @@ function App() {
       </Route>
       
 
-      <Route path="/changepasswd" element={<PasswordChange />} />
     </Routes>
   );
 }

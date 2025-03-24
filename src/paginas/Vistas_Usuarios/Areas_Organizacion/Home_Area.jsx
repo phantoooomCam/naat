@@ -2,10 +2,10 @@ import React from "react";
 import {useState} from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import Header from "../../Admin/Componentes/Header";
-import Sidebar from "../../Admin/Componentes/Sidebar";
+import Header from "../../../componentes/Header";
+import Sidebar from "../../../componentes/Sidebar";
 import DashHome_Area from "./DashHome_Area";
-import "../../Admin/Usuarios/Gestion/Gestion.css"
+import "../../SuperAdmin_Funciones/Usuarios/Gestion/Gestion.css"
 
 function Home_Area() {
     const [activeView, setActiveView] = useState("inicio");
