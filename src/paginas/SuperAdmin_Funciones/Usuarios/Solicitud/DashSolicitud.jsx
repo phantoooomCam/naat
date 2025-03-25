@@ -438,6 +438,7 @@ const DashSolicitud = () => {
                 >
                   Cancelar
                 </button>
+                
               </div>
             </form>
           ) : (
@@ -516,6 +517,15 @@ const DashSolicitud = () => {
                           >
                             <FontAwesomeIcon
                               icon={faPencilAlt}
+                              className="w-6 h-6"
+                            />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(user.id)}
+                            className="bg-red-400"
+                          >
+                            <FontAwesomeIcon
+                              icon={faTrash}
                               className="w-6 h-6"
                             />
                           </button>
