@@ -77,10 +77,9 @@ function App() {
         <Route path="/home_analista" element={<Home_Analista />} />
 
       {/* Funciones Analista */}
-      <Route path="/sabana" element={<Sabana />} />
+        <Route path="/sabana" element={<Sabana />} />
 
       </Route>
-      
 
     </Routes>
   );

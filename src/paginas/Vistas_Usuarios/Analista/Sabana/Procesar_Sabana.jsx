@@ -1,13 +1,57 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from "react";
+import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUpload, faFile, faTrash, faEye } from "@fortawesome/free-solid-svg-icons";
+import { faUpload, faFile, faTrash } from "@fortawesome/free-solid-svg-icons";
 import "./Sabana.css";
 
-const Procesar_Sabana = () => {
+const Procesar_Sabana = ({ activeView }) => {
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      const sidebar = document.querySelector(".sidebar");
+      if (sidebar) {
+        setIsSidebarCollapsed(sidebar.classList.contains("closed"));
+      }
+    });
+
+    observer.observe(document.body, { attributes: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
+
+  const views = {
+    procesamiento: (
+      <ProcesamientoView isSidebarCollapsed={isSidebarCollapsed} />
+    ),
+  };
+
+  return (
+    <div className={`dash-home ${isSidebarCollapsed ? "collapsed" : ""}`}>
+      <div className="container">
+        {views[activeView] || views.procesamiento}
+      </div>
+    </div>
+  );
+};
+
+const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [files, setFiles] = useState([]);
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
-  const inputRef = useRef(null);
+  const [telco, setTelco] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+
+  const processFiles = (newFiles) => {
+    const processedFiles = newFiles.map((file) => ({
+      id: Date.now() + Math.random(),
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      uploadDate: new Date().toLocaleDateString(),
+    }));
+    setFiles((prevFiles) => [...prevFiles, ...processedFiles]);
+  };
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -15,23 +59,10 @@ const Procesar_Sabana = () => {
     setDragActive(e.type === "dragenter" || e.type === "dragover");
   };
 
-  const processFiles = (newFiles) => {
-    const processedFiles = newFiles.map(file => ({
-      id: Date.now() + Math.random(),
-      name: file.name,
-      type: file.type,
-      size: file.size,
-      uploadDate: new Date().toLocaleDateString()
-    }));
-    
-    setFiles(prevFiles => [...prevFiles, ...processedFiles]);
-  };
-
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       processFiles(Array.from(e.dataTransfer.files));
     }
@@ -44,69 +75,52 @@ const Procesar_Sabana = () => {
   };
 
   const handleFileDelete = (fileId) => {
-    setFiles(prevFiles => prevFiles.filter(file => file.id !== fileId));
+    setFiles((prevFiles) => prevFiles.filter((file) => file.id !== fileId));
   };
 
   const [filters, setFilters] = useState({
-    fileTypes: [],
-    fileSizes: []
+    ubicacion: false,
+    contactos: false,
+    fechaInicio: "",
+    fechaFin: "",
+    horaInicio: "",
+    horaFin: "",
+    ciudades: false,
+    puntosInteres: false,
   });
 
-  const handleFilterChange = (type, value) => {
-    setFilters(prev => {
-      const currentFilter = prev[type];
-      const newFilter = currentFilter.includes(value)
-        ? currentFilter.filter(f => f !== value)
-        : [...currentFilter, value];
-      return { ...prev, [type]: newFilter };
-    });
+  const handleFilterChange = (filterName, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [filterName]: value,
+    }));
   };
-
-  const filteredFiles = files.filter(file => {
-    const typeMatch = filters.fileTypes.length === 0 || 
-      filters.fileTypes.some(type => file.type.includes(type));
-    
-    const sizeMatch = filters.fileSizes.length === 0 || 
-      filters.fileSizes.some(size => {
-        const fileSize = file.size / 1024; // KB
-        switch(size) {
-          case 'small': return fileSize < 1000;
-          case 'medium': return fileSize >= 1000 && fileSize < 10000;
-          case 'large': return fileSize >= 10000;
-          default: return true;
-        }
-      });
-    
-    return typeMatch && sizeMatch;
-  });
+  const inputRef = useRef(null);
+  const filteredFiles = files.filter((file) => true);
 
   return (
-    <div className="sabana-container">
-      <div className="sabana-header">
-        <h2>Procesamiento de Sábana</h2>
-        <p>Gestiona y procesa tus archivos de manera eficiente</p>
-      </div>
-
-      <div className="sabana-content">
-        {/* Upload Card */}
-        <div 
-          className={`upload-card ${dragActive ? 'drag-active' : ''}`}
+    <div
+      className={`sabana-container ${isSidebarCollapsed ? "collapsed" : ""}`}
+    >
+      <div className="upload-area-grid">
+        <div
+          className={`upload-card ${dragActive ? "drag-active" : ""}`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
         >
-          <input 
-            type="file" 
-            multiple 
+          <input
             ref={inputRef}
+            type="file"
+            multiple
             onChange={handleFileInput}
-            style={{ display: 'none' }}
+            style={{ display: "none" }}
           />
           <div className="upload-content">
             <FontAwesomeIcon icon={faUpload} className="upload-icon" />
             <p>Arrastra y suelta archivos aquí o</p>
-            <button 
+            <button
               onClick={() => inputRef.current.click()}
               className="upload-button"
             >
@@ -115,97 +129,214 @@ const Procesar_Sabana = () => {
           </div>
         </div>
 
-        {/* Main Content Area */}
-        <div className="main-content-area">
-          {/* Files List Card */}
-          <div className="files-card">
-            <div className="card-header">
-              <h3>Archivos Subidos</h3>
-            </div>
-            <div className="files-list">
-              {filteredFiles.map(file => (
-                <div 
-                  key={file.id} 
-                  className="file-item"
-                  onClick={() => setSelectedFile(file)}
+        <div className="filters-card">
+          <div className="card-header">
+            <h3>Compañía Telefónica</h3>
+          </div>
+          <div className="filters-content">
+            <div className="filter-group">
+              <label>
+                Selecciona una compañía:
+                <select
+                  className="phone-select"
+                  value={telco}
+                  onChange={(e) => setTelco(e.target.value)}
                 >
-                  <div className="file-info">
-                    <FontAwesomeIcon icon={faFile} />
-                    <span>{file.name}</span>
-                  </div>
-                  <div className="file-actions">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFileDelete(file.id);
-                      }}
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                  <option value="">Selecciona una compañía</option>
+                  <option value="Telcel">Telcel</option>
+                  <option value="ATT">AT&T</option>
+                  <option value="VirginMobile">VirginMobile</option>
+                  <option value="Bait">Bait</option>
+                  <option value="Telmex">Telmex</option>
+                  <option value="OXXO">OXXO</option>
+                  <option value="IZZI">IZZI</option>
+                  <option value="ALTAN">ALTAN</option>
+                </select>
+              </label>
+              <label>
+                Número telefónico:
+                <input
+                  type="text"
+                  className="phone-input"
+                  placeholder="Número telefónico"
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+                    if (value.length <= 10) setPhoneNumber(value);
+                  }}
+                />
+              </label>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Filters Card */}
-          <div className="filters-card">
-            <div className="card-header">
-              <h3>Filtrar Archivos</h3>
-            </div>
-            <div className="filters-content">
-              <div className="filter-group">
-                <h4>Tipo de Archivo</h4>
-                {['Imágenes', 'PDFs', 'Documentos'].map(type => (
-                  <label key={type} className="checkbox-label">
-                    <input 
-                      type="checkbox"
-                      checked={filters.fileTypes.includes(type.toLowerCase())}
-                      onChange={() => handleFilterChange('fileTypes', type.toLowerCase())}
-                    />
-                    {type}
-                  </label>
-                ))}
+      <div className="main-content-area-sabana">
+        <div className="files-card">
+          <div className="card-header">
+            <h3>Archivos Subidos</h3>
+          </div>
+          <div className="files-list">
+            {filteredFiles.map((file) => (
+              <div
+                key={file.id}
+                className="file-item"
+                onClick={() => setSelectedFile(file)}
+              >
+                <div className="file-info">
+                  <FontAwesomeIcon icon={faFile} />
+                  <span>{file.name}</span>
+                </div>
+                <div className="file-actions">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFileDelete(file.id);
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </button>
+                </div>
               </div>
-              <div className="filter-group">
-                <h4>Tamaño</h4>
-                {['Pequeño', 'Mediano', 'Grande'].map(size => (
-                  <label key={size} className="checkbox-label">
-                    <input 
-                      type="checkbox"
-                      checked={filters.fileSizes.includes(size.toLowerCase())}
-                      onChange={() => handleFilterChange('fileSizes', size.toLowerCase())}
-                    />
-                    {size}
-                  </label>
-                ))}
+            ))}
+          </div>
+
+          <div className="processing-buttons">
+            <button className="process-button">Procesar Archivos</button>
+            <button className="save-button">Guardar en Base de Datos</button>
+          </div>
+        </div>
+
+        <div className="filters-card">
+          <div className="card-header">
+            <h3>Filtrar Archivos</h3>
+          </div>
+          <div className="filters-content">
+            <div className="filter-group">
+              <div className="checkbox-filter">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={filters.ubicacion}
+                    onChange={() =>
+                      handleFilterChange("ubicacion", !filters.ubicacion)
+                    }
+                  />
+                  Buscar coincidencias de ubicación
+                </label>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={filters.contactos}
+                    onChange={() =>
+                      handleFilterChange("contactos", !filters.contactos)
+                    }
+                  />
+                  Buscar coincidencias de contactos
+                </label>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={filters.ciudades}
+                    onChange={() =>
+                      handleFilterChange("ciudades", !filters.ciudades)
+                    }
+                  />
+                  Buscar localización en ciudades
+                </label>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={filters.puntosInteres}
+                    onChange={() =>
+                      handleFilterChange(
+                        "puntosInteres",
+                        !filters.puntosInteres
+                      )
+                    }
+                  />
+                  Buscar cercanía en puntos de interés
+                </label>
+              </div>
+              <div className="date-time-filters">
+                <label>
+                  Fecha Inicio:
+                  <input
+                    type="date"
+                    value={filters.fechaInicio}
+                    onChange={(e) =>
+                      handleFilterChange("fechaInicio", e.target.value)
+                    }
+                    className="date-input"
+                  />
+                </label>
+                <label>
+                  Fecha Fin:
+                  <input
+                    type="date"
+                    value={filters.fechaFin}
+                    onChange={(e) =>
+                      handleFilterChange("fechaFin", e.target.value)
+                    }
+                    className="date-input"
+                  />
+                </label>
+                <label>
+                  Hora Inicio:
+                  <input
+                    type="time"
+                    value={filters.horaInicio}
+                    onChange={(e) =>
+                      handleFilterChange("horaInicio", e.target.value)
+                    }
+                    className="time-input"
+                  />
+                </label>
+                <label>
+                  Hora Fin:
+                  <input
+                    type="time"
+                    value={filters.horaFin}
+                    onChange={(e) =>
+                      handleFilterChange("horaFin", e.target.value)
+                    }
+                    className="time-input"
+                  />
+                </label>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Work Area Card */}
-          <div className="work-area-card">
-            <div className="card-header">
-              <h3>Área de Trabajo</h3>
-            </div>
-            <div className="work-content">
-              {selectedFile ? (
-                <div className="selected-file-preview">
-                  <FontAwesomeIcon icon={faFile} className="file-preview-icon" />
-                  <h4>{selectedFile.name}</h4>
-                  <p>Tipo: {selectedFile.type}</p>
-                  <p>Tamaño: {(selectedFile.size / 1024).toFixed(2)} KB</p>
-                  <p>Fecha de subida: {selectedFile.uploadDate}</p>
-                </div>
-              ) : (
-                <p>Selecciona un archivo para trabajar</p>
-              )}
-            </div>
+        <div className="work-area-card">
+          <div className="card-header">
+            <h3>Área de Trabajo</h3>
+          </div>
+          <div className="work-content">
+            {selectedFile ? (
+              <div className="selected-file-preview">
+                <FontAwesomeIcon icon={faFile} className="file-preview-icon" />
+                <h4>{selectedFile.name}</h4>
+                <p>Tipo: {selectedFile.type}</p>
+                <p>Tamaño: {(selectedFile.size / 1024).toFixed(2)} KB</p>
+                <p>Fecha de subida: {selectedFile.uploadDate}</p>
+              </div>
+            ) : (
+              <p>Selecciona un archivo para trabajar</p>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
+};
+
+Procesar_Sabana.propTypes = {
+  activeView: PropTypes.string.isRequired,
+};
+
+ProcesamientoView.propTypes = {
+  isSidebarCollapsed: PropTypes.bool,
 };
 
 export default Procesar_Sabana;

@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 
 import Header from "../../../../componentes/Header";
 import Sidebar from "../../../../componentes/Sidebar";
-// import Dash_Analista from "./Dash_Analista";
 import Procesar_Sabana from "./Procesar_Sabana";
 import "../../../../paginas/SuperAdmin_Funciones/Usuarios/Gestion/Gestion.css";
 
