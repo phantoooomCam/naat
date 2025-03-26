@@ -374,3 +374,15 @@
   color: #33608d; 
   margin-bottom: 15px; 
 }
+.clear-button {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.clear-button:hover {
+  opacity: 0.9;
+}

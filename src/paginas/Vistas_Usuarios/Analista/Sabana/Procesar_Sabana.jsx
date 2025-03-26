@@ -49,6 +49,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       type: file.type,
       size: file.size,
       uploadDate: new Date().toLocaleDateString(),
+      rawFile: file, // <- aquí guardas el archivo real
     }));
     setFiles((prevFiles) => [...prevFiles, ...processedFiles]);
   };
@@ -89,6 +90,11 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     puntosInteres: false,
   });
 
+  const handleClearAllFiles = () => {
+    setFiles([]);
+    setSelectedFile(null);
+  };
+
   const handleFilterChange = (filterName, value) => {
     setFilters((prev) => ({
       ...prev,
@@ -97,6 +103,41 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   };
   const inputRef = useRef(null);
   const filteredFiles = files.filter((file) => true);
+
+  const handleGuardarEnBD = async () => {
+    if (files.length === 0) {
+      alert("No hay archivos para guardar");
+      return;
+    }
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].rawFile) {
+        formData.append("archivos", files[i].rawFile);
+      }
+    }
+
+    try {
+      const response = await fetch(
+        "http://192.168.100.89:44444/api/archivos/subirftp",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok) {
+        alert("Archivos enviados con éxito");
+        console.log(data);
+      } else {
+        alert("Error en el backend");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Error al conectar con el servidor");
+    }
+  };
 
   return (
     <div
@@ -144,13 +185,21 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                 >
                   <option value="">Selecciona una compañía</option>
                   <option value="Telcel">Telcel</option>
+                  <option value="TelcelNuevoFormato">TelcelNuevoFormato</option>
+                  <option value="TelcelIMEI">TelcelIMEI</option>
                   <option value="ATT">AT&T</option>
+                  <option value="Movistar">Movistar</option>
                   <option value="VirginMobile">VirginMobile</option>
                   <option value="Bait">Bait</option>
                   <option value="Telmex">Telmex</option>
                   <option value="OXXO">OXXO</option>
                   <option value="IZZI">IZZI</option>
+                  <option value="Personalizada">Personalizada</option>
                   <option value="ALTAN">ALTAN</option>
+                  <option value="ATTNuevoFormato">ATTNuevoFormato</option>
+                  <option value="TelcelIMEINuevoFormato">
+                    TelcelIMEINuevoFormato
+                  </option>
                 </select>
               </label>
               <label>
@@ -203,7 +252,12 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
           <div className="processing-buttons">
             <button className="process-button">Procesar Archivos</button>
-            <button className="save-button">Guardar en Base de Datos</button>
+            <button className="save-button" onClick={handleGuardarEnBD}>
+              Guardar en Base de Datos
+            </button>
+            <button className="clear-button" onClick={handleClearAllFiles}>
+              Limpiar Todo
+            </button>
           </div>
         </div>
 
