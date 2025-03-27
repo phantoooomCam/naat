@@ -129,7 +129,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       const data = await response.json();
       if (response.ok) {
         alert("Archivos enviados con éxito");
-        console.log(data);
       } else {
         alert("Error en el backend");
       }

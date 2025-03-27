@@ -33,18 +33,20 @@ const ActividadesSist = () => {
     const token = localStorage.getItem("token");
 
     try {
-      const response = await fetch("http://192.168.100.89:44444/api/actividades", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      });
+      const response = await fetch(
+        "http://192.168.100.89:44444/api/actividades",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        }
+      );
 
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
 
       const data = await response.json();
-      console.log(data)
       setActividades(data);
     } catch (error) {
       console.error("Error al obtener actividades:", error);
@@ -55,11 +57,17 @@ const ActividadesSist = () => {
     }
   };
 
-  const datosFiltrados = actividades.filter((item) =>
-    `${item.nombre_usuario} ${item.entidad}`
-      .toLowerCase()
-      .includes(busqueda.toLowerCase())
-  );
+  const datosFiltrados = actividades.filter((item) => {
+    const textoBusqueda = busqueda.toLowerCase();
+    return (
+      (item.nombreUsuario?.toLowerCase() || "").includes(textoBusqueda) ||
+      (item.nombreAutor?.toLowerCase() || "").includes(textoBusqueda) ||
+      (item.entidad?.toLowerCase() || "").includes(textoBusqueda) ||
+      (item.accion?.toLowerCase() || "").includes(textoBusqueda) ||
+      (item.idUsuario?.toString() || "").includes(textoBusqueda)
+    );
+  });
+  
 
   const formatearFecha = (fechaISO) => {
     const fecha = new Date(fechaISO);
@@ -73,7 +81,7 @@ const ActividadesSist = () => {
   const totalPaginas = Math.ceil(datosFiltrados.length / registrosPorPagina);
 
   return (
-    <div className={`dash-gestion ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+    <div className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
       <div className="content-wrapper">
         <div className="content-container">
           <h2 className="h2-ingresos">Registro de Actividades</h2>

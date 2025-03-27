@@ -6,6 +6,7 @@ import { faPencilAlt, faTrash } from "@fortawesome/free-solid-svg-icons";
 const GestionDash = () => {
   // Estados para el colapso de sidebar
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
 
   // Estados para la gestión de usuarios
   const [users, setUsers] = useState([]);
@@ -239,8 +240,31 @@ const GestionDash = () => {
     });
   };
 
+  const validarFormulario = () => {
+    const errores = {};
+
+    if (formData.telefono && !/^\d{10}$/.test(formData.telefono)) {
+      errores.telefono = "El teléfono debe contener exactamente 10 dígitos.";
+    }
+
+    if (
+      formData.contraseña &&
+      !/^.*(?=.{8,})(?=.*[!@#$%^&*()\-_=+{};:,<.>]).*$/.test(
+        formData.contraseña
+      )
+    ) {
+      errores.contraseña =
+        "La contraseña debe tener al menos 8 caracteres y un carácter especial.";
+    }
+
+    setFormErrors(errores);
+    return Object.keys(errores).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validarFormulario()) return;
+
     if (!formData.id_usuario) return;
 
     try {
@@ -255,7 +279,6 @@ const GestionDash = () => {
           body: JSON.stringify(formData),
         }
       );
-      console.log(formData);
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(
@@ -271,62 +294,75 @@ const GestionDash = () => {
   };
 
   const handleEdit = (user) => {
-    const org = organizaciones.find((o) => o.nombreOrganizacion === user.organizacion);
+    const org = organizaciones.find(
+      (o) => o.nombreOrganizacion === user.organizacion
+    );
     const area = areas.find((a) => a.nombreArea === user.area);
-    const departamento = departamentos.find((d) => d.nombreDepartamento === user.departamento);
+    const departamento = departamentos.find(
+      (d) => d.nombreDepartamento === user.departamento
+    );
 
     const userData = {
-        id_usuario: user.id,
-        nombre: user.nombre,
-        apellidoPaterno: user.apellidoPaterno,
-        apellidoMaterno: user.apellidoMaterno,
-        correo: user.correo,
-        telefono: user.telefono,
-        nivel: user.nivel,
-        idOrganizacion: org ? org.idOrganizacion : "",
-        idArea: area ? area.idArea : "",
-        idDepartamento: departamento ? departamento.idDepartamento : "",
-        rol: user.rol,
-        contraseña: "",
+      id_usuario: user.id,
+      nombre: user.nombre,
+      apellidoPaterno: user.apellidoPaterno,
+      apellidoMaterno: user.apellidoMaterno,
+      correo: user.correo,
+      telefono: user.telefono,
+      nivel: user.nivel,
+      idOrganizacion: org ? org.idOrganizacion : "",
+      idArea: area ? area.idArea : "",
+      idDepartamento: departamento ? departamento.idDepartamento : "",
+      rol: user.rol,
+      contraseña: "",
     };
 
     setFormData(userData);
     setIsEditing(true);
-};
-useEffect(() => {
-  if (formData.idOrganizacion && areas.length > 0) {
+  };
+  useEffect(() => {
+    if (formData.idOrganizacion && areas.length > 0) {
       const areasDeOrganizacion = areas.filter(
-          (area) => area.idOrganizacion === parseInt(formData.idOrganizacion)
+        (area) => area.idOrganizacion === parseInt(formData.idOrganizacion)
       );
       setFilteredAreas(areasDeOrganizacion);
 
       // Selecciona automáticamente el área correspondiente si ya existe
-      if (!areasDeOrganizacion.some(a => a.idArea == formData.idArea)) {
-          setFormData(prev => ({
-              ...prev,
-              idArea: areasDeOrganizacion.length > 0 ? areasDeOrganizacion[0].idArea.toString() : ""
-          }));
+      if (!areasDeOrganizacion.some((a) => a.idArea == formData.idArea)) {
+        setFormData((prev) => ({
+          ...prev,
+          idArea:
+            areasDeOrganizacion.length > 0
+              ? areasDeOrganizacion[0].idArea.toString()
+              : "",
+        }));
       }
-  }
-}, [formData.idOrganizacion, areas]);
+    }
+  }, [formData.idOrganizacion, areas]);
 
-useEffect(() => {
-  if (formData.idArea && departamentos.length > 0) {
+  useEffect(() => {
+    if (formData.idArea && departamentos.length > 0) {
       const departamentosDeArea = departamentos.filter(
-          (depto) => depto.idArea === parseInt(formData.idArea)
+        (depto) => depto.idArea === parseInt(formData.idArea)
       );
       setFilteredDepartamentos(departamentosDeArea);
 
       // Selecciona automáticamente el departamento correspondiente si ya existe
-      if (!departamentosDeArea.some(d => d.idDepartamento == formData.idDepartamento)) {
-          setFormData(prev => ({
-              ...prev,
-              idDepartamento: departamentosDeArea.length > 0 ? departamentosDeArea[0].idDepartamento.toString() : ""
-          }));
+      if (
+        !departamentosDeArea.some(
+          (d) => d.idDepartamento == formData.idDepartamento
+        )
+      ) {
+        setFormData((prev) => ({
+          ...prev,
+          idDepartamento:
+            departamentosDeArea.length > 0
+              ? departamentosDeArea[0].idDepartamento.toString()
+              : "",
+        }));
       }
-  }
-}, [formData.idArea, departamentos]);
-
+    }
+  }, [formData.idArea, departamentos]);
 
   const handleDelete = async (id) => {
     if (!id) return;
@@ -357,6 +393,8 @@ useEffect(() => {
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (!validarFormulario()) return;
+
     if (!formData.nombre || !formData.correo || !formData.contraseña) return;
 
     const userToCreate = {
@@ -541,7 +579,11 @@ useEffect(() => {
                     className="inputedit"
                     placeholder="Contraseña"
                   />
+                  {formErrors.contraseña && (
+                    <p className="error-text">{formErrors.contraseña}</p>
+                  )}
                 </div>
+
                 <div>
                   <label>Teléfono</label>
                   <input
@@ -552,7 +594,11 @@ useEffect(() => {
                     className="inputedit"
                     placeholder="Telefono"
                   />
+                  {formErrors.telefono && (
+                    <p className="error-text">{formErrors.telefono}</p>
+                  )}
                 </div>
+
                 <div>
                   <label>Nivel</label>
                   <select
@@ -572,52 +618,58 @@ useEffect(() => {
                 <div>
                   <label>Organización</label>
                   <select
-    name="idOrganizacion"
-    value={formData.idOrganizacion || ""}
-    onChange={handleChange}
-    className="inputedit"
->
-    <option value="">Seleccione una organización</option>
-    {organizaciones.map((org) => (
-        <option key={org.idOrganizacion} value={org.idOrganizacion}>
-            {org.nombreOrganizacion}
-        </option>
-    ))}
-</select>
+                    name="idOrganizacion"
+                    value={formData.idOrganizacion || ""}
+                    onChange={handleChange}
+                    className="inputedit"
+                  >
+                    <option value="">Seleccione una organización</option>
+                    {organizaciones.map((org) => (
+                      <option
+                        key={org.idOrganizacion}
+                        value={org.idOrganizacion}
+                      >
+                        {org.nombreOrganizacion}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label>Area</label>
                   <select
-    name="idArea"
-    value={formData.idArea || ""}
-    onChange={handleChange}
-    className="inputedit"
-    disabled={!formData.idOrganizacion}
->
-    <option value="">Seleccione un área</option>
-    {filteredAreas.map((ar) => (
-        <option key={ar.idArea} value={ar.idArea}>
-            {ar.nombreArea}
-        </option>
-    ))}
-</select>
+                    name="idArea"
+                    value={formData.idArea || ""}
+                    onChange={handleChange}
+                    className="inputedit"
+                    disabled={!formData.idOrganizacion}
+                  >
+                    <option value="">Seleccione un área</option>
+                    {filteredAreas.map((ar) => (
+                      <option key={ar.idArea} value={ar.idArea}>
+                        {ar.nombreArea}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label>Departamento</label>
                   <select
-    name="idDepartamento"
-    value={formData.idDepartamento || ""}
-    onChange={handleChange}
-    className="inputedit"
-    disabled={!formData.idArea}
->
-    <option value="">Seleccione un departamento</option>
-    {filteredDepartamentos.map((depto) => (
-        <option key={depto.idDepartamento} value={depto.idDepartamento}>
-            {depto.nombreDepartamento}
-        </option>
-    ))}
-</select> 
+                    name="idDepartamento"
+                    value={formData.idDepartamento || ""}
+                    onChange={handleChange}
+                    className="inputedit"
+                    disabled={!formData.idArea}
+                  >
+                    <option value="">Seleccione un departamento</option>
+                    {filteredDepartamentos.map((depto) => (
+                      <option
+                        key={depto.idDepartamento}
+                        value={depto.idDepartamento}
+                      >
+                        {depto.nombreDepartamento}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label>Rol</label>

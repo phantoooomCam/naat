@@ -3,6 +3,7 @@ import './DashHome.css';
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from 'react';
 import { FaUsers, FaClipboardList, FaChartLine, FaSignInAlt, FaBuilding, FaTasks, FaLayerGroup } from 'react-icons/fa';
+
 const DashHome = ({ activeView }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 

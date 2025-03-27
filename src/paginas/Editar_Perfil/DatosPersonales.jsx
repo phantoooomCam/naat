@@ -171,6 +171,7 @@ const PerfilUsuario = () => {
                     onChange={handleChange}
                     placeholder="Ingresa tu nombre"
                     required
+                    disabled
                   />
                 </div>
               </div>
@@ -185,6 +186,7 @@ const PerfilUsuario = () => {
                     value={perfilData.apellidoPaterno}
                     onChange={handleChange}
                     placeholder="Ingresa tu apellido paterno"
+                    disabled
                   />
                 </div>
                 
@@ -197,6 +199,7 @@ const PerfilUsuario = () => {
                     value={perfilData.apellidoMaterno}
                     onChange={handleChange}
                     placeholder="Ingresa tu apellido materno"
+                    disabled
                   />
                 </div>
               </div>

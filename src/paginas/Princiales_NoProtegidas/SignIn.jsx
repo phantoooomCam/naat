@@ -142,7 +142,6 @@ export default function SignIn() {
       );
 
       const data = await response.json();
-      console.log(data);
 
       if (data.token) {
         // Almacenar el token y la información del usuario en el localStorage

@@ -89,7 +89,37 @@ const PasswordChange = () => {
       [field]: !prev[field],
     }));
   };
-
+  const notificarCambioPassword = async (userId, setError, setSuccess) => {
+    const token = localStorage.getItem("token");
+  
+    try {
+      const response = await fetch(
+        "http://192.168.100.89:44444/api/usuarios/change-password/{id}", // o el endpoint que tú necesites
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+          body: JSON.stringify({ idUsuario: userId }),
+        }
+      );
+  
+      const result = await response.json();
+  
+      if (!response.ok) {
+        setError(result.mensaje || "Error al notificar el cambio de contraseña.");
+        return false;
+      }
+  
+      setSuccess(true);
+      return true;
+    } catch (err) {
+      setError("Error de red al notificar el cambio.");
+      return false;
+    }
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -103,8 +133,6 @@ const PasswordChange = () => {
       oldPassword: formData.currentPassword,
       newPassword: formData.newPassword,
     };
-
-    console.log(passwordData);
 
     try {
       // Enviar los datos al backend

@@ -73,20 +73,12 @@ const DashSolicitud = () => {
       const data = JSON.parse(text);
 
       // DEBUGGING: Log all users and their levels
-      console.log("Todos los usuarios recibidos:", data);
 
       if (Array.isArray(data)) {
         // Filtrar usuarios con nivel 0, pero usando comparación flexible
         const levelZeroUsers = data.filter((user) => {
-          console.log(
-            `Usuario: ${user.nombre}, Nivel: ${
-              user.nivel
-            }, Tipo de Nivel: ${typeof user.nivel}`
-          );
           return user.nivel === null || user.nivel === "null";
         });
-
-        console.log("Usuarios de nivel 0:", levelZeroUsers);
 
         setUsers(levelZeroUsers);
         setFilteredUsers(levelZeroUsers);
