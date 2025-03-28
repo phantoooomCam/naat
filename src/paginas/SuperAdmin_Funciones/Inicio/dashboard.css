@@ -6,9 +6,11 @@
 
 .main-content {
   flex-grow: 1;
-  margin-left: 280px; /* Sidebar abierto */
+  margin-left: 270px; 
   transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   padding-top: var(--header-height);
+  max-width: calc(100vw - 280px); 
+  box-sizing: border-box;
 }
 
 .main-content.collapsed {
@@ -20,3 +22,6 @@
     margin-left: 0;
   }
 }
+
+
+

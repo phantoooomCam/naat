@@ -510,12 +510,10 @@ const GestionDash = () => {
         }`}
       >
         <div className="content-container">
-          <div className="perfil-header">
             <h2>Gestion de Usuarios</h2>
             <p className="perfil-subtitle">
               Gestiona la informacion de los Usuarios
             </p>
-          </div>
 
           {isEditing || isCreating ? (
             <form

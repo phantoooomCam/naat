@@ -1,6 +1,5 @@
 /* Estilos base */
 .content-wrapper {
-  max-width: 100%;
   width: 95%;
   margin: 120px auto;
   padding: 20px;
@@ -8,6 +7,19 @@
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   border-radius: 12px;
 }
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+}
+
+
 .content-wrapper.editing-mode {
   max-width: 800px;
   width: 90%;
@@ -215,14 +227,21 @@ tr:hover {
 /* Búsqueda */
 .search-container {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
+  width: 100%;
 }
 
-.search-input {
+
+.search-container input {
   flex: 1;
-  padding: 10px;
+  min-width: 200px;
+  max-width: 100%;
 }
+.search-container button {
+  white-space: nowrap;
+}
+
 
 /* Sidebar */
 .dash-gestion {
@@ -253,33 +272,28 @@ tr:hover {
   }
 }
 
-@media (max-width: 768px) {
-  .form-grid {
-    grid-template-columns: 1fr;
+@media (max-width: 900px) {
+  .content-wrapper {
+    padding: 10px;
+    overflow-x: auto;
+  }
+
+  .content-container {
+    width: 100%;
+    overflow-x: auto;
   }
 
   .table-container {
     overflow-x: auto;
-  }
-
-  table {
-    min-width: 600px;
-  }
-
-  .search-container {
-    flex-direction: column;
-  }
-
-  .form-buttons {
-    flex-direction: column;
-  }
-
-  button {
     width: 100%;
-    padding: 6px 12px;
-    font-size: 0.9rem;
   }
+  th,
+  td {
+    white-space: nowrap;
+  }
+  
 }
+
 
 @media (max-width: 480px) {
   table {
@@ -304,3 +318,4 @@ tr:hover {
   font-size: 0.9rem;
   margin-top: 4px;
 }
+
