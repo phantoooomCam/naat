@@ -33,16 +33,13 @@ const ActividadesSist = () => {
     const token = localStorage.getItem("token");
 
     try {
-      const response = await fetch(
-        "http://192.168.100.89:44444/api/actividades",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-        }
-      );
+      const response = await fetch("http://192.168.100.89:44444/api/actividades", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include" 
+      });
 
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
 
@@ -67,7 +64,6 @@ const ActividadesSist = () => {
       (item.idUsuario?.toString() || "").includes(textoBusqueda)
     );
   });
-  
 
   const formatearFecha = (fechaISO) => {
     const fecha = new Date(fechaISO);

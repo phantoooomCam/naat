@@ -130,24 +130,19 @@ export default function SignIn() {
     };
 
     try {
-      const response = await fetch(
-        "http://192.168.100.89:44444/api/usuarios/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
-        }
-      );
+      const response = await fetch("http://192.168.100.89:44444/api/usuarios/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // 👈 Esto es lo nuevo
+        body: JSON.stringify(requestBody),
+      });
+      
 
       const data = await response.json();
 
-      if (data.token) {
-        // Almacenar el token y la información del usuario en el localStorage
-        localStorage.setItem("token", data.token);
+      if (data.usuario) {
         localStorage.setItem("user", JSON.stringify(data.usuario));
-
+      
         if (data.usuario.nivel === 1) {
           navigate("/dashboard");
         } else if (data.usuario.nivel === 2) {
@@ -161,7 +156,8 @@ export default function SignIn() {
         } else {
           navigate("/");
         }
-      } else {
+      }
+       else {
         // Manejo de errores
         setError("Credenciales inválidas");
       }
