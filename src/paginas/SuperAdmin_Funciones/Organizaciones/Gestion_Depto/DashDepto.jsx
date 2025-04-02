@@ -1,43 +1,46 @@
-import { useState, useEffect } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencilAlt, faTrash } from "@fortawesome/free-solid-svg-icons";
-import "../../Usuarios/Gestion/Gestion.css";
+"use client"
+
+import { useState, useEffect } from "react"
+import "../../Usuarios/Gestion/Gestion.css"
 
 const DashDepartamento = () => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [departamentos, setDepartamentos] = useState([]);
-  const [filtro, setFiltro] = useState("");
-  const [areas, setAreas] = useState([]);
-  const [organizaciones, setOrganizaciones] = useState([]);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [departamentos, setDepartamentos] = useState([])
+  const [filtro, setFiltro] = useState("")
+  const [areas, setAreas] = useState([])
+  const [organizaciones, setOrganizaciones] = useState([])
   const [formData, setFormData] = useState({
     idDepartamento: 0,
     nombreDepartamento: "",
     idArea: "",
     idOrganizacion: "",
-  });
-  const [isEditing, setIsEditing] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
+  })
+  const [isEditing, setIsEditing] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [filteredAreas, setFilteredAreas] = useState([])
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
+  const [successMessage, setSuccessMessage] = useState("")
 
-  const API_URL = "http://192.168.100.89:44444/api";
-  const token = localStorage.getItem("token");
+  const API_URL = "http://192.168.100.89:44444/api"
+  const token = localStorage.getItem("token")
 
   // Observador del sidebar
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      const sidebar = document.querySelector(".sidebar");
+      const sidebar = document.querySelector(".sidebar")
       if (sidebar) {
-        setIsSidebarCollapsed(sidebar.classList.contains("closed"));
+        setIsSidebarCollapsed(sidebar.classList.contains("closed"))
       }
-    });
+    })
 
-    observer.observe(document.body, { attributes: true, subtree: true });
-    return () => observer.disconnect();
-  }, []);
+    observer.observe(document.body, { attributes: true, subtree: true })
+    return () => observer.disconnect()
+  }, [])
 
   const obtenerDepartamentos = async () => {
-    setLoading(true);
+    setLoading(true)
     try {
       const response = await fetch(`${API_URL}/departamentos`, {
         method: "GET",
@@ -45,18 +48,18 @@ const DashDepartamento = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      });
-      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-      const data = await response.json();
-      setDepartamentos(data);
-      setError(null);
+      })
+      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
+      const data = await response.json()
+      setDepartamentos(data)
+      setError(null)
     } catch (error) {
-      console.error("Error al obtener departamentos:", error);
-      setError("Error al cargar los departamentos. Intente nuevamente más tarde.");
+      console.error("Error al obtener departamentos:", error)
+      setError("Error al cargar los departamentos. Intente nuevamente más tarde.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const obtenerOrganizaciones = async () => {
     try {
@@ -66,14 +69,14 @@ const DashDepartamento = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      });
-      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-      const data = await response.json();
-      setOrganizaciones(data);
+      })
+      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
+      const data = await response.json()
+      setOrganizaciones(data)
     } catch (error) {
-      console.error("Error al obtener organizaciones:", error);
+      console.error("Error al obtener organizaciones:", error)
     }
-  };
+  }
 
   const obtenerAreas = async () => {
     try {
@@ -83,44 +86,64 @@ const DashDepartamento = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      });
-      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-      const data = await response.json();
-      setAreas(data);
+      })
+      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
+      const data = await response.json()
+      setAreas(data)
     } catch (error) {
-      console.error("Error al obtener áreas:", error);
+      console.error("Error al obtener áreas:", error)
     }
-  };
+  }
+
+  // Filtrar áreas basadas en la organización seleccionada
+  useEffect(() => {
+    if (formData.idOrganizacion) {
+      const areasDeOrganizacion = areas.filter(
+        (area) => area.idOrganizacion === Number.parseInt(formData.idOrganizacion, 10),
+      )
+      setFilteredAreas(areasDeOrganizacion)
+
+      // Reset área seleccionada si la organización cambia
+      if (!areasDeOrganizacion.some((a) => a.idArea == formData.idArea)) {
+        setFormData((prev) => ({
+          ...prev,
+          idArea: "",
+        }))
+      }
+    } else {
+      setFilteredAreas([])
+    }
+  }, [formData.idOrganizacion, areas])
 
   const crearDepartamento = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
+    e.preventDefault()
+    setLoading(true)
+
     if (!formData.nombreDepartamento.trim()) {
-      setError("El nombre del departamento no puede estar vacío");
-      setLoading(false);
-      return;
+      setError("El nombre del departamento no puede estar vacío")
+      setLoading(false)
+      return
     }
-    
+
     if (!formData.idOrganizacion) {
-      setError("Debe seleccionar una organización");
-      setLoading(false);
-      return;
+      setError("Debe seleccionar una organización")
+      setLoading(false)
+      return
     }
-    
-    if(!formData.idArea) {
-      setError("Debe seleccionar un área");
-      setLoading(false);
-      return;
+
+    if (!formData.idArea) {
+      setError("Debe seleccionar un área")
+      setLoading(false)
+      return
     }
 
     try {
       const dataToSend = {
         idDepartamento: 0,
         nombreDepartamento: formData.nombreDepartamento,
-        idArea: parseInt(formData.idArea, 10),
-        idOrganizacion: parseInt(formData.idOrganizacion, 10),
-      };
+        idArea: Number.parseInt(formData.idArea, 10),
+        idOrganizacion: Number.parseInt(formData.idOrganizacion, 10),
+      }
 
       const response = await fetch(`${API_URL}/departamentos`, {
         method: "POST",
@@ -129,51 +152,57 @@ const DashDepartamento = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(dataToSend),
-      });
+      })
 
-      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
 
-      resetearFormulario();
-      obtenerDepartamentos();
-      setIsCreating(false);
-      setError(null);
+      resetearFormulario()
+      obtenerDepartamentos()
+      setIsCreating(false)
+      setError(null)
+
+      setSuccessMessage("Departamento creado correctamente")
+      setShowSuccessMessage(true)
+      setTimeout(() => {
+        setShowSuccessMessage(false)
+      }, 3000)
     } catch (error) {
-      console.error("Error al crear el departamento:", error);
-      setError("Error al crear el departamento. Intente nuevamente.");
+      console.error("Error al crear el departamento:", error)
+      setError("Error al crear el departamento. Intente nuevamente.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const actualizarDepartamento = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
+    e.preventDefault()
+    setLoading(true)
+
     if (!formData.nombreDepartamento.trim()) {
-      setError("El nombre del departamento no puede estar vacío");
-      setLoading(false);
-      return;
+      setError("El nombre del departamento no puede estar vacío")
+      setLoading(false)
+      return
     }
-    
+
     if (!formData.idOrganizacion) {
-      setError("Debe seleccionar una organización");
-      setLoading(false);
-      return;
+      setError("Debe seleccionar una organización")
+      setLoading(false)
+      return
     }
-    
-    if(!formData.idArea) {
-      setError("Debe seleccionar un área");
-      setLoading(false);
-      return;
+
+    if (!formData.idArea) {
+      setError("Debe seleccionar un área")
+      setLoading(false)
+      return
     }
 
     try {
       const dataToSend = {
-        idDepartamento: parseInt(formData.idDepartamento, 10),
+        idDepartamento: Number.parseInt(formData.idDepartamento, 10),
         nombreDepartamento: formData.nombreDepartamento,
-        idArea: parseInt(formData.idArea, 10),
-        idOrganizacion: parseInt(formData.idOrganizacion, 10),
-      };
+        idArea: Number.parseInt(formData.idArea, 10),
+        idOrganizacion: Number.parseInt(formData.idOrganizacion, 10),
+      }
 
       const response = await fetch(`${API_URL}/departamentos/${formData.idDepartamento}`, {
         method: "PUT",
@@ -182,27 +211,33 @@ const DashDepartamento = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(dataToSend),
-      });
+      })
 
-      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
 
-      resetearFormulario();
-      obtenerDepartamentos();
-      setIsEditing(false);
-      setError(null);
+      resetearFormulario()
+      obtenerDepartamentos()
+      setIsEditing(false)
+      setError(null)
+
+      setSuccessMessage("Departamento actualizado correctamente")
+      setShowSuccessMessage(true)
+      setTimeout(() => {
+        setShowSuccessMessage(false)
+      }, 3000)
     } catch (error) {
-      console.error("Error al actualizar el departamento:", error);
-      setError("Error al actualizar el departamento. Intente nuevamente.");
+      console.error("Error al actualizar el departamento:", error)
+      setError("Error al actualizar el departamento. Intente nuevamente.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const eliminarDepartamento = async (id) => {
-    const confirmar = window.confirm("¿Está seguro que desea eliminar este departamento?");
-    if (!confirmar) return;
-    
-    setLoading(true);
+    const confirmar = window.confirm("¿Está seguro que desea eliminar este departamento?")
+    if (!confirmar) return
+
+    setLoading(true)
     try {
       const response = await fetch(`${API_URL}/departamentos/${id}`, {
         method: "DELETE",
@@ -210,35 +245,33 @@ const DashDepartamento = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      });
+      })
 
-      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
-      
-      obtenerDepartamentos();
-      setError(null);
+      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
+
+      obtenerDepartamentos()
+      setError(null)
+
+      setSuccessMessage("Departamento eliminado correctamente")
+      setShowSuccessMessage(true)
+      setTimeout(() => {
+        setShowSuccessMessage(false)
+      }, 3000)
     } catch (error) {
-      console.error("Error al eliminar el departamento:", error);
-      setError("Error al eliminar el departamento. Intente nuevamente.");
+      console.error("Error al eliminar el departamento:", error)
+      setError("Error al eliminar el departamento. Intente nuevamente.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
-
-  const areasFiltradas = () => {
-    if (!formData.idOrganizacion) return [];
-    return areas.filter(
-      (area) => area.idOrganizacion === parseInt(formData.idOrganizacion, 10)
-    );
-  };
+  }
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
+    const { name, value } = e.target
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
-      ...(name === "idOrganizacion" && { idArea: "" }) // Resetear área al cambiar organización
-    }));
-  };
+    }))
+  }
 
   const seleccionarDepartamento = (departamento) => {
     setFormData({
@@ -246,9 +279,9 @@ const DashDepartamento = () => {
       nombreDepartamento: departamento.nombreDepartamento,
       idArea: departamento.idArea,
       idOrganizacion: departamento.idOrganizacion,
-    });
-    setIsEditing(true);
-  };
+    })
+    setIsEditing(true)
+  }
 
   const resetearFormulario = () => {
     setFormData({
@@ -256,41 +289,67 @@ const DashDepartamento = () => {
       nombreDepartamento: "",
       idArea: "",
       idOrganizacion: "",
-    });
-  };
+    })
+  }
 
   const handleOpenCreateForm = () => {
-    resetearFormulario();
-    setIsCreating(true);
-  };
+    resetearFormulario()
+    setIsCreating(true)
+  }
 
   useEffect(() => {
-    obtenerDepartamentos();
-    obtenerOrganizaciones();
-    obtenerAreas();
-  }, []);
+    obtenerDepartamentos()
+    obtenerOrganizaciones()
+    obtenerAreas()
+  }, [])
 
   const departamentosFiltrados = departamentos.filter((departamento) =>
-    departamento.nombreDepartamento.toLowerCase().includes(filtro.toLowerCase())
-  );
+    departamento.nombreDepartamento.toLowerCase().includes(filtro.toLowerCase()),
+  )
+
+  if (loading && !isEditing && !isCreating) {
+    return (
+      <div className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
+        <div className="content-wrapper">
+          <div className="content-container">
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p>Cargando departamentos...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
+      {showSuccessMessage && (
+        <div className="success-message">
+          <div className="success-content">
+            <span className="success-icon">✓</span>
+            <span>{successMessage}</span>
+          </div>
+        </div>
+      )}
+
       <div className={`content-wrapper ${isEditing || isCreating ? "editing-mode" : ""}`}>
         <div className="content-container">
-          <div className="perfil-header">
-            <h2>Lista de Departamentos</h2>
-            <p className="perfil-subtitle">
-              Gestiona la información de los departamentos
-            </p>
+          <div className="section-header">
+            <h2>Gestión de Departamentos</h2>
+            <p className="section-description">Administra la información de los departamentos</p>
           </div>
 
-          {error && <div className="error-message">{error}</div>}
+          {error && (
+            <div className="error-message" style={{ marginBottom: "15px" }}>
+              {error}
+            </div>
+          )}
 
           {isEditing ? (
             <form onSubmit={actualizarDepartamento} className="gestion-form editing-mode">
               <div className="form-grid">
-                <div>
+                <div className="form-field">
                   <label>Organización</label>
                   <select
                     name="idOrganizacion"
@@ -307,7 +366,7 @@ const DashDepartamento = () => {
                     ))}
                   </select>
                 </div>
-                <div>
+                <div className="form-field">
                   <label>Área</label>
                   <select
                     name="idArea"
@@ -317,17 +376,17 @@ const DashDepartamento = () => {
                     disabled={!formData.idOrganizacion || loading}
                   >
                     <option value="">Seleccione un área</option>
-                    {areasFiltradas().map((area) => (
+                    {filteredAreas.map((area) => (
                       <option key={area.idArea} value={area.idArea}>
                         {area.nombreArea}
                       </option>
                     ))}
                   </select>
-                  {formData.idOrganizacion && areasFiltradas().length === 0 && (
+                  {formData.idOrganizacion && filteredAreas.length === 0 && (
                     <p className="warning">No hay áreas disponibles para esta organización</p>
                   )}
                 </div>
-                <div>
+                <div className="form-field">
                   <label>Nombre del Departamento</label>
                   <input
                     type="text"
@@ -348,8 +407,8 @@ const DashDepartamento = () => {
                   type="button"
                   className="btn-cancel"
                   onClick={() => {
-                    setIsEditing(false);
-                    resetearFormulario();
+                    setIsEditing(false)
+                    resetearFormulario()
                   }}
                   disabled={loading}
                 >
@@ -360,7 +419,7 @@ const DashDepartamento = () => {
           ) : isCreating ? (
             <form onSubmit={crearDepartamento} className="gestion-form editing-mode">
               <div className="form-grid">
-                <div>
+                <div className="form-field">
                   <label>Organización</label>
                   <select
                     name="idOrganizacion"
@@ -377,7 +436,7 @@ const DashDepartamento = () => {
                     ))}
                   </select>
                 </div>
-                <div>
+                <div className="form-field">
                   <label>Área</label>
                   <select
                     name="idArea"
@@ -387,17 +446,17 @@ const DashDepartamento = () => {
                     disabled={!formData.idOrganizacion || loading}
                   >
                     <option value="">Seleccione un área</option>
-                    {areasFiltradas().map((area) => (
+                    {filteredAreas.map((area) => (
                       <option key={area.idArea} value={area.idArea}>
                         {area.nombreArea}
                       </option>
                     ))}
                   </select>
-                  {formData.idOrganizacion && areasFiltradas().length === 0 && (
+                  {formData.idOrganizacion && filteredAreas.length === 0 && (
                     <p className="warning">No hay áreas disponibles para esta organización</p>
                   )}
                 </div>
-                <div>
+                <div className="form-field">
                   <label>Nombre del Departamento</label>
                   <input
                     type="text"
@@ -414,12 +473,7 @@ const DashDepartamento = () => {
                 <button type="submit" className="btn-edit" disabled={loading}>
                   {loading ? "Procesando..." : "Crear"}
                 </button>
-                <button
-                  type="button"
-                  className="btn-cancel"
-                  onClick={() => setIsCreating(false)}
-                  disabled={loading}
-                >
+                <button type="button" className="btn-cancel" onClick={() => setIsCreating(false)} disabled={loading}>
                   Cancelar
                 </button>
               </div>
@@ -428,20 +482,23 @@ const DashDepartamento = () => {
             <>
               <form className="gestion-form">
                 <div className="search-container">
-                  <input
-                    type="text"
-                    placeholder="Buscar departamento..."
-                    value={filtro}
-                    onChange={(e) => setFiltro(e.target.value)}
-                    className="search-input"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleOpenCreateForm}
-                    className="bg-green-500 add-button"
-                    disabled={loading}
-                  >
-                    Agregar
+                  <div className="search-input-wrapper">
+                    <input
+                      type="text"
+                      placeholder="Buscar departamento..."
+                      value={filtro}
+                      onChange={(e) => setFiltro(e.target.value)}
+                      className="search-input"
+                    />
+                    {filtro && (
+                      <button className="clear-search" onClick={() => setFiltro("")} type="button">
+                        ×
+                      </button>
+                    )}
+                  </div>
+                  <button type="button" onClick={handleOpenCreateForm} className="add-button" disabled={loading}>
+                    <span className="button-icon">+</span>
+                    <span className="button-text">Agregar Departamento</span>
                   </button>
                 </div>
               </form>
@@ -458,45 +515,47 @@ const DashDepartamento = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {departamentosFiltrados.map((departamento) => {
-                      const organizacion = organizaciones.find(
-                        (org) => org.idOrganizacion === departamento.idOrganizacion
-                      );
-                      const area = areas.find(
-                        (area) => area.idArea === departamento.idArea
-                      );
-                      
-                      return (
-                        <tr key={departamento.idDepartamento}>
-                          <td>{departamento.idDepartamento}</td>
-                          <td>{departamento.nombreDepartamento}</td>
-                          <td>{organizacion?.nombreOrganizacion || "-"}</td>
-                          <td>{area?.nombreArea || "-"}</td>
-                          <td className="td-btn">
-                            <button
-                              onClick={() => seleccionarDepartamento(departamento)}
-                              className="bg-green-400"
-                              disabled={loading}
-                            >
-                              <FontAwesomeIcon
-                                icon={faPencilAlt}
-                                className="w-6 h-6"
-                              />
-                            </button>
-                            <button
-                              onClick={() => eliminarDepartamento(departamento.idDepartamento)}
-                              className="bg-red-400"
-                              disabled={loading}
-                            >
-                              <FontAwesomeIcon
-                                icon={faTrash}
-                                className="w-6 h-6"
-                              />
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {departamentosFiltrados.length > 0 ? (
+                      departamentosFiltrados.map((departamento) => {
+                        const organizacion = organizaciones.find(
+                          (org) => org.idOrganizacion === departamento.idOrganizacion,
+                        )
+                        const area = areas.find((area) => area.idArea === departamento.idArea)
+
+                        return (
+                          <tr key={departamento.idDepartamento}>
+                            <td>{departamento.idDepartamento}</td>
+                            <td>{departamento.nombreDepartamento}</td>
+                            <td>{organizacion?.nombreOrganizacion || "-"}</td>
+                            <td>{area?.nombreArea || "-"}</td>
+                            <td className="td-btn">
+                              <button
+                                onClick={() => seleccionarDepartamento(departamento)}
+                                className="action-button edit-button"
+                                title="Editar departamento"
+                                disabled={loading}
+                              >
+                                <i className="fas fa-pencil-alt"></i>
+                              </button>
+                              <button
+                                onClick={() => eliminarDepartamento(departamento.idDepartamento)}
+                                className="action-button delete-button"
+                                title="Eliminar departamento"
+                                disabled={loading}
+                              >
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </td>
+                          </tr>
+                        )
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="no-results">
+                          No se encontraron departamentos
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -505,7 +564,8 @@ const DashDepartamento = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default DashDepartamento;
+export default DashDepartamento
+
