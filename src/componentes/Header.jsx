@@ -30,36 +30,25 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem("token")
-
-      if (!token) {
-        console.error("Error: No hay token almacenado.")
-        return
-      }
-
       const response = await fetch("http://localhost:44444/api/usuarios/logout", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      })
-
+        credentials: "include" // ✅ ¡esto envía la cookie!
+      });
+  
       if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.mensaje || "Error al cerrar sesión.")
+        const data = await response.json();
+        throw new Error(data.mensaje || "Error al cerrar sesión.");
       }
-
-      // Eliminar el token y la información del usuario del almacenamiento local
-      localStorage.removeItem("token")
-      localStorage.removeItem("user")
-
-      // Redirigir al usuario a la página de inicio de sesión
-      navigate("/")
+  
+      // ✅ Limpiar cualquier dato local guardado del usuario
+      localStorage.removeItem("user");
+  
+      // ✅ Redirigir al login
+      navigate("/");
     } catch (error) {
-      console.error("Error al cerrar sesión:", error)
+      console.error("Error al cerrar sesión:", error);
     }
-  }
+  };
 
   // Detectar si el sidebar está abierto o cerrado dinámicamente
   useEffect(() => {
