@@ -2,7 +2,7 @@
 .dash-home {
   flex-grow: 1;
   width: 100%;
-  padding: 2rem;
+  padding: 3rem;
   display: flex;
   justify-content: center;
   align-items: flex-start;

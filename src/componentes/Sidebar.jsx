@@ -5,8 +5,8 @@ import { useState, useEffect, useRef } from "react"
 import "./Sidebar.css"
 import NAAT from "../assets/completo_blanco.png"
 import { FiHome, FiUsers, FiSettings } from "react-icons/fi"
-import { FaFolder } from "react-icons/fa"
-import { FaChevronDown, FaChevronUp } from "react-icons/fa"
+import { SlOrganization } from "react-icons/sl"
+import { FaChevronDown, FaChevronRight } from "react-icons/fa"
 
 const Sidebar = () => {
   const location = useLocation()
@@ -21,8 +21,8 @@ const Sidebar = () => {
       icon: <FiUsers />,
       label: "Usuarios",
       subItems: [
-        { id: "/gestion", label: "Gestionar Usuarios" },
-        { id: "/solicitudes", label: "Solicitudes" },
+        { id: "/gestion", label: "Gestión" },
+        { id: "/solicitudes", label: "Solicitud" },
       ],
     },
     {
@@ -36,7 +36,7 @@ const Sidebar = () => {
     },
     {
       id: "organizaciones",
-      icon: <FaFolder />,
+      icon: <SlOrganization />,
       label: "Organizaciones",
       subItems: [
         { id: "/orga", label: "Gestión Organización" },
@@ -272,8 +272,11 @@ const Sidebar = () => {
                     <>
                       <span className="label">{item.label}</span>
                       {item.subItems && (
-                        <span className="menu-arrow">
-                          {expandedMenus.includes(item.id) ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+                        <span
+                          className="menu-arrow"
+                          style={{ transform: expandedMenus.includes(item.id) ? "rotate(180deg)" : "rotate(0deg)" }}
+                        >
+                          {expandedMenus.includes(item.id) ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
                         </span>
                       )}
                     </>
