@@ -36,11 +36,12 @@ export default function ForgotPassword() {
     }
 
     try {
-      const response = await fetch("http://192.168.100.89:44444/api/usuarios/olvidepassword", {
+      const response = await fetch("http://localhost:44444/api/usuarios/olvidepassword", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({ correo: usuario }),
       });
 

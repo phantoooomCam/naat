@@ -113,12 +113,12 @@ const DashSolicitud = () => {
 
     try {
       // Actualiza el usuario con el nuevo nivel
-      const response = await fetch(`http://192.168.100.89:44444/api/usuarios/${formData.id_usuario}`, {
+      const response = await fetch(`http://localhost:44444/api/usuarios/${formData.id_usuario}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
         },
+        credentials: "include",
         body: JSON.stringify(formData),
       })
 
@@ -128,12 +128,12 @@ const DashSolicitud = () => {
       }
 
       // Llama al endpoint de activación para notificar por correo
-      const activarResponse = await fetch("http://192.168.100.89:44444/api/usuarios/activar", {
+      const activarResponse = await fetch("http://localhost:44444/api/usuarios/activar", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
         },
+        credentials: "include",
         body: JSON.stringify({ idUsuario: formData.id_usuario }),
       })
 
@@ -182,11 +182,12 @@ const DashSolicitud = () => {
       if (!id) return
 
       try {
-        const response = await fetch(`http://192.168.100.89:44444/api/usuarios/${id}`, {
+        const response = await fetch(`http://localhost:44444/api/usuarios/${id}`, {
           method: "DELETE",
           headers: {
-            Authorization: token ? `Bearer ${token}` : "",
+            "Content-Type": "application/json",
           },
+          credentials: "include",
         })
 
         if (!response.ok) {

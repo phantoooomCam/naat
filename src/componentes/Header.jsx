@@ -37,12 +37,12 @@ const Header = () => {
         return
       }
 
-      const response = await fetch("http://192.168.100.89:44444/api/usuarios/logout", {
+      const response = await fetch("http://localhost:44444/api/usuarios/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
       })
 
       if (!response.ok) {

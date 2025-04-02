@@ -66,9 +66,9 @@ const DashDepartamento = () => {
       const response = await fetch(`${API_URL}/organizaciones`, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
       })
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
       const data = await response.json()
@@ -83,9 +83,9 @@ const DashDepartamento = () => {
       const response = await fetch(`${API_URL}/areas`, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
       })
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
       const data = await response.json()
@@ -148,9 +148,9 @@ const DashDepartamento = () => {
       const response = await fetch(`${API_URL}/departamentos`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(dataToSend),
       })
 
@@ -207,9 +207,9 @@ const DashDepartamento = () => {
       const response = await fetch(`${API_URL}/departamentos/${formData.idDepartamento}`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(dataToSend),
       })
 
@@ -242,9 +242,9 @@ const DashDepartamento = () => {
       const response = await fetch(`${API_URL}/departamentos/${id}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
       })
 
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)

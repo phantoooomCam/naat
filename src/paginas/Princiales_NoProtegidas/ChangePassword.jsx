@@ -48,13 +48,13 @@ const PasswordChange = () => {
       }
 
       const response = await fetch(
-        "http://192.168.100.89:44444/api/usuarios/logout",
+        "http://localhost:44444/api/usuarios/logout",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
         }
       );
 
@@ -94,13 +94,13 @@ const PasswordChange = () => {
   
     try {
       const response = await fetch(
-        "http://192.168.100.89:44444/api/usuarios/change-password/{id}", // o el endpoint que tú necesites
+        "http://localhost:44444/api/usuarios/change-password/{id}", // o el endpoint que tú necesites
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: token ? `Bearer ${token}` : "",
           },
+          credentials: "include",
           body: JSON.stringify({ idUsuario: userId }),
         }
       );
@@ -137,13 +137,13 @@ const PasswordChange = () => {
     try {
       // Enviar los datos al backend
       const response = await fetch(
-        `http://192.168.100.89:44444/api/usuarios/change-password/${userId}`,
+        `http://localhost:44444/api/usuarios/change-password/${userId}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify(passwordData),
         }
       );

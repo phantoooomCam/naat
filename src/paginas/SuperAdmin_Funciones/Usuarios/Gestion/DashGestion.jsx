@@ -52,12 +52,12 @@ const GestionDash = () => {
 
   const fetchOrganizaciones = async () => {
     try {
-      const response = await fetch("http://192.168.100.89:44444/api/organizaciones", {
+      const response = await fetch("http://localhost:44444/api/organizaciones", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
         },
+        credentials: "include",
       })
 
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
@@ -71,12 +71,12 @@ const GestionDash = () => {
 
   const fetchAreas = async () => {
     try {
-      const response = await fetch("http://192.168.100.89:44444/api/areas", {
+      const response = await fetch("http://localhost:44444/api/areas", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
         },
+        credentials: "include",
       })
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
 
@@ -89,12 +89,12 @@ const GestionDash = () => {
 
   const fetchDepartamentos = async () => {
     try {
-      const response = await fetch("http://192.168.100.89:44444/api/departamentos", {
+      const response = await fetch("http://localhost:44444/api/departamentos", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
         },
+        credentials: "include",
       })
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
       const data = await response.json()
@@ -245,12 +245,12 @@ const GestionDash = () => {
     if (!formData.id_usuario) return
 
     try {
-      const response = await fetch(`http://192.168.100.89:44444/api/usuarios/${formData.id_usuario}`, {
+      const response = await fetch(`http://localhost:44444/api/usuarios/${formData.id_usuario}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
         },
+        credentials: "include",
         body: JSON.stringify(formData),
       })
       if (!response.ok) {
@@ -333,11 +333,12 @@ const GestionDash = () => {
       if (!id) return
 
       try {
-        const response = await fetch(`http://192.168.100.89:44444/api/usuarios/${id}`, {
+        const response = await fetch(`http://localhost:44444/api/usuarios/${id}`, {
           method: "DELETE",
           headers: {
-            Authorization: token ? `Bearer ${token}` : "",
+            "Content-Type": "application/json",
           },
+          credentials: "include",
         })
 
         if (!response.ok) {
@@ -382,12 +383,12 @@ const GestionDash = () => {
     }
 
     try {
-      const response = await fetch("http://192.168.100.89:44444/api/usuarios/crear-usuario", {
+      const response = await fetch("http://localhost:44444/api/usuarios/crear-usuario", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
         },
+        credentials: "include",
         body: JSON.stringify(userToCreate),
       })
 

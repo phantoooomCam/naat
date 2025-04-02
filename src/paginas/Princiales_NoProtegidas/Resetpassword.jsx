@@ -46,12 +46,12 @@ export default function ResetPassword({ token: propToken }) {
     }
 
     try {
-      const response = await fetch("http://192.168.100.89:44444/api/usuarios/reset-password", {
+      const response = await fetch("http://localhost:44444/api/usuarios/reset-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({ newPassword: password }),
       });
 

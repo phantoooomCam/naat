@@ -63,9 +63,9 @@ const DashArea = () => {
       const response = await fetch(`${API_URL}/organizaciones`, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
       })
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
       const data = await response.json()
@@ -101,9 +101,9 @@ const DashArea = () => {
       const response = await fetch(`${API_URL}/areas`, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(dataToSend),
       })
 
@@ -153,9 +153,9 @@ const DashArea = () => {
       const response = await fetch(`${API_URL}/areas/${formData.idArea}`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(dataToSend),
       })
 
@@ -188,9 +188,9 @@ const DashArea = () => {
       const response = await fetch(`${API_URL}/areas/${id}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
       })
 
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)

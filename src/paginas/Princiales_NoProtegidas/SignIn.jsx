@@ -93,12 +93,13 @@ export default function SignIn() {
 
     try {
       const response = await fetch(
-        "http://192.168.100.89:44444/api/usuarios/register",
+        "http://localhost:44444/api/usuarios/register",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include",
           body: JSON.stringify(userData),
         }
       );

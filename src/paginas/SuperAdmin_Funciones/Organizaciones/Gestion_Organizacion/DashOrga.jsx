@@ -74,9 +74,9 @@ const DashOrga = () => {
       const response = await fetch(API_URL, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(nuevaOrg),
       })
 
@@ -110,9 +110,9 @@ const DashOrga = () => {
       const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
       })
 
       if (!response.ok) {
@@ -152,9 +152,9 @@ const DashOrga = () => {
       const response = await fetch(`${API_URL}/${organizacionEditar.idOrganizacion}`, {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(organizacionActualizada),
       })
 

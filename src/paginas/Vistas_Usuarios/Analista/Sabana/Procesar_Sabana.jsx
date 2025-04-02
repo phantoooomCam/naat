@@ -119,7 +119,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
     try {
       const response = await fetch(
-        "http://192.168.100.89:44444/api/archivos/subirftp",
+        "http://localhost:44444/api/archivos/subirftp",
         {
           method: "POST",
           body: formData,
