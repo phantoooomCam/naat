@@ -1,45 +1,79 @@
+/* Variables */
+:root {
+  --sidebar-width: 280px;
+  --sidebar-width-collapsed: 80px;
+  --sidebar-bg: linear-gradient(195deg, #42424a, #222a35);
+  --sidebar-color: #fff;
+  --sidebar-hover: rgba(255, 255, 255, 0.1);
+  --sidebar-active: #33608d;
+  --sidebar-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Sidebar Base */
 .sidebar {
-  width: 280px;
+  width: var(--sidebar-width);
   height: 100vh;
   position: fixed;
   left: 0;
   top: 0;
-  background: linear-gradient(195deg, #42424a, #222a35);
-  color: #fff;
-  transition: all 0.3s ease;
-  padding: 20px;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-color);
+  transition: var(--sidebar-transition);
+  padding: 0;
   z-index: 999;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--sidebar-shadow);
   overflow-y: auto;
   max-height: 100vh;
 }
 
-/* Overlay para cerrar el sidebar en móviles */
-.sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 998;
-  /* Justo debajo del sidebar */
-  display: none;
-}
-
-.sidebar.open {
-  transform: translateX(0);
-}
-
+/* Sidebar Collapsed State */
 .sidebar.closed {
-  width: 80px;
+  width: var(--sidebar-width-collapsed);
   overflow: hidden;
+}
+
+/* Sidebar Header */
+.sidebar-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 40px;
   padding: 20px 10px;
 }
 
-/* En sidebar cerrado, solo mostrar los iconos */
-.sidebar.closed .menu-item .label {
-  display: none;
+.logo-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  transition: transform 0.2s ease;
+}
+
+.logo-wrapper:hover {
+  transform: scale(1.05);
+}
+
+.top-logo {
+  width: 80px;
+  height: auto;
+  object-fit: contain;
+  background: none;
+  transition: var(--sidebar-transition);
+}
+
+.dashboard-title {
+  color: white;
+  font-size: 1.4rem;
+  margin: 0;
+  text-align: center;
+  transition: var(--sidebar-transition);
 }
 
 /* Cuando el sidebar está colapsado */
@@ -53,62 +87,20 @@
   gap: 0;
 }
 
-.sidebar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-}
-
-.logo-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0;
-  background: none;
-  border-radius: 0;
-}
-
-.top-logo {
-  width: 80px;
-  height: auto;
-  object-fit: contain;
-  background: none;
-}
-
-.dashboard-title {
-  color: white;
-  font-size: 1.4rem;
-  margin: 0;
-  text-align: center;
-}
-
-/* Ajustes para el header */
-.sidebar-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  margin-bottom: 1rem;
-  border-bottom: none;
-}
-
-
-
-/* Elimina el subrayado de los enlaces */
-.menu-link {
-  text-decoration: none;
-  display: block;
-}
-
+/* Menu Items */
 .menu-items {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 0 15px;
+}
+
+.menu-container {
+  position: relative;
+}
+
+.menu-wrapper {
+  position: relative;
 }
 
 .menu-item {
@@ -124,11 +116,23 @@
   background: transparent;
   color: #fff;
   cursor: pointer;
-  transition: background 0.2s ease-in-out;
+  transition: all 0.3s ease;
   max-width: 100%;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  position: relative;
+}
+
+.menu-item:hover {
+  background: var(--sidebar-hover);
+  transform: translateX(5px);
+}
+
+.menu-item.active {
+  background: var(--sidebar-active);
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar.closed .menu-item {
@@ -142,6 +146,12 @@
   justify-content: center;
   align-items: center;
   width: 30px;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.menu-item:hover .icon {
+  transform: scale(1.1);
 }
 
 .sidebar.closed .menu-item .icon {
@@ -149,44 +159,39 @@
   font-size: 1.25rem;
 }
 
-.sidebar.closed .sub-menu-item {
-  padding: 8px 5px;
+.menu-item .label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  flex: 1;
+  transition: opacity 0.3s ease;
+}
+
+.menu-arrow {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
   justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+/* Sub Menu */
+.sub-menu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  padding-left: 20px;
+  margin-left: 0.5rem;
+  border-left: 1px solid var(--sidebar-border);
+  opacity: 0;
+}
+
+.sub-menu.expanded {
+  max-height: 500px; /* Valor alto para asegurar que se muestre todo */
+  opacity: 1;
 }
 
 .sidebar.closed .sub-menu {
-  padding-left: 5px;
-}
-
-
-.menu-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.menu-item.active {
-  background: #33608d;
-  color: white;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.icon {
-  font-size: 1.25rem;
-  display: flex;
-}
-
-.label {
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.sub-menu {
-  padding-left: 20px;
   display: none;
-  flex-direction: column;
-}
-
-.sub-menu.active {
-  display: block;
 }
 
 .sub-menu-item {
@@ -197,17 +202,45 @@
   align-items: center;
   padding: 8px 12px;
   cursor: pointer;
-  transition: background 0.2s ease-in-out;
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  width: 100%;
+  text-align: left;
 }
 
-
 .sub-menu-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: var(--sidebar-hover);
+  color: white;
+  transform: translateX(5px);
 }
 
 .sub-menu .sub-menu-item.active {
   font-weight: bold;
   color: #ffffff !important;
+  background-color: var(--sidebar-active);
+}
+
+/* Overlay para cerrar el sidebar en móviles */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998; /* Justo debajo del sidebar */
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.visible {
+  opacity: 1;
+}
+
+.sidebar.mobile.open + .sidebar-overlay,
+.sidebar-overlay {
+  display: block;
 }
 
 /* ===== RESPONSIVE MEJORADO ===== */
@@ -215,30 +248,21 @@
 /* Reglas para dispositivos móviles */
 @media (max-width: 768px) {
   .sidebar {
-    width: 60px;
-    /* Ancho por defecto en móvil (cerrado) */
-    z-index: 1001;
-    /* Asegurar que está por encima del overlay */
+    width: 60px; /* Ancho por defecto en móvil (cerrado) */
+    z-index: 1001; /* Asegurar que está por encima del overlay */
+    transform: translateX(0); /* Visible pero colapsado */
   }
 
   .sidebar.mobile.open {
-    width: 250px;
-    /* Ancho cuando está abierto en móvil */
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    /* Sombra más pronunciada al estar abierto */
+    width: 250px; /* Ancho cuando está abierto en móvil */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Sombra más pronunciada al estar abierto */
+    transform: translateX(0);
   }
 
   .sidebar.mobile.closed {
-    width: 50px;
-    /* Ancho cuando está cerrado en móvil */
-    padding: 20px 5px;
-    /* Padding mínimo */
-  }
-
-  /* Mostrar overlay cuando el sidebar está abierto en móvil */
-  .sidebar.mobile.open+.sidebar-overlay,
-  .sidebar-overlay {
-    display: block;
+    width: 70px; /* Ancho cuando está cerrado en móvil */
+    padding: 20px 5px; /* Padding mínimo */
+    transform: translateX(0); /* Siempre visible */
   }
 
   .sidebar.mobile.closed .menu-item {
@@ -247,6 +271,26 @@
 
   .sidebar.mobile.closed .top-logo {
     width: 30px;
+  }
+
+  /* Asegurar que los iconos en elementos activos mantengan su tamaño */
+  .sidebar.mobile.closed .menu-item.active .icon,
+  .sidebar.mobile.closed .menu-item .icon {
+    width: 24px;
+    height: 24px;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Asegurar que los iconos SVG dentro de los elementos activos mantengan su tamaño */
+  .sidebar.mobile.closed .menu-item.active .icon svg,
+  .sidebar.mobile.closed .menu-item .icon svg {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
   }
 
   /* Para iPhones más pequeños y dispositivos estrechos */
@@ -261,62 +305,8 @@
     }
 
     .sidebar.mobile.open {
-      width: 230px;
-      /* Ligeramente más estrecho en pantallas muy pequeñas */
+      width: 230px; /* Ligeramente más estrecho en pantallas muy pequeñas */
     }
   }
 }
 
-
-/* Fixed positioning for password toggle buttons */
-.password-input-group {
-  position: relative;
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.password-input-group input {
-  width: 100%;
-  padding: 12px;
-  padding-right: 40px; /* Make space for the icon */
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 1rem;
-  background-color: white;
-  transition: border-color 0.2s;
-}
-
-.toggle-password-btn {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
-  width: 24px;
-  height: 24px;
-}
-
-.toggle-password-btn .icon {
-  width: 20px;
-  height: 20px;
-  color: #666;
-}
-
-/* Make sure there's no other element interfering with the positioning */
-.password-input-group * {
-  box-sizing: border-box;
-}
-
-@media (max-width: 480px) {
-  .toggle-password-btn {
-    right: 10px;
-  }
-}

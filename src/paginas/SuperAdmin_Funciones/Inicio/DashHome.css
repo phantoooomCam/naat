@@ -2,7 +2,7 @@
 .dash-home {
   flex-grow: 1;
   width: 100%;
-  padding: 3rem;
+  padding: 2rem;
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -23,18 +23,147 @@
 /* Encabezado */
 .home-view h1 {
   color: #34495e;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   text-align: left;
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
   margin-top: 70px;
+}
+
+.section-title {
+  color: #34495e;
+  margin: 2rem 0 1rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Estadísticas resumidas */
+.stats-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+}
+
+.stat-icon {
+  background-color: rgba(51, 96, 141, 0.1);
+  color: #33608d;
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-right: 1rem;
+}
+
+.stat-icon.warning {
+  background-color: rgba(243, 156, 18, 0.1);
+  color: #f39c12;
+}
+
+.stat-content h3 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  color: #2c3e50;
+}
+
+.stat-content p {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+/* Gráficos */
+.charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chart-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.chart-card h3 {
+  color: #2c3e50;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.chart-wrapper {
+  height: 300px;
+  width: 100%;
+}
+
+/* Tabla de actividad reciente */
+.recent-activity-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  margin-bottom: 2rem;
+}
+
+.recent-activity-card h3 {
+  color: #2c3e50;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.activity-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.activity-table th,
+.activity-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.activity-table th {
+  background-color: #f9f9f9;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.activity-table tr:hover {
+  background-color: #f5f5f5;
 }
 
 /* Diseño de tarjetas en cuadrícula */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2rem;
+  gap: 1.5rem;
   justify-content: center;
 }
 
@@ -53,7 +182,7 @@
   padding: 2rem;
   cursor: pointer;
   border-left: 5px solid #33608d;
-  overflow: hidden; /* Evita que el contenido se salga */
+  overflow: hidden;
   text-overflow: ellipsis;
 }
 
@@ -88,7 +217,7 @@
   color: #2c3e50;
   margin: 0;
   padding-bottom: 5px;
-  max-width: 80%; /* Evita que se expanda demasiado */
+  max-width: 80%;
 }
 
 /* Descripción */
@@ -99,66 +228,117 @@
   max-width: 80%;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* Corta el texto si es muy largo */
+  text-overflow: ellipsis;
 }
 
 @media (min-width: 1024px) {
   .dash-home.collapsed {
-    margin-left: -192px; /* 🔹 Se desplaza hacia la izquierda cuando el sidebar está colapsado */
+    margin-left: -192px;
     transition: margin 0.3s ease-in-out;
   }
 }
 
-/* 📌 Ajustes en Móviles (≤1024px) */
+/* Ajustes en Móviles (≤1024px) */
 @media (max-width: 1024px) {
-  .home-view h1{
-    font-size: 25px;
+  .home-view h1 {
+    font-size: 1.5rem;
     margin-top: 50px;
-  }
-  .cards-grid {
-    display: flex;
-    flex-direction: column;
-    align-items: center; /* 🔹 Centra las tarjetas */
-    gap: 1.5rem;
+    text-align: center;
   }
 
-  .row-1, .row-2, .row-3 {
+  .section-title {
+    text-align: center;
+  }
+
+  .charts-container {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-grid {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
+    gap: 1.5rem;
   }
 
   .card {
-    width: 85%; /* 🔹 Ajusta el ancho para que no ocupen toda la pantalla */
-    max-width: 400px; /* 🔹 Limita el tamaño máximo */
-    margin: 0 auto; /* 🔹 Centra las tarjetas */
-    padding: .5rem; /* 🔹 Reduce el padding */
+    width: 85%;
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 1.5rem;
   }
 
   .dash-home {
-    margin-left: 45px !important; /* 🔹 Asegura que no se mueva */
-    width: 100%; /* 🔹 Usa todo el ancho */
-    transition: none; /* 🔹 No aplicar animaciones innecesarias */
-    flex-direction: column; /* 🔹 Ajusta el contenido verticalmente */
-    align-items: center; 
-    justify-content: center;
+    margin-left: 60px !important; /* Ajustar al ancho del sidebar móvil */
+    width: calc(100% - 60px);
+    transition: none;
+    padding: 1rem;
   }
 
-   /* 📌 Cuando el sidebar está abierto en móviles, mover DashHome a la derecha */
-   .sidebar.open ~ .dash-home {
-    margin-left: 100px; /* 🔹 Se mueve a la derecha para compensar el sidebar */
+  .stats-overview {
+    grid-template-columns: 1fr;
   }
-
-  /* 📌 Cuando el sidebar está cerrado, mantener centrado */
-  .sidebar.closed ~ .dash-home {
-    margin-left: 0; /* 🔹 Sin desplazamiento */
-  }
-
-  /* 🔹 Sidebar se sobrepone sobre DashHome en móviles */
-  .sidebar {
-    position: fixed;
-    z-index: 1000; /* 🔹 Asegurar que esté sobre DashHome */
-  }
-
 }
+
+@media (max-width: 768px) {
+  .chart-card {
+    padding: 1rem;
+  }
+
+  .chart-wrapper {
+    height: 250px;
+  }
+
+  .activity-table th,
+  .activity-table td {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  /* Ajustar el contenido principal para que no quede debajo del sidebar en móviles */
+  .dash-home {
+    margin-left: 60px !important; /* Mantener consistente con el ancho del sidebar */
+    width: calc(100% - 60px);
+    transition: none;
+    padding: 1rem;
+  }
+
+  .home-view h1 {
+    font-size: 1.3rem;
+    margin-top: 80px; /* Aumentar el margen superior para evitar que quede bajo el header */
+    text-align: center;
+  }
+
+  .stats-overview {
+    margin-top: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-view h1 {
+    font-size: 1.3rem;
+  }
+
+  .section-title {
+    font-size: 1.2rem;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+  }
+
+  .stat-content h3 {
+    font-size: 1.5rem;
+  }
+
+  .chart-wrapper {
+    height: 200px;
+  }
+}
+
