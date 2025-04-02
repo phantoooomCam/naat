@@ -16,7 +16,7 @@ const DashOrga = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
 
-  const API_URL = "http://192.168.100.89:44444/api/organizaciones"
+  const API_URL = "http://localhost:44444/api/organizaciones"
   const token = localStorage.getItem("token")
 
   // Observador del sidebar
@@ -39,9 +39,9 @@ const DashOrga = () => {
       const response = await fetch(API_URL, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
       })
 
       if (!response.ok) {

@@ -35,12 +35,12 @@ const IngresoSist = () => {
     const token = localStorage.getItem("token")
 
     try {
-      const response = await fetch("http://192.168.100.89:44444/api/ingresos", {
+      const response = await fetch("http://localhost:44444/api/ingresos", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
         },
+        credentials: "include",
       })
 
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`)

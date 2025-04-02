@@ -20,7 +20,7 @@ const DashArea = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
 
-  const API_URL = "http://192.168.100.89:44444/api"
+  const API_URL = "http://localhost:44444/api"
   const token = localStorage.getItem("token")
 
   // Observador del sidebar
@@ -42,9 +42,9 @@ const DashArea = () => {
       const response = await fetch(`${API_URL}/areas`, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        credentials: "include",
       })
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
       const data = await response.json()

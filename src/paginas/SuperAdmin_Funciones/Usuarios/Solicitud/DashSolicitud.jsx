@@ -51,13 +51,12 @@ const DashSolicitud = () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch("http://192.168.100.89:44444/api/usuarios/?inicio=1&cantidad=10", {
+      const response = await fetch("http://localhost:44444/api/usuarios/?inicio=1&cantidad=10", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
         },
+        credentials: "include",
       })
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)

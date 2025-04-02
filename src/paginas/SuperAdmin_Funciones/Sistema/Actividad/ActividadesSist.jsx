@@ -35,7 +35,7 @@ const ActividadesSist = () => {
     const token = localStorage.getItem("token")
 
     try {
-      const response = await fetch("http://192.168.100.89:44444/api/actividades", {
+      const response = await fetch("http://localhost:44444/api/actividades", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
