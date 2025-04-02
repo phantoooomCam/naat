@@ -1,21 +1,20 @@
 import { Navigate, Outlet } from "react-router-dom";
 
 const ProtectedRoute = () => {
-  const token = localStorage.getItem("token"); 
-  const userData = localStorage.getItem("user"); // Datos del usuario en formato JSON
+  const userData = localStorage.getItem("user");
 
-  if (!token || !userData) {
-    return <Navigate to="/login" />; // Redirigir al login si no hay sesión
+  if (!userData) {
+    return <Navigate to="/" />;
   }
 
-  const user = JSON.parse(userData); // Convertir el JSON a objeto
-  const dashboardLevels = [1, 2, 3, 4, 5 ]; // Solo estos niveles pueden acceder al dashboard
+  const user = JSON.parse(userData);
+  const dashboardLevels = [1, 2, 3, 4, 5];
 
   if (dashboardLevels.includes(user.nivel)) {
-    return <Outlet />; // Permitir acceso a las rutas protegidas
+    return <Outlet />;
   }
 
-  return <Navigate to="/home" />; // Redirigir niveles 3, 4 y 5 a otra ruta
+  return <Navigate to="/home" />;
 };
 
 export default ProtectedRoute;
