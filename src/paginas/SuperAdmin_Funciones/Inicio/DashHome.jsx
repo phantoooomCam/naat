@@ -1,20 +1,11 @@
-import PropTypes from "prop-types";
-import "./DashHome.css";
-import { useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
-import { useState, useEffect } from "react";
-import {
-  FaUsers,
-  FaClipboardList,
-  FaChartLine,
-  FaSignInAlt,
-  FaBuilding,
-  FaTasks,
-  FaLayerGroup,
-  FaUserPlus,
-  FaUserClock,
-  FaExclamationTriangle,
-} from "react-icons/fa";
+"use client"
+
+import PropTypes from "prop-types"
+import "./DashHome.css"
+import { useNavigate } from "react-router-dom"
+import { AnimatePresence, motion } from "framer-motion"
+import { useState, useEffect } from "react"
+import { FaUsers, FaBuilding, FaTasks, FaLayerGroup, FaUserClock, FaExclamationTriangle } from "react-icons/fa"
 import {
   BarChart,
   Bar,
@@ -27,91 +18,81 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts";
+} from "recharts"
 
 const DashHome = ({ activeView }) => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      const sidebar = document.querySelector(".sidebar");
+      const sidebar = document.querySelector(".sidebar")
       if (sidebar) {
-        setIsSidebarCollapsed(sidebar.classList.contains("closed"));
+        setIsSidebarCollapsed(sidebar.classList.contains("closed"))
       }
-    });
+    })
 
-    observer.observe(document.body, { attributes: true, subtree: true });
+    observer.observe(document.body, { attributes: true, subtree: true })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   const views = {
     inicio: <HomeView isSidebarCollapsed={isSidebarCollapsed} />,
-  };
+  }
 
   return (
     <div className={`dash-home ${isSidebarCollapsed ? "collapsed" : ""}`}>
       <div className="container">{views[activeView]}</div>
     </div>
-  );
-};
-
-// Datos de ejemplo para los gráficos
-const activityData = [
-  { name: "Lun", usuarios: 40, solicitudes: 24, ingresos: 18 },
-  { name: "Mar", usuarios: 30, solicitudes: 13, ingresos: 22 },
-  { name: "Mié", usuarios: 20, solicitudes: 28, ingresos: 15 },
-  { name: "Jue", usuarios: 27, solicitudes: 18, ingresos: 21 },
-  { name: "Vie", usuarios: 18, solicitudes: 23, ingresos: 19 },
-  { name: "Sáb", usuarios: 23, solicitudes: 12, ingresos: 8 },
-  { name: "Dom", usuarios: 34, solicitudes: 5, ingresos: 3 },
-];
-
-const userTypeData = [
-  { name: "Super Admin", value: 5 },
-  { name: "Admin Org", value: 15 },
-  { name: "Jefe Área", value: 25 },
-  { name: "Jefe Depto", value: 35 },
-  { name: "Analista", value: 85 },
-];
-
-const COLORS = ["#222a35", "#33608d", "#4a7ca9", "#6698c5", "#82b4e1"];
-
-const recentActivityData = [
-  { id: 1, usuario: "Ana García", accion: "Inicio de sesión", fecha: "2023-11-15 09:23" },
-  { id: 2, usuario: "Carlos Pérez", accion: "Creación de usuario", fecha: "2023-11-15 08:45" },
-  { id: 3, usuario: "María López", accion: "Actualización de perfil", fecha: "2023-11-14 16:30" },
-  { id: 4, usuario: "Juan Rodríguez", accion: "Eliminación de registro", fecha: "2023-11-14 14:15" },
-  { id: 5, usuario: "Laura Martínez", accion: "Inicio de sesión", fecha: "2023-11-14 10:05" },
-];
+  )
+}
 
 const HomeView = ({ isSidebarCollapsed }) => {
-  const usuario = JSON.parse(localStorage.getItem("user"));
-  const nombre = usuario?.nombre || "Usuario";
-  const navigate = useNavigate();
+  const usuario = JSON.parse(localStorage.getItem("user"))
+  const nombre = usuario?.nombre || "Usuario"
+  const navigate = useNavigate()
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200)
 
-  // Datos de las tarjetas con iconos (mantenidos del código original)
-  const dashboardCards = [
-    { id: 1, title: "Gestión Usuarios", route: "/gestion", icon: <FaUsers /> },
-    { id: 2, title: "Solicitudes", route: "/solicitudes", icon: <FaClipboardList /> },
-    { id: 3, title: "Actividad del Sistema", route: "/actividad", icon: <FaChartLine /> },
-    { id: 4, title: "Ingresos del Sistema", route: "/ingresos", icon: <FaSignInAlt /> },
-    { id: 5, title: "Gestión Organización", route: "/orga", icon: <FaBuilding /> },
-    { id: 6, title: "Gestión Departamento", route: "/depto", icon: <FaTasks /> },
-    { id: 7, title: "Gestión Área", route: "/area", icon: <FaLayerGroup /> },
-  ];
+  const [totalUsuarios, setTotalUsuarios] = useState(0)
+  const [rotatingStatIndex, setRotatingStatIndex] = useState(0)
+  const [totalOrganizaciones, setTotalOrganizaciones] = useState(0)
+  const [totalAreas, setTotalAreas] = useState(0)
+  const [totalDepartamentos, setTotalDepartamentos] = useState(0)
+  const [pendientes, setPendientes] = useState(0)
+  const [actividadPorDia, setActividadPorDia] = useState([])
+  const [userTypeData, setUserTypeData] = useState([])
+  const [actividadReciente, setActividadReciente] = useState([])
 
-  const [totalUsuarios, setTotalUsuarios] = useState(0);
-  const [rotatingStatIndex, setRotatingStatIndex] = useState(0);
-  const [totalOrganizaciones, setTotalOrganizaciones] = useState(0);
-  const [totalAreas, setTotalAreas] = useState(0);
-  const [totalDepartamentos, setTotalDepartamentos] = useState(0);
+  // Detectar cambios en el ancho de la ventana
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth)
+    }
+
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
+  const getRangoSemanaActual = () => {
+    const hoy = new Date()
+    const diaSemana = hoy.getDay() // 0=Dom, 1=Lun, ..., 6=Sáb
+
+    const inicioSemana = new Date(hoy)
+    inicioSemana.setDate(hoy.getDate() - diaSemana)
+    inicioSemana.setHours(0, 0, 0, 0)
+
+    const finSemana = new Date(inicioSemana)
+    finSemana.setDate(inicioSemana.getDate() + 6)
+    finSemana.setHours(23, 59, 59, 999)
+
+    return { inicioSemana, finSemana }
+  }
 
   const rotatingData = [
     { id: "organizaciones", icon: <FaBuilding />, value: totalOrganizaciones, label: "Organizaciones" },
     { id: "areas", icon: <FaLayerGroup />, value: totalAreas, label: "Áreas" },
     { id: "departamentos", icon: <FaTasks />, value: totalDepartamentos, label: "Departamentos" },
-  ];
+  ]
 
   useEffect(() => {
     const fetchUsuarios = async () => {
@@ -121,20 +102,65 @@ const HomeView = ({ isSidebarCollapsed }) => {
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include", // ¡IMPORTANTE! para incluir cookies
-        });
+          credentials: "include",
+        })
 
-        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
 
-        const data = await response.json();
-        setTotalUsuarios(data.length); // Suponiendo que se devuelve un array de usuarios
+        const data = await response.json()
+        setTotalUsuarios(data.length)
+
+        // Usuarios pendientes (nivel null, undefined, 0, "null", "0")
+        const pendientesUsuarios = data.filter((user) => {
+          const nivel = user.nivel
+          return nivel === null || nivel === undefined || nivel === "null" || nivel === "0" || nivel === 0
+        })
+        setPendientes(pendientesUsuarios.length)
+
+        // Agrupar por nivel
+        const conteoPorNivel = {
+          "Super Admin": 0,
+          "Admin Org": 0,
+          "Jefe de Área": 0,
+          "Jefe de Departamento": 0,
+          Analista: 0,
+        }
+
+        data.forEach((user) => {
+          switch (user.nivel) {
+            case 1:
+              conteoPorNivel["Super Admin"]++
+              break
+            case 2:
+              conteoPorNivel["Admin Org"]++
+              break
+            case 3:
+              conteoPorNivel["Jefe de Área"]++
+              break
+            case 4:
+              conteoPorNivel["Jefe de Departamento"]++
+              break
+            case 5:
+              conteoPorNivel["Analista"]++
+              break
+            default:
+              break
+          }
+        })
+
+        // Convertir a formato para PieChart
+        const datosGrafico = Object.entries(conteoPorNivel)
+          .filter(([_, value]) => value > 0)
+          .map(([name, value]) => ({ name, value }))
+
+        setUserTypeData(datosGrafico)
       } catch (error) {
-        console.error("Error al obtener usuarios:", error);
+        console.error("Error al obtener usuarios:", error)
       }
-    };
+    }
 
-    fetchUsuarios();
-  }, []);
+    fetchUsuarios()
+  }, [])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -152,26 +178,185 @@ const HomeView = ({ isSidebarCollapsed }) => {
             headers: { "Content-Type": "application/json" },
             credentials: "include",
           }),
-        ]);
+        ])
 
-        setTotalOrganizaciones((await orgRes.json()).length);
-        setTotalAreas((await areaRes.json()).length);
-        setTotalDepartamentos((await deptoRes.json()).length);
+        setTotalOrganizaciones((await orgRes.json()).length)
+        setTotalAreas((await areaRes.json()).length)
+        setTotalDepartamentos((await deptoRes.json()).length)
       } catch (error) {
-        console.error("Error al obtener datos rotativos:", error);
+        console.error("Error al obtener datos rotativos:", error)
       }
-    };
+    }
 
-    fetchData();
-  }, []);
+    fetchData()
+  }, [])
+
+  useEffect(() => {
+    const fetchActividades = async () => {
+      try {
+        const response = await fetch("http://localhost:44444/api/actividades", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        })
+
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`)
+
+        const data = await response.json()
+
+        const dias = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+
+        // === FILTRAR SEMANA ACTUAL PARA LA GRÁFICA ===
+        const hoy = new Date()
+        const diaSemana = hoy.getDay() // 0=Dom, 1=Lun, ..., 6=Sáb
+
+        const inicioSemana = new Date(hoy)
+        inicioSemana.setDate(hoy.getDate() - diaSemana)
+        inicioSemana.setHours(0, 0, 0, 0)
+
+        const finSemana = new Date(inicioSemana)
+        finSemana.setDate(inicioSemana.getDate() + 6)
+        finSemana.setHours(23, 59, 59, 999)
+
+        const actividadesSemana = data.filter((actividad) => {
+          const fecha = new Date(actividad.fecha || actividad.fechaHora || actividad.createdAt)
+          return fecha >= inicioSemana && fecha <= finSemana
+        })
+
+        // === GRÁFICA POR DÍA ===
+        const resumen = {}
+        dias.forEach((dia) => {
+          resumen[dia] = {
+            name: dia,
+            Crear: 0,
+            Actualizar: 0,
+            Eliminar: 0,
+            "Cambiar Contraseña": 0,
+            "Reporte Sospechoso": 0,
+            Activar: 0,
+            "Restablecer Contraseña": 0,
+            "Solicitar Recuperación": 0,
+          }
+        })
+
+        actividadesSemana.forEach((actividad) => {
+          const accion = (actividad.accion || "").toLowerCase()
+          const fecha = new Date(actividad.fecha || actividad.fechaHora || actividad.createdAt)
+          const dia = dias[fecha.getDay()]
+
+          if (!resumen[dia]) return
+
+          if (accion.includes("crear")) resumen[dia].Crear += 1
+          else if (accion.includes("actualizar")) resumen[dia].Actualizar += 1
+          else if (accion.includes("eliminar")) resumen[dia].Eliminar += 1
+          else if (accion.includes("cambiar contraseña")) resumen[dia]["Cambiar Contraseña"] += 1
+          else if (accion.includes("sospechoso")) resumen[dia]["Reporte Sospechoso"] += 1
+          else if (accion.includes("activar")) resumen[dia].Activar += 1
+          else if (accion.includes("restablecer")) resumen[dia]["Restablecer Contraseña"] += 1
+          else if (accion.includes("recuperación") || accion.includes("recuperar"))
+            resumen[dia]["Solicitar Recuperación"] += 1
+        })
+
+        const datosGrafica = dias.map((dia) => resumen[dia])
+        setActividadPorDia(datosGrafica)
+
+        // === ACTIVIDAD RECIENTE (últimas 5) ===
+        const recientes = [...data]
+          .filter((a) => !!a.fecha)
+          .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+          .slice(0, 5)
+
+        setActividadReciente(recientes)
+      } catch (error) {
+        console.error("Error al obtener actividades:", error)
+        setActividadPorDia([])
+        setActividadReciente([])
+      }
+    }
+
+    fetchActividades()
+  }, [])
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setRotatingStatIndex((prevIndex) => (prevIndex + 1) % rotatingData.length);
-    }, 5000); // cambia cada 5 segundos
+      setRotatingStatIndex((prevIndex) => (prevIndex + 1) % rotatingData.length)
+    }, 5000) // cambia cada 5 segundos
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => clearInterval(interval)
+  }, [])
+
+  const COLORS = [
+    "#2c3e50", // azul oscuro elegante
+    "#1976d2", // azul brillante
+    "#3f7cac", // azul intermedio (reemplazo de lavanda)
+    "#90caf9", // azul claro
+    "#546e7a", // gris azulado
+  ]
+
+  // Determinar qué barras mostrar según el tamaño de pantalla
+  const getVisibleBars = () => {
+    if (windowWidth <= 480) {
+      return (
+        <>
+          <Bar dataKey="Crear" fill="#33608d" />
+          <Bar dataKey="Actualizar" fill="#1f77b4" />
+          <Bar dataKey="Eliminar" fill="#d62728" />
+        </>
+      )
+    }
+
+    if (windowWidth <= 768) {
+      return (
+        <>
+          <Bar dataKey="Crear" fill="#33608d" />
+          <Bar dataKey="Actualizar" fill="#1f77b4" />
+          <Bar dataKey="Eliminar" fill="#d62728" />
+          <Bar dataKey="Cambiar Contraseña" fill="#ff7f0e" />
+          <Bar dataKey="Reporte Sospechoso" fill="#9467bd" />
+        </>
+      )
+    }
+
+    return (
+      <>
+        <Bar dataKey="Crear" fill="#33608d" />
+        <Bar dataKey="Actualizar" fill="#1f77b4" />
+        <Bar dataKey="Eliminar" fill="#d62728" />
+        <Bar dataKey="Cambiar Contraseña" fill="#ff7f0e" />
+        <Bar dataKey="Reporte Sospechoso" fill="#9467bd" />
+        <Bar dataKey="Activar" fill="#2ca02c" />
+        <Bar dataKey="Restablecer Contraseña" fill="#17becf" />
+        <Bar dataKey="Solicitar Recuperación" fill="#bcbd22" />
+      </>
+    )
+  }
+
+  // Calcular el ancho de la gráfica de barras basado en el tamaño de pantalla
+  const getBarChartWidth = () => {
+    if (windowWidth <= 480) {
+      return 400 // Ancho mínimo para móviles pequeños
+    }
+    if (windowWidth <= 768) {
+      return 500 // Ancho para tablets
+    }
+    return "100%" // Ancho completo para escritorio
+  }
+
+  // Calcular el radio del gráfico de pastel basado en el tamaño de pantalla
+  const getPieRadius = () => {
+    if (windowWidth <= 480) {
+      return 80
+    }
+    if (windowWidth <= 768) {
+      return 90
+    }
+    return 100
+  }
+
+  // Determinar si mostrar etiquetas en el gráfico de pastel
+  const shouldShowPieLabels = windowWidth > 480
 
   return (
     <div className="home-view">
@@ -190,9 +375,7 @@ const HomeView = ({ isSidebarCollapsed }) => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon">
-            {rotatingData[rotatingStatIndex].icon}
-          </div>
+          <div className="stat-icon">{rotatingData[rotatingStatIndex].icon}</div>
           <AnimatePresence mode="wait">
             <motion.div
               key={rotatingData[rotatingStatIndex].id}
@@ -213,10 +396,11 @@ const HomeView = ({ isSidebarCollapsed }) => {
             <FaUserClock />
           </div>
           <div className="stat-content">
-            <h3>8</h3>
+            <h3>{pendientes}</h3>
             <p>Solicitudes Pendientes</p>
           </div>
         </div>
+
         <div className="stat-card">
           <div className="stat-icon warning">
             <FaExclamationTriangle />
@@ -232,44 +416,105 @@ const HomeView = ({ isSidebarCollapsed }) => {
       <div className="charts-container">
         <div className="chart-card">
           <h3>Actividad Semanal</h3>
-          <div className="chart-wrapper">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={activityData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="usuarios" name="Usuarios" fill="#33608d" />
-                <Bar dataKey="solicitudes" name="Solicitudes" fill="#222a35" />
-                <Bar dataKey="ingresos" name="Ingresos" fill="#6698c5" />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}>
+            <div className="chart-scroll-container">
+              {windowWidth <= 768 ? (
+                // Versión móvil con ancho fijo y scroll
+                <BarChart
+                  width={windowWidth <= 480 ? 500 : 600}
+                  height={300}
+                  data={actividadPorDia}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Legend
+                    layout="horizontal"
+                    verticalAlign="bottom"
+                    align="center"
+                    wrapperStyle={{
+                      bottom: 0,
+                      fontSize: windowWidth <= 480 ? "9px" : "11px",
+                    }}
+                  />
+                  {getVisibleBars()}
+                </BarChart>
+              ) : (
+                // Versión escritorio con ResponsiveContainer
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={actividadPorDia} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis allowDecimals={false} />
+                    <Tooltip />
+                    <Legend layout="horizontal" verticalAlign="bottom" align="center" />
+                    <Bar dataKey="Crear" fill="#33608d" />
+                    <Bar dataKey="Actualizar" fill="#1f77b4" />
+                    <Bar dataKey="Eliminar" fill="#d62728" />
+                    <Bar dataKey="Cambiar Contraseña" fill="#ff7f0e" />
+                    <Bar dataKey="Reporte Sospechoso" fill="#9467bd" />
+                    <Bar dataKey="Activar" fill="#2ca02c" />
+                    <Bar dataKey="Restablecer Contraseña" fill="#17becf" />
+                    <Bar dataKey="Solicitar Recuperación" fill="#bcbd22" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
           </div>
         </div>
 
         <div className="chart-card">
           <h3>Distribución de Usuarios</h3>
-          <div className="chart-wrapper">
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={userTypeData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {userTypeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}>
+            <div className="chart-scroll-container">
+              {windowWidth <= 768 ? (
+                // Versión móvil con ancho fijo
+                <PieChart width={300} height={300}>
+                  <Pie
+                    data={userTypeData}
+                    cx={150}
+                    cy={150}
+                    outerRadius={getPieRadius()}
+                    fill="#8884d8"
+                    dataKey="value"
+                    labelLine={shouldShowPieLabels}
+                    label={
+                      shouldShowPieLabels ? ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%` : null
+                    }
+                  >
+                    {userTypeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value, name) => [`${value} usuario(s)`, name]} />
+                </PieChart>
+              ) : (
+                // Versión escritorio con ResponsiveContainer
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={userTypeData}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                      labelLine={true}
+                      stroke="#ffffff"
+                      strokeWidth={2}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {userTypeData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value, name) => [`${value} usuario(s)`, name]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -288,12 +533,20 @@ const HomeView = ({ isSidebarCollapsed }) => {
               </tr>
             </thead>
             <tbody>
-              {recentActivityData.map((activity) => (
-                <tr key={activity.id}>
-                  <td>{activity.id}</td>
-                  <td>{activity.usuario}</td>
+              {actividadReciente.map((activity) => (
+                <tr key={activity.idActividad}>
+                  <td>{activity.idActividad}</td>
+                  <td>{activity.nombreAutor || "Desconocido"}</td>
                   <td>{activity.accion}</td>
-                  <td>{activity.fecha}</td>
+                  <td>
+                    {new Date(activity.fecha).toLocaleString("es-MX", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -303,15 +556,16 @@ const HomeView = ({ isSidebarCollapsed }) => {
 
       {/* Accesos rápidos (combina las tarjetas del código original con el título del nuevo) */}
     </div>
-  );
-};
+  )
+}
 
 DashHome.propTypes = {
   activeView: PropTypes.string.isRequired,
-};
+}
 
 HomeView.propTypes = {
   isSidebarCollapsed: PropTypes.bool,
-};
+}
 
-export default DashHome;
+export default DashHome
+

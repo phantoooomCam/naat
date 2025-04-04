@@ -93,7 +93,7 @@
 /* Gráficos */
 .charts-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -103,6 +103,7 @@
   border-radius: 12px;
   padding: 1.5rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
 }
 
 .chart-card h3 {
@@ -113,8 +114,28 @@
 }
 
 .chart-wrapper {
-  height: 300px;
   width: 100%;
+  position: relative;
+}
+
+/* Solo aplicar scroll en móviles */
+.chart-wrapper.mobile .chart-scroll-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 10px;
+}
+
+.chart-wrapper:not(.mobile) .chart-scroll-container {
+  overflow-x: visible;
+}
+
+.chart-scroll-container {
+  width: 100%;
+}
+
+/* Asegurar que las gráficas no se desborden */
+.recharts-responsive-container {
+  margin: 0 auto;
 }
 
 /* Tabla de actividad reciente */
@@ -231,6 +252,31 @@
   text-overflow: ellipsis;
 }
 
+/* Estilos específicos para Recharts */
+.recharts-legend-wrapper {
+  width: 100% !important;
+}
+
+.recharts-default-legend {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+}
+
+.recharts-legend-item {
+  margin: 0 5px !important;
+}
+
+/* Indicador de scroll para móviles */
+.chart-wrapper.mobile .chart-scroll-container::-webkit-scrollbar {
+  height: 4px;
+}
+
+.chart-wrapper.mobile .chart-scroll-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
 @media (min-width: 1024px) {
   .dash-home.collapsed {
     margin-left: -192px;
@@ -285,10 +331,6 @@
     padding: 1rem;
   }
 
-  .chart-wrapper {
-    height: 250px;
-  }
-
   .activity-table th,
   .activity-table td {
     padding: 0.5rem;
@@ -311,6 +353,14 @@
 
   .stats-overview {
     margin-top: 20px;
+  }
+
+  /* Asegurar que las leyendas se muestren correctamente */
+  .recharts-legend-wrapper {
+    position: relative !important;
+    width: 100% !important;
+    bottom: 0 !important;
+    left: 0 !important;
   }
 }
 
@@ -337,8 +387,18 @@
     font-size: 1.5rem;
   }
 
-  .chart-wrapper {
-    height: 200px;
+  /* Ajustes para gráficas en pantallas muy pequeñas */
+  .recharts-legend-item-text {
+    font-size: 10px !important;
+  }
+
+  .recharts-tooltip-item-name,
+  .recharts-tooltip-item-value {
+    font-size: 10px;
+  }
+
+  .recharts-cartesian-axis-tick-value {
+    font-size: 10px;
   }
 }
 
