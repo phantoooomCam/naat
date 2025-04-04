@@ -46,7 +46,7 @@ export default function ResetPassword({ token: propToken }) {
     }
 
     try {
-      const response = await fetch("https://naatintelligence.com:44445/api/usuarios/reset-password", {
+      const response = await fetch("/api/usuarios/reset-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

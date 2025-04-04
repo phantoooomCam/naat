@@ -23,7 +23,7 @@ const DashDepartamento = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
 
-  const API_URL = "https://naatintelligence.com:44445/api"
+  const API_URL = "/api"
   const token = localStorage.getItem("token")
 
   // Observador del sidebar

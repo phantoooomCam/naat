@@ -30,7 +30,7 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("https://naatintelligence.com:44445/api/usuarios/logout", {
+      const response = await fetch("/api/usuarios/logout", {
         method: "POST",
         credentials: "include" // ✅ ¡esto envía la cookie!
       });

@@ -10,6 +10,15 @@ export default defineConfig({
   //   port: 5173, // Puedes cambiar el puerto si es necesario
   //   strictPort: true, // Asegura que use ese puerto específico
   // },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://192.168.100.89:44444',
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  }
   
 })
 

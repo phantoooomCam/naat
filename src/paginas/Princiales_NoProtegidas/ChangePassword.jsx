@@ -1,198 +1,222 @@
-import React, { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import "./Change.css"; // Cambio del nombre del archivo CSS
+"use client"
+
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { Eye, EyeOff, Lock, Save, AlertCircle, Check, X } from "lucide-react"
+import { toast } from "react-hot-toast"
+import "./Change.css"
 
 const PasswordChange = () => {
   const [formData, setFormData] = useState({
     currentPassword: "",
     newPassword: "",
-  });
+    confirmPassword: "",
+  })
 
   const [showPasswords, setShowPasswords] = useState({
     currentPassword: false,
     newPassword: false,
-  });
+    confirmPassword: false,
+  })
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [validations, setValidations] = useState({
+    length: false,
+    specialChar: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    match: false,
+  })
+
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   // Recuperar el objeto del usuario desde el localStorage
-  const usuario = JSON.parse(localStorage.getItem("user"));
-  const userId = usuario ? usuario.id : null; // Suponiendo que el ID del usuario está en 'id'
+  const usuario = JSON.parse(localStorage.getItem("user"))
+  const userId = usuario ? usuario.id : null
 
-  const token = localStorage.getItem("token"); // El token almacenado en localStorage
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   // Observador para el sidebar
-  React.useEffect(() => {
+  useEffect(() => {
     const observer = new MutationObserver(() => {
-      const sidebar = document.querySelector(".sidebar");
+      const sidebar = document.querySelector(".sidebar")
       if (sidebar) {
-        setIsSidebarCollapsed(sidebar.classList.contains("closed"));
+        setIsSidebarCollapsed(sidebar.classList.contains("closed"))
       }
-    });
+    })
 
-    observer.observe(document.body, { attributes: true, subtree: true });
-    return () => observer.disconnect();
-  }, []);
+    observer.observe(document.body, { attributes: true, subtree: true })
+    return () => observer.disconnect()
+  }, [])
+
+  // Validar la contraseña mientras el usuario escribe
+  useEffect(() => {
+    const { newPassword } = formData
+    setValidations({
+      length: newPassword.length >= 8,
+      specialChar: /[!@#$%^&*()\-_=+{};:,<.>]/.test(newPassword),
+      uppercase: /[A-Z]/.test(newPassword),
+      lowercase: /[a-z]/.test(newPassword),
+      number: /[0-9]/.test(newPassword),
+      match: newPassword === formData.confirmPassword && newPassword !== "",
+    })
+
+    setValidations({
+      length: newPassword.length >= 8,
+      specialChar: /[!@#$%^&*()\-_=+{};:,<.>]/.test(newPassword),
+      uppercase: /[A-Z]/.test(newPassword),
+      lowercase: /[a-z]/.test(newPassword),
+      number: /[0-9]/.test(newPassword),
+      match: newPassword === formData.confirmPassword && newPassword !== "",
+    })
+  }, [formData.newPassword])
 
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem("token");
+      setIsLoading(true)
 
-      if (!token) {
-        console.error("Error: No hay token almacenado.");
-        return;
-      }
-
-      const response = await fetch(
-        "https://naatintelligence.com:44445/api/usuarios/logout",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        }
-      );
+      const response = await fetch("/api/usuarios/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      })
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.mensaje || "Error al cerrar sesión.");
+        const data = await response.json()
+        throw new Error(data.mensaje || "Error al cerrar sesión.")
       }
 
-      // ✅ Eliminar el token y la información del usuario del almacenamiento local
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      // Eliminar el token y la información del usuario del almacenamiento local
+      localStorage.removeItem("token")
+      localStorage.removeItem("user")
 
-      // ✅ Redirigir al usuario a la página de inicio de sesión
-      navigate("/");
+      // Redirigir al usuario a la página de inicio de sesión
+      navigate("/")
     } catch (error) {
-      console.error("Error al cerrar sesión:", error);
+      console.error("Error al cerrar sesión:", error)
+      setError("Error al cerrar sesión. Intente nuevamente.")
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value } = e.target
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }));
-    setError("");
-  };
+    }))
+    setError("")
+  }
 
   const togglePasswordVisibility = (field) => {
     setShowPasswords((prev) => ({
       ...prev,
       [field]: !prev[field],
-    }));
-  };
-  const notificarCambioPassword = async (userId, setError, setSuccess) => {
-    const token = localStorage.getItem("token");
-  
-    try {
-      const response = await fetch(
-        "https://naatintelligence.com:44445/api/usuarios/change-password/{id}", // o el endpoint que tú necesites
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ idUsuario: userId }),
-        }
-      );
-  
-      const result = await response.json();
-  
-      if (!response.ok) {
-        setError(result.mensaje || "Error al notificar el cambio de contraseña.");
-        return false;
-      }
-  
-      setSuccess(true);
-      return true;
-    } catch (err) {
-      setError("Error de red al notificar el cambio.");
-      return false;
-    }
-  };
-  
+    }))
+  }
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
+    setError("")
+    setSuccess(false)
+
+    // Validar que todos los campos estén completos
+    if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
+      setError("Todos los campos son obligatorios")
+      return
+    }
+
+    // Validar que la nueva contraseña cumpla con los requisitos
+    const allValid = Object.values(validations).every(Boolean)
+    if (!allValid) {
+      setError("La nueva contraseña no cumple con todos los requisitos")
+      return
+    }
 
     if (!userId) {
-      setError("No se ha detectado un ID de sesión válido.");
-      return;
+      setError("No se ha detectado un ID de sesión válido.")
+      return
     }
 
-    // Crear el objeto JSON con las claves exactas que espera el backend
-    const passwordData = {
-      oldPassword: formData.currentPassword,
-      newPassword: formData.newPassword,
-    };
+    setIsLoading(true)
 
     try {
+      // Crear el objeto JSON con las claves exactas que espera el backend
+      const passwordData = {
+        oldPassword: formData.currentPassword,
+        newPassword: formData.newPassword,
+      }
+
       // Enviar los datos al backend
-      const response = await fetch(
-        `https://naatintelligence.com:44445/api/usuarios/change-password/${userId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify(passwordData),
-        }
-      );
+      const response = await fetch(`/api/usuarios/change-password/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(passwordData),
+      })
 
       // Verificar que la respuesta del servidor sea exitosa
       if (!response.ok) {
-        throw new Error("Error en la solicitud");
+        const errorData = await response.json()
+        throw new Error(errorData.mensaje || "Error en la solicitud")
       }
 
-      // Ahora parseamos la respuesta como JSON en lugar de texto
-      const responseData = await response.json();
+      // Ahora parseamos la respuesta como JSON
+      const responseData = await response.json()
 
       // Verificamos el mensaje en el objeto JSON de respuesta
       if (responseData.mensaje === "Contraseña actualizada exitosamente.") {
-        setSuccess(true);
-        setError(""); // Limpiar cualquier mensaje de error previo
+        setSuccess(true)
+        setError("") // Limpiar cualquier mensaje de error previo
+        toast.success("Contraseña actualizada correctamente")
 
-        // Esperar 1 segundo antes de redirigir al Sign-In
+        // Esperar 2 segundos antes de redirigir al Sign-In
         setTimeout(() => {
-          handleLogout();
-          navigate("/");
-        }, 1000);
+          handleLogout()
+        }, 2000)
       } else {
-        setError("Error al cambiar la contraseña.");
+        setError("Error al cambiar la contraseña.")
+        toast.error("Error al cambiar la contraseña")
       }
     } catch (error) {
-      console.error("Error en la solicitud:", error);
-      setError("Error al cambiar la contraseña.");
+      console.error("Error en la solicitud:", error)
+      setError(error.message || "Error al cambiar la contraseña.")
+      toast.error(error.message || "Error al cambiar la contraseña")
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
-    <div className={`password-container ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+    <div className={`password-container ${isSidebarCollapsed ? "collapsed" : ""}`}>
       <div className="password-content">
         <div className="password-header">
           <h2>Cambiar Contraseña</h2>
           <p className="password-subtitle">Actualiza tu contraseña para mantener tu cuenta segura</p>
         </div>
-        
+
         {(error || success) && (
-          <div className={`status-message ${error ? 'error' : 'success'}`}>
-            {error || "¡Contraseña cambiada exitosamente!"}
+          <div className={`status-message ${error ? "error" : "success"}`}>
+            <span className="status-icon">{error ? <AlertCircle size={20} /> : <Check size={20} />}</span>
+            <span>{error || "¡Contraseña cambiada exitosamente!"}</span>
           </div>
         )}
-        
+
         <div className="password-card">
           <form onSubmit={handleSubmit} className="password-form">
             <div className="form-group">
-              <label htmlFor="currentPassword">Contraseña Actual</label>
+              <label htmlFor="currentPassword">
+                <Lock className="form-icon" />
+                <span>Contraseña Actual</span>
+              </label>
               <div className="password-input-group">
                 <input
                   type={showPasswords.currentPassword ? "text" : "password"}
@@ -202,24 +226,25 @@ const PasswordChange = () => {
                   onChange={handleChange}
                   placeholder="Ingresa tu contraseña actual"
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   className="toggle-password-btn"
                   onClick={() => togglePasswordVisibility("currentPassword")}
                   aria-label={showPasswords.currentPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  disabled={isLoading}
                 >
-                  {showPasswords.currentPassword ? (
-                    <Eye className="icon" />
-                  ) : (
-                    <EyeOff className="icon" />
-                  )}
+                  {showPasswords.currentPassword ? <EyeOff className="icon" /> : <Eye className="icon" />}
                 </button>
               </div>
             </div>
-            
+
             <div className="form-group">
-              <label htmlFor="newPassword">Nueva Contraseña</label>
+              <label htmlFor="newPassword">
+                <Lock className="form-icon" />
+                <span>Nueva Contraseña</span>
+              </label>
               <div className="password-input-group">
                 <input
                   type={showPasswords.newPassword ? "text" : "password"}
@@ -229,32 +254,102 @@ const PasswordChange = () => {
                   onChange={handleChange}
                   placeholder="Ingresa tu nueva contraseña"
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
                   className="toggle-password-btn"
                   onClick={() => togglePasswordVisibility("newPassword")}
                   aria-label={showPasswords.newPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  disabled={isLoading}
                 >
-                  {showPasswords.newPassword ? (
-                    <Eye className="icon" />
-                  ) : (
-                    <EyeOff className="icon" />
-                  )}
+                  {showPasswords.newPassword ? <EyeOff className="icon" /> : <Eye className="icon" />}
                 </button>
               </div>
+              <small className="form-help">
+                Debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, números y caracteres especiales
+              </small>
+              {formData.newPassword && (
+                <div className="password-validation-feedback">
+                  {!validations.length && (
+                    <p className="validation-error">La contraseña debe tener al menos 8 caracteres</p>
+                  )}
+                  {!validations.uppercase && (
+                    <p className="validation-error">La contraseña debe incluir al menos una letra mayúscula</p>
+                  )}
+                  {!validations.lowercase && (
+                    <p className="validation-error">La contraseña debe incluir al menos una letra minúscula</p>
+                  )}
+                  {!validations.number && (
+                    <p className="validation-error">La contraseña debe incluir al menos un número</p>
+                  )}
+                  {!validations.specialChar && (
+                    <p className="validation-error">La contraseña debe incluir al menos un carácter especial</p>
+                  )}
+                </div>
+              )}
             </div>
-            
+
+            <div className="form-group">
+              <label htmlFor="confirmPassword">
+                <Lock className="form-icon" />
+                <span>Confirmar Contraseña</span>
+              </label>
+              <div className="password-input-group">
+                <input
+                  type={showPasswords.confirmPassword ? "text" : "password"}
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirma tu nueva contraseña"
+                  required
+                  disabled={isLoading}
+                />
+                <button
+                  type="button"
+                  className="toggle-password-btn"
+                  onClick={() => togglePasswordVisibility("confirmPassword")}
+                  aria-label={showPasswords.confirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  disabled={isLoading}
+                >
+                  {showPasswords.confirmPassword ? <EyeOff className="icon" /> : <Eye className="icon" />}
+                </button>
+              </div>
+              {formData.confirmPassword && !validations.match && (
+                <p className="password-mismatch">Las contraseñas no coinciden</p>
+              )}
+            </div>
+
             <div className="form-actions">
-              <button type="submit" className="btn-save-password">
-                Actualizar Contraseña
+              <button type="button" className="btn-cancel-password" onClick={() => navigate(-1)} disabled={isLoading}>
+                <X className="btn-icon" />
+                <span>Cancelar</span>
+              </button>
+              <button
+                type="submit"
+                className="btn-save-password"
+                disabled={isLoading || !Object.values(validations).every(Boolean)}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="loading-spinner"></span>
+                    <span>Procesando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="btn-icon" />
+                    <span>Actualizar Contraseña</span>
+                  </>
+                )}
               </button>
             </div>
           </form>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default PasswordChange;
+export default PasswordChange
+

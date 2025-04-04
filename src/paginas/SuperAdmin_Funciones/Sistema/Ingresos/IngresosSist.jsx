@@ -35,7 +35,7 @@ const IngresoSist = () => {
     const token = localStorage.getItem("token")
 
     try {
-      const response = await fetch("https://naatintelligence.com:44445/api/ingresos", {
+      const response = await fetch("/api/ingresos", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

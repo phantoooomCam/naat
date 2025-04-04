@@ -36,7 +36,7 @@ export default function ForgotPassword() {
     }
 
     try {
-      const response = await fetch("https://naatintelligence.com:44445/api/usuarios/olvidepassword", {
+      const response = await fetch("/api/usuarios/olvidepassword", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

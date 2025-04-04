@@ -93,7 +93,7 @@ export default function SignIn() {
 
     try {
       const response = await fetch(
-        "https://naatintelligence.com:44445/api/usuarios/register",
+        "/api/usuarios/register",
         {
           method: "POST",
           headers: {
@@ -131,7 +131,7 @@ export default function SignIn() {
     };
 
     try {
-      const response = await fetch("https://naatintelligence.com:44445/api/usuarios/login", {
+      const response = await fetch("/api/usuarios/login", { //https://naatintelligence.com:44445
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include", // 👈 Esto es lo nuevo
