@@ -48,7 +48,7 @@ const PasswordChange = () => {
       }
 
       const response = await fetch(
-        "http://localhost:44444/api/usuarios/logout",
+        "https://naatintelligence.com:44445/api/usuarios/logout",
         {
           method: "POST",
           headers: {
@@ -94,7 +94,7 @@ const PasswordChange = () => {
   
     try {
       const response = await fetch(
-        "http://localhost:44444/api/usuarios/change-password/{id}", // o el endpoint que tú necesites
+        "https://naatintelligence.com:44445/api/usuarios/change-password/{id}", // o el endpoint que tú necesites
         {
           method: "POST",
           headers: {
@@ -137,7 +137,7 @@ const PasswordChange = () => {
     try {
       // Enviar los datos al backend
       const response = await fetch(
-        `http://localhost:44444/api/usuarios/change-password/${userId}`,
+        `https://naatintelligence.com:44445/api/usuarios/change-password/${userId}`,
         {
           method: "PUT",
           headers: {

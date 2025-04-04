@@ -52,7 +52,7 @@ const GestionDash = () => {
 
   const fetchOrganizaciones = async () => {
     try {
-      const response = await fetch("http://localhost:44444/api/organizaciones", {
+      const response = await fetch("https://naatintelligence.com:44445/api/organizaciones", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -71,7 +71,7 @@ const GestionDash = () => {
 
   const fetchAreas = async () => {
     try {
-      const response = await fetch("http://localhost:44444/api/areas", {
+      const response = await fetch("https://naatintelligence.com:44445/api/areas", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -89,7 +89,7 @@ const GestionDash = () => {
 
   const fetchDepartamentos = async () => {
     try {
-      const response = await fetch("http://localhost:44444/api/departamentos", {
+      const response = await fetch("https://naatintelligence.com:44445/api/departamentos", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -122,7 +122,7 @@ const GestionDash = () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch("http://localhost:44444/api/usuarios/", {
+      const response = await fetch("https://naatintelligence.com:44445/api/usuarios/", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -245,7 +245,7 @@ const GestionDash = () => {
     if (!formData.id_usuario) return
 
     try {
-      const response = await fetch(`http://localhost:44444/api/usuarios/${formData.id_usuario}`, {
+      const response = await fetch(`https://naatintelligence.com:44445/api/usuarios/${formData.id_usuario}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -333,7 +333,7 @@ const GestionDash = () => {
       if (!id) return
 
       try {
-        const response = await fetch(`http://localhost:44444/api/usuarios/${id}`, {
+        const response = await fetch(`https://naatintelligence.com:44445/api/usuarios/${id}`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -383,7 +383,7 @@ const GestionDash = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:44444/api/usuarios/crear-usuario", {
+      const response = await fetch("https://naatintelligence.com:44445/api/usuarios/crear-usuario", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

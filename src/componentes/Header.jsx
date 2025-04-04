@@ -30,7 +30,7 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("http://localhost:44444/api/usuarios/logout", {
+      const response = await fetch("https://naatintelligence.com:44445/api/usuarios/logout", {
         method: "POST",
         credentials: "include" 
       });

@@ -51,7 +51,7 @@ const DashSolicitud = () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch("http://localhost:44444/api/usuarios/?inicio=1&cantidad=10", {
+      const response = await fetch("https://naatintelligence.com:44445/api/usuarios/?inicio=1&cantidad=10", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -113,7 +113,7 @@ const DashSolicitud = () => {
 
     try {
       // Actualiza el usuario con el nuevo nivel
-      const response = await fetch(`http://localhost:44444/api/usuarios/${formData.id_usuario}`, {
+      const response = await fetch(`https://naatintelligence.com:44445/api/usuarios/${formData.id_usuario}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -128,7 +128,7 @@ const DashSolicitud = () => {
       }
 
       // Llama al endpoint de activación para notificar por correo
-      const activarResponse = await fetch("http://localhost:44444/api/usuarios/activar", {
+      const activarResponse = await fetch("https://naatintelligence.com:44445/api/usuarios/activar", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -182,7 +182,7 @@ const DashSolicitud = () => {
       if (!id) return
 
       try {
-        const response = await fetch(`http://localhost:44444/api/usuarios/${id}`, {
+        const response = await fetch(`https://naatintelligence.com:44445/api/usuarios/${id}`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",

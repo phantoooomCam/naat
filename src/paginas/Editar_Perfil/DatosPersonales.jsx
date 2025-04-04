@@ -63,7 +63,7 @@ const PerfilUsuario = () => {
     try {
       const token = localStorage.getItem("token");
   
-      const response = await fetch("http://localhost:44444/api/usuarios/perfil", {
+      const response = await fetch("https://naatintelligence.com:44445/api/usuarios/perfil", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

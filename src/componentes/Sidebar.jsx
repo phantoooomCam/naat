@@ -4,9 +4,50 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { useState, useEffect, useRef } from "react"
 import "./Sidebar.css"
 import NAAT from "../assets/completo_blanco.png"
-import { FiHome, FiUsers, FiSettings } from "react-icons/fi"
-import { SlOrganization } from "react-icons/sl"
 import { FaChevronDown, FaChevronRight } from "react-icons/fa"
+import { menu } from "./sidebarConfig"
+
+// Define the menu structure here
+// const menu = {
+//   1: [
+//     {
+//       id: "/dashboard",
+//       label: "Inicio",
+//       icon: <FiHome size={20} />,
+//     },
+//     {
+//       id: "/usuarios",
+//       label: "Usuarios",
+//       icon: <FiUsers size={20} />,
+//     },
+//     {
+//       id: "/organizaciones",
+//       label: "Organizaciones",
+//       icon: <SlOrganization size={20} />,
+//     },
+//     {
+//       id: "configuracion",
+//       label: "Configuración",
+//       icon: <FiSettings size={20} />,
+//       subItems: [
+//         { id: "/configuracion/general", label: "General" },
+//         { id: "/configuracion/seguridad", label: "Seguridad" },
+//       ],
+//     },
+//   ],
+//   2: [
+//     {
+//       id: "/dashboard",
+//       label: "Inicio",
+//       icon: <FiHome size={20} />,
+//     },
+//     {
+//       id: "/usuarios",
+//       label: "Usuarios",
+//       icon: <FiUsers size={20} />,
+//     },
+//   ],
+// }
 
 const Sidebar = () => {
   const location = useLocation()
@@ -14,37 +55,8 @@ const Sidebar = () => {
   const initialRender = useRef(true)
 
   // Estructura del menú con submenús
-  const menuItems = [
-    { id: "/dashboard", icon: <FiHome />, label: "Inicio" },
-    {
-      id: "usuarios",
-      icon: <FiUsers />,
-      label: "Usuarios",
-      subItems: [
-        { id: "/gestion", label: "Gestión" },
-        { id: "/solicitudes", label: "Solicitud" },
-      ],
-    },
-    {
-      id: "sistema",
-      icon: <FiSettings />,
-      label: "Sistema",
-      subItems: [
-        { id: "/ingresos", label: "Ingresos" },
-        { id: "/actividad", label: "Actividad" },
-      ],
-    },
-    {
-      id: "organizaciones",
-      icon: <SlOrganization />,
-      label: "Organizaciones",
-      subItems: [
-        { id: "/orga", label: "Gestión Organización" },
-        { id: "/area", label: "Gestión Área" },
-        { id: "/depto", label: "Gestión Departamento" },
-      ],
-    },
-  ]
+  const userLevel = JSON.parse(localStorage.getItem("user"))?.nivel || 1
+  const menuItems = menu[userLevel] || []
 
   // Estado para controlar si el sidebar está abierto o cerrado
   const [isOpen, setIsOpen] = useState(() => {

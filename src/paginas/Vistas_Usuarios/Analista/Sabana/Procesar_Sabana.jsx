@@ -119,7 +119,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
     try {
       const response = await fetch(
-        "http://localhost:44444/api/archivos/subirftp",
+        "https://naatintelligence.com:44445/api/archivos/subirftp",
         {
           method: "POST",
           body: formData,
