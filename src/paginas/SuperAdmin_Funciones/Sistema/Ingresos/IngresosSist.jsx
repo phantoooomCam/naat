@@ -35,7 +35,7 @@ const IngresoSist = () => {
     const token = localStorage.getItem("token")
 
     try {
-      const response = await fetch("/api/ingresos", {
+      const response = await fetch("http://localhost:44444/api/ingresos", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

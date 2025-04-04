@@ -94,7 +94,7 @@ export default function PageNotFound() {
             </div>
           </div>
 
-          <div className="error-message">
+          <div className="error-message-404">
             <h2>Página no encontrada</h2>
             <p>La página que estás buscando parece haberse perdido en el espacio digital.</p>
             <Link to="/" className="back-button">

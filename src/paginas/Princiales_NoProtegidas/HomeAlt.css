@@ -705,7 +705,7 @@ body {
 }
 
 /* Error message */
-.error-message {
+.error-message-404 {
   max-width: 500px;
   background: linear-gradient(135deg, rgba(23, 37, 84, 0.7), rgba(76, 29, 149, 0.7));
   backdrop-filter: blur(10px);
@@ -746,6 +746,7 @@ body {
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
   z-index: 1;
+  margin-top: .75rem;
 }
 
 .back-button::before {
