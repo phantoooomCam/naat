@@ -200,12 +200,14 @@
   color: #787878;
   display: flex;
   align-items: center;
-  padding: 8px 12px;
+  padding: 6px 12px;
   cursor: pointer;
   transition: all 0.3s ease;
   border-radius: 8px;
   width: 100%;
   text-align: left;
+  font-size: 0.875rem;
+  margin-top: 4px;
 }
 
 .sub-menu-item:hover {
@@ -215,7 +217,6 @@
 }
 
 .sub-menu .sub-menu-item.active {
-  font-weight: bold;
   color: #ffffff !important;
   background-color: var(--sidebar-active);
 }

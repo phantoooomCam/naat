@@ -55,7 +55,7 @@ function App() {
       
       <Route element={<ProtectedRoute />}>
       {/* RUtas de SuperAdmin */}
-        {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+        <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/gestion" element={<Gestion />} />
         <Route path="/solicitudes" element={<Solicitud />} />
         <Route path="/ingresos" element={<IngresoSist />} />
@@ -78,7 +78,7 @@ function App() {
 
       {/* Funciones Analista */}
         <Route path="/sabana" element={<Sabana />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        
 
 
       </Route>

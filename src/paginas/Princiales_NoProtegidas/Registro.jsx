@@ -43,7 +43,7 @@ export default function SignIn() {
 
     try {
       const response = await fetch(
-        "http://localhost:44444/api/usuarios/register",
+        "/api/usuarios/register",
         {
           method: "POST",
           headers: {
@@ -82,7 +82,7 @@ export default function SignIn() {
 
     try {
       const response = await fetch(
-        "http://localhost:44444/api/usuarios/login",
+        "/api/usuarios/login",
         {
           method: "POST",
           headers: {

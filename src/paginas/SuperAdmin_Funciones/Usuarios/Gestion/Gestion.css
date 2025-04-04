@@ -8,6 +8,10 @@
   border-radius: 12px;
   transition: all 0.3s ease;
 }
+.main-content{
+  background-color: #e8e8e8;
+  min-height: 100vh;
+}
 
 .table-container {
   width: 100%;
@@ -251,6 +255,7 @@ tr:hover {
 .dash-gestion.collapsed {
   margin-left: -192px;
   transition: margin 0.3s ease-in-out;
+  background-color:#e8e8e8;
 }
 
 
