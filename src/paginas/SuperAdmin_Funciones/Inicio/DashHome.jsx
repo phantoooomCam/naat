@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import "./DashHome.css";
 import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import {
   FaUsers,
@@ -100,6 +101,78 @@ const HomeView = ({ isSidebarCollapsed }) => {
     { id: 7, title: "Gestión Área", route: "/area", icon: <FaLayerGroup /> },
   ];
 
+  const [totalUsuarios, setTotalUsuarios] = useState(0);
+  const [rotatingStatIndex, setRotatingStatIndex] = useState(0);
+  const [totalOrganizaciones, setTotalOrganizaciones] = useState(0);
+  const [totalAreas, setTotalAreas] = useState(0);
+  const [totalDepartamentos, setTotalDepartamentos] = useState(0);
+
+  const rotatingData = [
+    { id: "organizaciones", icon: <FaBuilding />, value: totalOrganizaciones, label: "Organizaciones" },
+    { id: "areas", icon: <FaLayerGroup />, value: totalAreas, label: "Áreas" },
+    { id: "departamentos", icon: <FaTasks />, value: totalDepartamentos, label: "Departamentos" },
+  ];
+
+  useEffect(() => {
+    const fetchUsuarios = async () => {
+      try {
+        const response = await fetch("http://localhost:44444/api/usuarios", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", // ¡IMPORTANTE! para incluir cookies
+        });
+
+        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+
+        const data = await response.json();
+        setTotalUsuarios(data.length); // Suponiendo que se devuelve un array de usuarios
+      } catch (error) {
+        console.error("Error al obtener usuarios:", error);
+      }
+    };
+
+    fetchUsuarios();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [orgRes, areaRes, deptoRes] = await Promise.all([
+          fetch("http://localhost:44444/api/organizaciones", {
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          }),
+          fetch("http://localhost:44444/api/areas", {
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          }),
+          fetch("http://localhost:44444/api/departamentos", {
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          }),
+        ]);
+
+        setTotalOrganizaciones((await orgRes.json()).length);
+        setTotalAreas((await areaRes.json()).length);
+        setTotalDepartamentos((await deptoRes.json()).length);
+      } catch (error) {
+        console.error("Error al obtener datos rotativos:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRotatingStatIndex((prevIndex) => (prevIndex + 1) % rotatingData.length);
+    }, 5000); // cambia cada 5 segundos
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="home-view">
       <h1>Bienvenido {nombre}, al Panel de Control</h1>
@@ -111,19 +184,30 @@ const HomeView = ({ isSidebarCollapsed }) => {
             <FaUsers />
           </div>
           <div className="stat-content">
-            <h3>165</h3>
+            <h3>{totalUsuarios}</h3>
             <p>Usuarios Totales</p>
           </div>
         </div>
+
         <div className="stat-card">
           <div className="stat-icon">
-            <FaUserPlus />
+            {rotatingData[rotatingStatIndex].icon}
           </div>
-          <div className="stat-content">
-            <h3>12</h3>
-            <p>Nuevos Usuarios</p>
-          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={rotatingData[rotatingStatIndex].id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              transition={{ duration: 0.3 }}
+              className="stat-content"
+            >
+              <h3>{rotatingData[rotatingStatIndex].value}</h3>
+              <p>{rotatingData[rotatingStatIndex].label}</p>
+            </motion.div>
+          </AnimatePresence>
         </div>
+
         <div className="stat-card">
           <div className="stat-icon">
             <FaUserClock />

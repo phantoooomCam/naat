@@ -32,7 +32,7 @@ const Header = () => {
     try {
       const response = await fetch("http://localhost:44444/api/usuarios/logout", {
         method: "POST",
-        credentials: "include" 
+        credentials: "include" // ✅ ¡esto envía la cookie!
       });
   
       if (!response.ok) {
@@ -40,6 +40,7 @@ const Header = () => {
         throw new Error(data.mensaje || "Error al cerrar sesión.");
       }
   
+      // ✅ Limpiar cualquier dato local guardado del usuario
       localStorage.removeItem("user");
   
       // ✅ Redirigir al login

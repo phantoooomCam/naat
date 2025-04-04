@@ -2,7 +2,6 @@ import { useState } from 'react';
 import Header from '../../../componentes/Header';
 import Sidebar from '../../../componentes/Sidebar';
 import DashHome from './DashHome';
-import './Dashboard.css';
 
 const Dashboard = () => {
   const [activeView, setActiveView] = useState('inicio');
