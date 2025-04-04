@@ -1,0 +1,465 @@
+/* Estilos base */
+.not-found-wrapper {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+    font-family: "Poppins", sans-serif;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+  
+  /* Header */
+  .not-found-header {
+    padding: 1.5rem 2rem;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  .not-found-nav {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+  }
+  
+  .not-found-logo img {
+    height: 40px;
+    width: auto;
+    transition: transform 0.3s ease;
+  }
+  
+  .not-found-logo img:hover {
+    transform: scale(1.05);
+  }
+  
+  /* Contenido principal */
+  .not-found-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  .not-found-container {
+    max-width: 1200px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  
+  .not-found-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3rem;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  .not-found-content.animate {
+    animation: fadeInUp 0.8s ease forwards;
+  }
+  
+  @keyframes fadeInUp {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Texto */
+  .not-found-text {
+    flex: 1;
+    max-width: 500px;
+  }
+  
+  .not-found-title {
+    font-size: 8rem;
+    font-weight: 800;
+    margin: 0;
+    background: linear-gradient(90deg, #222a35, #33608d);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+    position: relative;
+  }
+  
+  .not-found-title::after {
+    content: "404";
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: -1;
+    color: rgba(51, 96, 141, 0.1);
+    transform: translate(5px, 5px);
+  }
+  
+  .not-found-subtitle {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin: 1rem 0;
+    color: #222a35;
+  }
+  
+  .not-found-description {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+  
+  /* Botón */
+  .not-found-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #222a35;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(34, 42, 53, 0.2);
+  }
+  
+  .not-found-button:hover {
+    background-color: #33608d;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(51, 96, 141, 0.3);
+  }
+  
+  .button-icon {
+    transition: transform 0.3s ease;
+  }
+  
+  .not-found-button:hover .button-icon {
+    transform: translateX(5px);
+  }
+  
+  /* Animación */
+  .not-found-visual {
+    flex: 1;
+    max-width: 500px;
+    height: 400px;
+    position: relative;
+  }
+  
+  .error-animation {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    perspective: 800px;
+  }
+  
+  /* Planeta */
+  .planet {
+    width: 200px;
+    height: 200px;
+    background: linear-gradient(135deg, #33608d, #222a35);
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: inset -20px -20px 50px rgba(0, 0, 0, 0.4), 0 0 20px rgba(51, 96, 141, 0.4);
+    animation: rotatePlanet 20s linear infinite;
+  }
+  
+  @keyframes rotatePlanet {
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg);
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(360deg);
+    }
+  }
+  
+  /* Estrellas */
+  .stars {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .star {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background-color: white;
+    border-radius: 50%;
+    animation: twinkle 2s infinite alternate;
+  }
+  
+  @keyframes twinkle {
+    0% {
+      opacity: 0.2;
+      transform: scale(1);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1.5);
+    }
+  }
+  
+  /* Astronauta */
+  .astronaut {
+    position: absolute;
+    top: 60%;
+    left: 30%;
+    transform: translate(-50%, -50%);
+    animation: float 6s ease-in-out infinite;
+    z-index: 10;
+  }
+  
+  @keyframes float {
+    0%,
+    100% {
+      transform: translate(-50%, -50%) translateY(0px) rotate(5deg);
+    }
+    50% {
+      transform: translate(-50%, -50%) translateY(-20px) rotate(-5deg);
+    }
+  }
+  
+  .astronaut-head {
+    width: 40px;
+    height: 40px;
+    background-color: white;
+    border-radius: 50%;
+    position: absolute;
+    top: -20px;
+    left: 15px;
+    box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .astronaut-backpack {
+    width: 40px;
+    height: 50px;
+    background-color: white;
+    border-radius: 8px;
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .astronaut-body {
+    width: 70px;
+    height: 80px;
+    background-color: white;
+    border-radius: 10px;
+    position: absolute;
+    top: 20px;
+    left: 0;
+    box-shadow: inset -5px -5px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .astronaut-body__chest {
+    width: 40px;
+    height: 30px;
+    background-color: #33608d;
+    border-radius: 5px;
+    position: absolute;
+    top: 35px;
+    left: 15px;
+  }
+  
+  .astronaut-arm-left1 {
+    width: 15px;
+    height: 40px;
+    background-color: white;
+    border-radius: 10px;
+    position: absolute;
+    top: 30px;
+    left: -15px;
+    transform: rotate(10deg);
+    transform-origin: top right;
+    animation: moveArmLeft 4s ease-in-out infinite;
+    box-shadow: inset -2px -2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  @keyframes moveArmLeft {
+    0%,
+    100% {
+      transform: rotate(10deg);
+    }
+    50% {
+      transform: rotate(30deg);
+    }
+  }
+  
+  .astronaut-arm-left2 {
+    width: 15px;
+    height: 40px;
+    background-color: white;
+    border-radius: 10px;
+    position: absolute;
+    top: 65px;
+    left: -25px;
+    transform: rotate(-20deg);
+    transform-origin: top right;
+    animation: moveArmLeft2 4s ease-in-out infinite;
+    box-shadow: inset -2px -2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  @keyframes moveArmLeft2 {
+    0%,
+    100% {
+      transform: rotate(-20deg);
+    }
+    50% {
+      transform: rotate(-40deg);
+    }
+  }
+  
+  .astronaut-arm-right1 {
+    width: 15px;
+    height: 40px;
+    background-color: white;
+    border-radius: 10px;
+    position: absolute;
+    top: 30px;
+    left: 70px;
+    transform: rotate(-10deg);
+    transform-origin: top left;
+    animation: moveArmRight 4s ease-in-out infinite;
+    box-shadow: inset 2px -2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  @keyframes moveArmRight {
+    0%,
+    100% {
+      transform: rotate(-10deg);
+    }
+    50% {
+      transform: rotate(-30deg);
+    }
+  }
+  
+  .astronaut-arm-right2 {
+    width: 15px;
+    height: 40px;
+    background-color: white;
+    border-radius: 10px;
+    position: absolute;
+    top: 65px;
+    left: 80px;
+    transform: rotate(20deg);
+    transform-origin: top left;
+    animation: moveArmRight2 4s ease-in-out infinite;
+    box-shadow: inset 2px -2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  @keyframes moveArmRight2 {
+    0%,
+    100% {
+      transform: rotate(20deg);
+    }
+    50% {
+      transform: rotate(40deg);
+    }
+  }
+  
+  .astronaut-leg-left {
+    width: 20px;
+    height: 40px;
+    background-color: white;
+    border-radius: 10px;
+    position: absolute;
+    top: 100px;
+    left: 10px;
+    box-shadow: inset -2px -2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .astronaut-leg-right {
+    width: 20px;
+    height: 40px;
+    background-color: white;
+    border-radius: 10px;
+    position: absolute;
+    top: 100px;
+    left: 40px;
+    box-shadow: inset 2px -2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .astronaut-foot-left {
+    width: 25px;
+    height: 10px;
+    background-color: white;
+    border-radius: 3px;
+    position: absolute;
+    top: 140px;
+    left: 5px;
+    box-shadow: inset -2px -2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  .astronaut-foot-right {
+    width: 25px;
+    height: 10px;
+    background-color: white;
+    border-radius: 3px;
+    position: absolute;
+    top: 140px;
+    left: 35px;
+    box-shadow: inset 2px -2px 5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Responsive */
+  @media (max-width: 992px) {
+    .not-found-content {
+      flex-direction: column-reverse;
+      text-align: center;
+    }
+  
+    .not-found-text {
+      max-width: 100%;
+    }
+  
+    .not-found-visual {
+      max-width: 100%;
+      height: 300px;
+    }
+  
+    .not-found-title {
+      font-size: 6rem;
+    }
+  
+    .not-found-subtitle {
+      font-size: 2rem;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .not-found-main {
+      padding: 1rem;
+    }
+  
+    .not-found-title {
+      font-size: 5rem;
+    }
+  
+    .not-found-subtitle {
+      font-size: 1.5rem;
+    }
+  
+    .not-found-description {
+      font-size: 1rem;
+    }
+  
+    .not-found-visual {
+      height: 250px;
+    }
+  
+    .planet {
+      width: 150px;
+      height: 150px;
+    }
+  
+    .astronaut {
+      transform: scale(0.8) translate(-50%, -50%);
+    }
+  }
+  
+  
