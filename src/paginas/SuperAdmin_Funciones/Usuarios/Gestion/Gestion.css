@@ -12,6 +12,10 @@
   background-color: #e8e8e8;
   min-height: 100vh;
 }
+.dashboard-container{
+  background-color: #e8e8e8;
+  min-height: 100vh;
+}
 
 .table-container {
   width: 100%;
