@@ -78,7 +78,7 @@ const PasswordChange = () => {
     try {
       setIsLoading(true)
 
-      const response = await fetch("/api/usuarios/logout", {
+      const response = await fetch("http://localhost:44444/api/usuarios/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -154,7 +154,7 @@ const PasswordChange = () => {
       }
 
       // Enviar los datos al backend
-      const response = await fetch(`/api/usuarios/change-password/${userId}`, {
+      const response = await fetch(`http://localhost:44444/api/usuarios/change-password/${userId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

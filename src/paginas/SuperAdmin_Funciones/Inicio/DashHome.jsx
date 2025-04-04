@@ -97,7 +97,7 @@ const HomeView = ({ isSidebarCollapsed }) => {
   useEffect(() => {
     const fetchUsuarios = async () => {
       try {
-        const response = await fetch("/api/usuarios", {
+        const response = await fetch("http://localhost:44444/api/usuarios", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -166,15 +166,15 @@ const HomeView = ({ isSidebarCollapsed }) => {
     const fetchData = async () => {
       try {
         const [orgRes, areaRes, deptoRes] = await Promise.all([
-          fetch("/api/organizaciones", {
+          fetch("http://localhost:44444/api/organizaciones", {
             headers: { "Content-Type": "application/json" },
             credentials: "include",
           }),
-          fetch("/api/areas", {
+          fetch("http://localhost:44444/api/areas", {
             headers: { "Content-Type": "application/json" },
             credentials: "include",
           }),
-          fetch("/api/departamentos", {
+          fetch("http://localhost:44444/api/departamentos", {
             headers: { "Content-Type": "application/json" },
             credentials: "include",
           }),
