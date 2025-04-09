@@ -1,29 +1,36 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";  // ✅ Importa useNavigate
+import { useNavigate, useLocation } from "react-router-dom";
 import "./login-signin.css";
 import { FaLock } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import NAAT from "../../assets/completo_blanco.png";
 import NAAT2 from "../../assets/naat.png";
 
-export default function ResetPassword({ token: propToken }) {
+export default function ResetPassword() {
   const [isRegister, setIsRegister] = useState(true);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
 
-  const navigate = useNavigate(); // ✅ Hook para redirección
-
-  // Obtener el token desde la prop o desde localStorage
+  const navigate = useNavigate();
+  const location = useLocation();
   const token = new URLSearchParams(window.location.search).get("token");
+
+  const cambioForzado = location.state?.cambioForzado;
+  const idUsuario = location.state?.idUsuario;
 
   useEffect(() => {
     document.body.classList.add("auth-body");
+
+    if (!cambioForzado && token) {
+      document.cookie = `jwt_token=${token}; path=/; SameSite=Lax`;
+    }
+
     return () => {
       document.body.classList.remove("auth-body");
     };
-  }, []);
+  }, [token, cambioForzado]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,32 +47,46 @@ export default function ResetPassword({ token: propToken }) {
       return;
     }
 
-    if (!token) {
-      setError("Token no encontrado. Solicita un nuevo enlace de recuperación.");
-      return;
-    }
-
     try {
-      const response = await fetch("http://localhost:44444/api/usuarios/reset-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ newPassword: password }),
-      });
+      let response;
+
+      if (cambioForzado && idUsuario) {
+        // 🔐 Cambio de contraseña forzado
+        response = await fetch("/api/usuarios/cambiar-contrasena-forzada", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            idUsuario,
+            nuevaContrasena: password,
+          }),
+        });
+      } else {
+        // 🔄 Reset de contraseña normal (con token)
+        if (!token) {
+          setError("Token no encontrado. Solicita un nuevo enlace de recuperación.");
+          return;
+        }
+
+        response = await fetch("/api/usuarios/reset-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ newPassword: password }),
+        });
+      }
 
       const data = await response.json();
 
       if (response.ok) {
         setMensaje("Tu contraseña ha sido actualizada exitosamente.");
 
-        // ✅ Redirigir después de 2 segundos para mostrar el mensaje
+        document.cookie = "jwt_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+
         setTimeout(() => {
           navigate("/");
         }, 2000);
       } else {
-        setError(data.error || "Hubo un problema al cambiar la contraseña.");
+        setError(data.mensaje || "Hubo un problema al cambiar la contraseña.");
       }
     } catch (err) {
       setError("Error de conexión. Inténtalo de nuevo.");
@@ -75,13 +96,12 @@ export default function ResetPassword({ token: propToken }) {
   return (
     <div className="auth-container-wrapper">
       <div className={`auth-container ${isRegister ? "auth-active" : ""}`}>
-        {/* Formulario de restablecimiento */}
         <div className="auth-form-box auth-form-box-register">
           <form onSubmit={handleSubmit}>
             <Link to="/">
               <img src={NAAT2} alt="NAAT Logo" className="auth-signin-logo" />
             </Link>
-            <h1>Restablece tu contraseña</h1>
+            <h1>{cambioForzado ? "Cambia tu contraseña" : "Restablece tu contraseña"}</h1>
             {error && <p className="error-message">{error}</p>}
             {mensaje && <p className="success-message">{mensaje}</p>}
 
@@ -108,18 +128,17 @@ export default function ResetPassword({ token: propToken }) {
             </div>
 
             <button type="submit" className="auth-btn">
-              CAMBIAR CONTRASEÑA
+              {cambioForzado ? "ACTUALIZAR CONTRASEÑA" : "CAMBIAR CONTRASEÑA"}
             </button>
           </form>
         </div>
 
-        {/* Panel de información */}
         <div className="auth-toggle-box">
           <div className="auth-toggle-panel auth-toggle-right">
             <Link to="/">
               <img src={NAAT} alt="NAAT Logo" className="auth-registro-logo" />
             </Link>
-            <h1>Restablecimiento de contraseña</h1>
+            <h1>{cambioForzado ? "Cambio obligatorio" : "Restablecimiento de contraseña"}</h1>
           </div>
         </div>
       </div>

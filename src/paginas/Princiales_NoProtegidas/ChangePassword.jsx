@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Eye, EyeOff, Lock, Save, AlertCircle, Check, X } from "lucide-react"
 import { toast } from "react-hot-toast"
+import { useLocation } from "react-router-dom"
+
 import "./Change.css"
 
 const PasswordChange = () => {
@@ -33,9 +35,10 @@ const PasswordChange = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
-  // Recuperar el objeto del usuario desde el localStorage
+  const location = useLocation()
   const usuario = JSON.parse(localStorage.getItem("user"))
-  const userId = usuario ? usuario.id : null
+  const userId = location.state?.idUsuario || usuario?.id
+  const cambioForzado = location.state?.cambioForzado
 
   const navigate = useNavigate()
 
@@ -78,7 +81,7 @@ const PasswordChange = () => {
     try {
       setIsLoading(true)
 
-      const response = await fetch("http://localhost:44444/api/usuarios/logout", {
+      const response = await fetch("/api/usuarios/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -126,20 +129,22 @@ const PasswordChange = () => {
     setError("")
     setSuccess(false)
 
-    // Validar que todos los campos estén completos
-    if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
+    const cambioForzado = location.state?.cambioForzado
+    const userIdForzado = location.state?.idUsuario
+    const idFinal = userIdForzado || userId
+
+    if (!formData.newPassword || !formData.confirmPassword || (!cambioForzado && !formData.currentPassword)) {
       setError("Todos los campos son obligatorios")
       return
     }
 
-    // Validar que la nueva contraseña cumpla con los requisitos
     const allValid = Object.values(validations).every(Boolean)
     if (!allValid) {
       setError("La nueva contraseña no cumple con todos los requisitos")
       return
     }
 
-    if (!userId) {
+    if (!idFinal) {
       setError("No se ha detectado un ID de sesión válido.")
       return
     }
@@ -147,38 +152,48 @@ const PasswordChange = () => {
     setIsLoading(true)
 
     try {
-      // Crear el objeto JSON con las claves exactas que espera el backend
-      const passwordData = {
-        oldPassword: formData.currentPassword,
-        newPassword: formData.newPassword,
+      let response
+
+      if (cambioForzado) {
+        // 🔐 Cambio de contraseña forzado (sin oldPassword)
+        response = await fetch("/api/usuarios/cambiar-contrasena-forzada", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            idUsuario: idFinal,
+            nuevaContrasena: formData.newPassword
+          })
+        })
+      } else {
+        // 🔄 Cambio normal con validación de contraseña actual
+        const passwordData = {
+          oldPassword: formData.currentPassword,
+          newPassword: formData.newPassword,
+        }
+
+        response = await fetch(`/api/usuarios/change-password/${idFinal}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify(passwordData),
+        })
       }
 
-      // Enviar los datos al backend
-      const response = await fetch(`http://localhost:44444/api/usuarios/change-password/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(passwordData),
-      })
-
-      // Verificar que la respuesta del servidor sea exitosa
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.mensaje || "Error en la solicitud")
+        throw new Error(errorData.mensaje || "Error al cambiar la contraseña.")
       }
 
-      // Ahora parseamos la respuesta como JSON
       const responseData = await response.json()
 
-      // Verificamos el mensaje en el objeto JSON de respuesta
-      if (responseData.mensaje === "Contraseña actualizada exitosamente.") {
+      if (responseData.mensaje.includes("actualizada")) {
         setSuccess(true)
-        setError("") // Limpiar cualquier mensaje de error previo
         toast.success("Contraseña actualizada correctamente")
 
-        // Esperar 2 segundos antes de redirigir al Sign-In
         setTimeout(() => {
           handleLogout()
         }, 2000)
@@ -212,33 +227,35 @@ const PasswordChange = () => {
 
         <div className="password-card">
           <form onSubmit={handleSubmit} className="password-form">
-            <div className="form-group">
-              <label htmlFor="currentPassword">
-                <Lock className="form-icon" />
-                <span>Contraseña Actual</span>
-              </label>
-              <div className="password-input-group">
-                <input
-                  type={showPasswords.currentPassword ? "text" : "password"}
-                  id="currentPassword"
-                  name="currentPassword"
-                  value={formData.currentPassword}
-                  onChange={handleChange}
-                  placeholder="Ingresa tu contraseña actual"
-                  required
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  className="toggle-password-btn"
-                  onClick={() => togglePasswordVisibility("currentPassword")}
-                  aria-label={showPasswords.currentPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                  disabled={isLoading}
-                >
-                  {showPasswords.currentPassword ? <EyeOff className="icon" /> : <Eye className="icon" />}
-                </button>
+            {!cambioForzado && (
+              <div className="form-group">
+                <label htmlFor="currentPassword">
+                  <Lock className="form-icon" />
+                  <span>Contraseña Actual</span>
+                </label>
+                <div className="password-input-group">
+                  <input
+                    type={showPasswords.currentPassword ? "text" : "password"}
+                    id="currentPassword"
+                    name="currentPassword"
+                    value={formData.currentPassword}
+                    onChange={handleChange}
+                    placeholder="Ingresa tu contraseña actual"
+                    required={!cambioForzado}
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    className="toggle-password-btn"
+                    onClick={() => togglePasswordVisibility("currentPassword")}
+                    aria-label={showPasswords.currentPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    disabled={isLoading}
+                  >
+                    {showPasswords.currentPassword ? <EyeOff className="icon" /> : <Eye className="icon" />}
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="form-group">
               <label htmlFor="newPassword">
@@ -352,4 +369,3 @@ const PasswordChange = () => {
 }
 
 export default PasswordChange
-

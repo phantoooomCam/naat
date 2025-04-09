@@ -93,7 +93,7 @@ export default function SignIn() {
 
     try {
       const response = await fetch(
-        "http://localhost:44444/api/usuarios/register",
+        "/api/usuarios/register",
         {
           method: "POST",
           headers: {
@@ -124,26 +124,42 @@ export default function SignIn() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-
+  
     const requestBody = {
       correo: usuario,
       contraseña: clave,
     };
-
+  
     try {
-      const response = await fetch("http://localhost:44444/api/usuarios/login", { //https://naatintelligence.com:44445
+      const response = await fetch("/api/usuarios/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // 👈 Esto es lo nuevo
+        credentials: "include",
         body: JSON.stringify(requestBody),
       });
-      
-
+  
       const data = await response.json();
-
+  
+      if (!response.ok) {
+        // 🔐 Si es login bloqueado por cambio obligatorio
+        if (data.requiereCambio) {
+          navigate("/reset-password", {
+            state: {
+              cambioForzado: true,
+              idUsuario: data.usuario?.id || null,
+            },
+          });
+          return;
+        }
+  
+        // ⚠️ Otro error de login
+        throw new Error(data.mensaje || "Credenciales inválidas");
+      }
+  
+      // ✅ Login normal exitoso
       if (data.usuario) {
         localStorage.setItem("user", JSON.stringify(data.usuario));
-      
+  
         if (data.usuario.nivel === 1) {
           navigate("/dashboard");
         } else if (data.usuario.nivel === 2) {
@@ -157,16 +173,14 @@ export default function SignIn() {
         } else {
           navigate("/");
         }
-      }
-       else {
-        // Manejo de errores
+      } else {
         setError("Credenciales inválidas");
       }
     } catch (error) {
       console.error("Error en el inicio de sesión:", error);
-      setError("Error al intentar iniciar sesión");
+      setError(error.message || "Error al intentar iniciar sesión");
     }
-  };
+  };  
 
   useEffect(() => {
     document.body.classList.add("auth-body");

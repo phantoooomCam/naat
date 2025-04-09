@@ -9,6 +9,7 @@ import MensajeRegistro from "./paginas/Princiales_NoProtegidas/MensajeRegistro";
 import PageNotFound from "./paginas/Princiales_NoProtegidas/PageNotFound";
 import ForgotPassword from "./paginas/Princiales_NoProtegidas/OlvidarContra";
 import ResetPassword from "./paginas/Princiales_NoProtegidas/Resetpassword";
+import CuentaBloqueada from "./paginas/Princiales_NoProtegidas/CuentaBloqueada";
 
 // -----------------------------------------------------SuperAdmin_Funciones
 // Rutas de SuperAdmin
@@ -52,6 +53,7 @@ function App() {
       <Route path="*" element={<PageNotFound />} />
       <Route path="forgot_password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword  />} />
+      <Route path="/cuenta_bloqueada" element={<CuentaBloqueada  />} />
       
       <Route element={<ProtectedRoute />}>
       {/* RUtas de SuperAdmin */}

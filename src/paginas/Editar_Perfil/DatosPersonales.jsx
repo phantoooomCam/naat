@@ -100,7 +100,7 @@ const PerfilUsuario = () => {
     setIsLoading(true)
 
     try {
-      const response = await fetch("http://localhost:44444/api/usuarios/perfil", {
+      const response = await fetch("/api/usuarios/perfil", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

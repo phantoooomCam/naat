@@ -20,10 +20,12 @@ const DashSolicitud = () => {
     telefono: "",
     contraseña: "",
     usuario: "",
-    organizacion: "",
+    idOrganizacion: "",
     nivel: 5,
     rol: "Lector",
-  })
+  });
+  const [organizaciones, setOrganizaciones] = useState([]);
+
   const [isEditing, setIsEditing] = useState(false)
   const [searchText, setSearchText] = useState("")
   const [isCreating, setIsCreating] = useState(false)
@@ -51,7 +53,7 @@ const DashSolicitud = () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch("http://localhost:44444/api/usuarios/?inicio=1&cantidad=10", {
+      const response = await fetch("/api/usuarios/?inicio=1&cantidad=10", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -87,9 +89,32 @@ const DashSolicitud = () => {
     }
   }
 
+  const fetchOrganizaciones = async () => {
+    try {
+      const response = await fetch("/api/organizaciones", {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al obtener organizaciones");
+      }
+
+      const data = await response.json();
+      console.log("Organizaciones cargadas:", data);
+      setOrganizaciones(data);
+    } catch (error) {
+      console.error("Error al cargar organizaciones:", error);
+    }
+  };
+
   useEffect(() => {
     fetchUsers()
   }, [])
+
+  useEffect(() => {
+    fetchOrganizaciones();
+  }, []);
+
 
   // Filtrado de usuarios
   useEffect(() => {
@@ -112,14 +137,22 @@ const DashSolicitud = () => {
     if (!formData.id_usuario) return
 
     try {
-      // Actualiza el usuario con el nuevo nivel
-      const response = await fetch(`http://localhost:44444/api/usuarios/${formData.id_usuario}`, {
+      // 👇 Prepara payload con objeto organización { id: ... }
+      const payload = {
+        ...formData,
+        organizacion: formData.organizacion
+          ? { id: parseInt(formData.organizacion) }
+          : null,
+      }
+
+      // Actualiza el usuario con nivel y organización
+      const response = await fetch(`/api/usuarios/${formData.id_usuario}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload), // 👈 Usa el payload aquí
       })
 
       if (!response.ok) {
@@ -127,8 +160,8 @@ const DashSolicitud = () => {
         throw new Error(`Error al actualizar: ${response.status} - ${errorText}`)
       }
 
-      // Llama al endpoint de activación para notificar por correo
-      const activarResponse = await fetch("http://localhost:44444/api/usuarios/activar", {
+      // Enviar email de activación
+      const activarResponse = await fetch("/api/usuarios/activar", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -148,7 +181,6 @@ const DashSolicitud = () => {
         return
       }
 
-      // Muestra mensaje opcional
       setSuccessMessage(activarResult.mensaje || "Usuario activado correctamente.")
       setShowSuccessMessage(true)
       setTimeout(() => {
@@ -162,6 +194,7 @@ const DashSolicitud = () => {
     }
   }
 
+
   const handleEdit = (user) => {
     setFormData({
       id_usuario: user.id,
@@ -171,7 +204,7 @@ const DashSolicitud = () => {
       correo: user.correo,
       telefono: user.telefono,
       nivel: user.nivel,
-      organizacion: user.organizacion,
+      idOrganizacion: user.organizacion?.idOrganizacion ?? "",
       rol: user.rol,
     })
     setIsEditing(true)
@@ -182,7 +215,7 @@ const DashSolicitud = () => {
       if (!id) return
 
       try {
-        const response = await fetch(`http://localhost:44444/api/usuarios/${id}`, {
+        const response = await fetch(`/api/usuarios/${id}`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -311,6 +344,25 @@ const DashSolicitud = () => {
                   </select>
                 </div>
               </div>
+
+              <div className="form-field">
+                <label>Organización</label>
+                <select
+                  name="idOrganizacion"
+                  value={formData.idOrganizacion}
+                  onChange={handleChange}
+                  className="inputedit"
+                >
+                  <option value="">Selecciona una organización</option>
+                  {organizaciones.map((org) => (
+                    <option key={org.idOrganizacion} value={org.idOrganizacion}>
+                      {org.nombreOrganizacion}
+                    </option>
+                  ))}
+                </select>
+
+              </div>
+
 
               <div className="form-buttons">
                 <button type="submit" className="btn-edit">
