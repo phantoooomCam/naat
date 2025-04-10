@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import useSessionValidator from "./assets/hooks/useSessionValidator";
 
 // -----------------------------------------------------Principales_NoProtegidas
 //Rutas NO Protegidas 

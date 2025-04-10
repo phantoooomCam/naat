@@ -32,23 +32,23 @@ const Header = () => {
     try {
       const response = await fetch("/api/usuarios/logout", {
         method: "POST",
-        credentials: "include" // ✅ ¡esto envía la cookie!
+        credentials: "include" // ✅ Envia la cookie jwt_token
       });
   
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.mensaje || "Error al cerrar sesión.");
-      }
+      // El backend borra la cookie al recibir esta petición
   
-      // ✅ Limpiar cualquier dato local guardado del usuario
-      localStorage.removeItem("user");
+      // ✅ Limpiar todo inmediatamente
+      localStorage.clear();
   
-      // ✅ Redirigir al login
-      navigate("/");
+      // ✅ Redirigir con recarga inmediata (sin esperar toast ni timeout)
+      window.location.href = "/";
+  
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
+      alert("Error al cerrar sesión. Intenta de nuevo.");
     }
   };
+  
 
   // Detectar si el sidebar está abierto o cerrado dinámicamente
   useEffect(() => {
