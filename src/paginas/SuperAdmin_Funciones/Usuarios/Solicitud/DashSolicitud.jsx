@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import "../Gestion/Gestion.css"
+import fetchWithAuth from "../../../../utils/fetchWithAuth";
+
 
 const DashSolicitud = () => {
   // Estados para el colapso de sidebar
@@ -53,12 +55,12 @@ const DashSolicitud = () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch("/api/usuarios/?inicio=1&cantidad=10", {
+      const response = await fetchWithAuth("/api/usuarios/?inicio=1&cantidad=10", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
       })
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
@@ -91,8 +93,8 @@ const DashSolicitud = () => {
 
   const fetchOrganizaciones = async () => {
     try {
-      const response = await fetch("/api/organizaciones", {
-        credentials: "include",
+      const response = await fetchWithAuth("/api/organizaciones", {
+      
       });
 
       if (!response.ok) {
@@ -146,12 +148,12 @@ const DashSolicitud = () => {
       }
 
       // Actualiza el usuario con nivel y organización
-      const response = await fetch(`/api/usuarios/${formData.id_usuario}`, {
+      const response = await fetchWithAuth(`/api/usuarios/${formData.id_usuario}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
         body: JSON.stringify(payload), // 👈 Usa el payload aquí
       })
 
@@ -161,12 +163,12 @@ const DashSolicitud = () => {
       }
 
       // Enviar email de activación
-      const activarResponse = await fetch("/api/usuarios/activar", {
+      const activarResponse = await fetchWithAuth("/api/usuarios/activar", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
         body: JSON.stringify({ idUsuario: formData.id_usuario }),
       })
 
@@ -215,12 +217,12 @@ const DashSolicitud = () => {
       if (!id) return
 
       try {
-        const response = await fetch(`/api/usuarios/${id}`, {
+        const response = await fetchWithAuth(`/api/usuarios/${id}`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
+        
         })
 
         if (!response.ok) {

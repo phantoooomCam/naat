@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import "../../Usuarios/Gestion/Gestion.css"
+import fetchWithAuth from "../../../../utils/fetchWithAuth";
+
 
 const ActividadesSist = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -35,12 +37,12 @@ const ActividadesSist = () => {
     const token = localStorage.getItem("token")
 
     try {
-      const response = await fetch("/api/actividades", {
+      const response = await fetchWithAuth("/api/actividades", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
       })
 
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`)

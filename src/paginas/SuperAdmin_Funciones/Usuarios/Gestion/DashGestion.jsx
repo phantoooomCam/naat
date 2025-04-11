@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPencilAlt, faTrash } from "@fortawesome/free-solid-svg-icons"
+import fetchWithAuth from "../../../../utils/fetchWithAuth";
+
 
 const GestionDash = () => {
   // Estados para el colapso de sidebar
@@ -52,12 +54,12 @@ const GestionDash = () => {
 
   const fetchOrganizaciones = async () => {
     try {
-      const response = await fetch("/api/organizaciones", {
+      const response = await fetchWithAuth("/api/organizaciones", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
       })
 
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
@@ -71,12 +73,12 @@ const GestionDash = () => {
 
   const fetchAreas = async () => {
     try {
-      const response = await fetch("/api/areas", {
+      const response = await fetchWithAuth("/api/areas", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
       })
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
 
@@ -89,12 +91,12 @@ const GestionDash = () => {
 
   const fetchDepartamentos = async () => {
     try {
-      const response = await fetch("/api/departamentos", {
+      const response = await fetchWithAuth("/api/departamentos", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
       })
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
       const data = await response.json()
@@ -122,12 +124,12 @@ const GestionDash = () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch("/api/usuarios/", {
+      const response = await fetchWithAuth("/api/usuarios/", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
       })
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
@@ -245,12 +247,12 @@ const GestionDash = () => {
     if (!formData.id_usuario) return
 
     try {
-      const response = await fetch(`/api/usuarios/${formData.id_usuario}`, {
+      const response = await fetchWithAuth(`/api/usuarios/${formData.id_usuario}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
         body: JSON.stringify(formData),
       })
       if (!response.ok) {
@@ -333,12 +335,12 @@ const GestionDash = () => {
       if (!id) return
 
       try {
-        const response = await fetch(`/api/usuarios/${id}`, {
+        const response = await fetchWithAuth(`/api/usuarios/${id}`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
+        
         })
 
         if (!response.ok) {
@@ -383,12 +385,12 @@ const GestionDash = () => {
     }
 
     try {
-      const response = await fetch("/api/usuarios/crear-usuario", {
+      const response = await fetchWithAuth("/api/usuarios/crear-usuario", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
         body: JSON.stringify(userToCreate),
       })
 

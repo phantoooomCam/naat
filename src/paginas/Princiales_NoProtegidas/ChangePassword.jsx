@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom"
 import { Eye, EyeOff, Lock, Save, AlertCircle, Check, X } from "lucide-react"
 import { toast } from "react-hot-toast"
 import { useLocation } from "react-router-dom"
+import fetchWithAuth from "../../utils/fetchWithAuth";
+
 
 import "./Change.css"
 
@@ -81,12 +83,12 @@ const PasswordChange = () => {
     try {
       setIsLoading(true)
 
-      const response = await fetch("/api/usuarios/logout", {
+      const response = await fetchWithAuth("/api/usuarios/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
       })
 
       if (!response.ok) {
@@ -156,7 +158,7 @@ const PasswordChange = () => {
 
       if (cambioForzado) {
         // 🔐 Cambio de contraseña forzado (sin oldPassword)
-        response = await fetch("/api/usuarios/cambiar-contrasena-forzada", {
+        response = await fetchWithAuth("/api/usuarios/cambiar-contrasena-forzada", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -173,12 +175,12 @@ const PasswordChange = () => {
           newPassword: formData.newPassword,
         }
 
-        response = await fetch(`/api/usuarios/change-password/${idFinal}`, {
+        response = await fetchWithAuth(`/api/usuarios/change-password/${idFinal}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json"
           },
-          credentials: "include",
+        
           body: JSON.stringify(passwordData),
         })
       }

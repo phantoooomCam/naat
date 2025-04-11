@@ -5,6 +5,8 @@ import { Link } from "react-router-dom"
 import NAAT_image from "../../assets/naat.png"
 import { FiAlertTriangle, FiMail, FiLock } from "react-icons/fi"
 import "./CuentaBloqueada.css"
+import fetchWithAuth from "../../utils/fetchWithAuth";
+
 
 export default function CuentaBloqueada() {
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -70,7 +72,7 @@ export default function CuentaBloqueada() {
           return;
         }
       
-        fetch("http://localhost:44444/api/usuarios/reportar-cambio", {
+        fetchWithAuth("http://localhost:44444/api/usuarios/reportar-cambio", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ idUsuario: usuarioId }),

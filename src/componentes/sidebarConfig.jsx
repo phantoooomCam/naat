@@ -2,6 +2,8 @@ import { FiHome, FiUsers, FiSettings, FiHelpCircle } from 'react-icons/fi';
 import { LuBookHeadphones } from "react-icons/lu";
 import { SlOrganization } from "react-icons/sl";
 import { VscOrganization } from "react-icons/vsc";
+import fetchWithAuth from "../utils/fetchWithAuth";
+
 
 export const menu={
     1: [

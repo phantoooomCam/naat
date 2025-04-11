@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import { FiLogOut, FiSettings, FiUser, FiChevronDown } from "react-icons/fi"
 import "./Header.css"
+import fetchWithAuth from "../utils/fetchWithAuth";
+
 
 const Header = () => {
   const usuario = JSON.parse(localStorage.getItem("user"))
@@ -30,7 +32,7 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("/api/usuarios/logout", {
+      const response = await fetchWithAuth("/api/usuarios/logout", {
         method: "POST",
         credentials: "include" // ✅ Envia la cookie jwt_token
       });

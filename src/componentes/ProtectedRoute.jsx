@@ -1,9 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
-import useSessionValidator from "../assets/hooks/useSessionValidator"; // ✅ importa el hook
 
 const ProtectedRoute = () => {
-  useSessionValidator(); // ✅ se activa SOLO en rutas protegidas
-
   const userData = localStorage.getItem("user");
 
   if (!userData) {

@@ -11,6 +11,9 @@ import {
   FaTasks,
   FaLayerGroup,
 } from "react-icons/fa";
+import fetchWithAuth from "../../../utils/fetchWithAuth";
+
+
 const DashHome_Depto = ({ activeView }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 

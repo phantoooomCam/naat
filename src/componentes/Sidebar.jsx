@@ -6,6 +6,8 @@ import "./Sidebar.css"
 import NAAT from "../assets/completo_blanco.png"
 import { FaChevronDown, FaChevronRight } from "react-icons/fa"
 import { menu } from "./sidebarConfig"
+import fetchWithAuth from "../utils/fetchWithAuth";
+
 
 // Define the menu structure here
 // const menu = {

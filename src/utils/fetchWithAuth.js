@@ -3,9 +3,16 @@ import { toast } from "react-hot-toast";
 
 const fetchWithAuth = async (url, options = {}) => {
   try {
+    const token = localStorage.getItem("token");
+    
     const response = await fetch(url, {
       ...options,
-      credentials: "include", // 🔐 importante para enviar cookies
+      // 🔐 importante para enviar cookies
+      credentials: "include",
+      headers: {
+        ...options.headers,
+        "Authorization": `Bearer ${token}`
+      }
     });
 
     if ([401, 403, 404].includes(response.status)) {

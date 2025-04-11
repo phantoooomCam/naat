@@ -9,6 +9,10 @@ import { useState, useEffect, useRef } from "react";
 import "../../componentes/Sidebar.css";
 import NAAT from "../../../src/assets/completo_blanco.png";
 import {menu} from "../../componentes/sidebarConfig2";
+import fetchWithAuth from "../../utils/fetchWithAuth";
+
+
+
 const SideAdmin = () => {
   const location = useLocation();
   const navigate = useNavigate();

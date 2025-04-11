@@ -5,6 +5,8 @@ import PropTypes from "prop-types"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faUpload, faFile, faTrash, faCheck, faSpinner, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons"
 import "./Sabana.css"
+import fetchWithAuth from "../../../../utils/fetchWithAuth";
+
 
 const Procesar_Sabana = ({ activeView }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -152,7 +154,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     }
 
     try {
-      const response = await fetch("/api/archivos/subirftp", {
+      const response = await fetchWithAuth("/api/archivos/subirftp", {
         method: "POST",
         body: formData,
       })

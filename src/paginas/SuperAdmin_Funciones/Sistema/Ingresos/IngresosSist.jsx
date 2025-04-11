@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import "../../../SuperAdmin_Funciones/Usuarios/Gestion/Gestion.css" // Using the same CSS as DashGestion
+import fetchWithAuth from "../../../../utils/fetchWithAuth";
+
 
 const IngresoSist = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -35,12 +37,12 @@ const IngresoSist = () => {
     const token = localStorage.getItem("token")
 
     try {
-      const response = await fetch("/api/ingresos", {
+      const response = await fetchWithAuth("/api/ingresos", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
       })
 
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`)

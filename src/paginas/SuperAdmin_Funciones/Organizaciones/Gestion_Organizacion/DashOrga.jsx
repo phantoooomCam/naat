@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import "../../Usuarios/Gestion/Gestion.css"
+import fetchWithAuth from "../../../../utils/fetchWithAuth";
+
 
 const DashOrga = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -36,12 +38,12 @@ const DashOrga = () => {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetchWithAuth(API_URL, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
       })
 
       if (!response.ok) {
@@ -71,12 +73,12 @@ const DashOrga = () => {
     }
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetchWithAuth(API_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
         body: JSON.stringify(nuevaOrg),
       })
 
@@ -107,12 +109,12 @@ const DashOrga = () => {
 
     setLoading(true)
     try {
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await fetchWithAuth(`${API_URL}/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
       })
 
       if (!response.ok) {
@@ -149,12 +151,12 @@ const DashOrga = () => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/${organizacionEditar.idOrganizacion}`, {
+      const response = await fetchWithAuth(`${API_URL}/${organizacionEditar.idOrganizacion}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
         body: JSON.stringify(organizacionActualizada),
       })
 

@@ -4,6 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import Header from "../../../../componentes/Header"
 import Sidebar from "../../../../componentes/Sidebar";
 import DashArea from "./Dash_Area";
+import fetchWithAuth from "../../../../utils/fetchWithAuth";
+
 
 
 

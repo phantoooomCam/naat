@@ -27,6 +27,8 @@ import {
   Pie,
   Cell,
 } from "recharts"
+import fetchWithAuth from "../../../utils/fetchWithAuth";
+
 
 const DashHome_Organizacion = ({ activeView }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -110,12 +112,12 @@ const HomeView = ({ isSidebarCollapsed }) => {
   useEffect(() => {
     const fetchUsuarios = async () => {
       try {
-        const response = await fetch("/api/usuarios", {
+        const response = await fetchWithAuth("/api/usuarios", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
+        
         })
 
         if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
@@ -181,13 +183,13 @@ const HomeView = ({ isSidebarCollapsed }) => {
       try {
         // Solo necesitamos áreas y departamentos para este usuario
         const [areaRes, deptoRes] = await Promise.all([
-          fetch("/api/areas", {
+          fetchWithAuth("/api/areas", {
             headers: { "Content-Type": "application/json" },
-            credentials: "include",
+          
           }),
-          fetch("/api/departamentos", {
+          fetchWithAuth("/api/departamentos", {
             headers: { "Content-Type": "application/json" },
-            credentials: "include",
+          
           }),
         ])
 
@@ -215,12 +217,12 @@ const HomeView = ({ isSidebarCollapsed }) => {
   useEffect(() => {
     const fetchActividades = async () => {
       try {
-        const response = await fetch("/api/actividades", {
+        const response = await fetchWithAuth("/api/actividades", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
+        
         })
 
         if (!response.ok) throw new Error(`Error HTTP: ${response.status}`)

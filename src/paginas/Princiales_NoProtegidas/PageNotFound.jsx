@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react"
 import { Link } from "react-router-dom"
 import NAAT_image from "../../assets/naat.png"
 import "./HomeAlt.css"
+import fetchWithAuth from "../../utils/fetchWithAuth";
+
 
 export default function PageNotFound() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })

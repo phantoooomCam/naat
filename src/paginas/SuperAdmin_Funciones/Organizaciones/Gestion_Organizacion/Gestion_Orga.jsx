@@ -5,6 +5,7 @@ import Header from "../../../../componentes/Header"
 import Sidebar from "../../../../componentes/Sidebar";
 import DashOrga from "./DashOrga";
 import './Orga.css'
+import fetchWithAuth from "../../../../utils/fetchWithAuth";
 
 
 

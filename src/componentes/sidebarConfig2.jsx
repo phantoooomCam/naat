@@ -5,6 +5,8 @@ import { BiSupport } from "react-icons/bi";
 import { BiLogIn } from "react-icons/bi";
 import { SlOrganization } from "react-icons/sl";
 import { VscOrganization } from "react-icons/vsc";
+import fetchWithAuth from "../utils/fetchWithAuth";
+
 
 export const menu={
     1: [

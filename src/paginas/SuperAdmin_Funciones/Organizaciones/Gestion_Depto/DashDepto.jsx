@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import "../../Usuarios/Gestion/Gestion.css"
+import fetchWithAuth from "../../../../utils/fetchWithAuth";
+
 
 const DashDepartamento = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -42,12 +44,12 @@ const DashDepartamento = () => {
   const obtenerDepartamentos = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`${API_URL}/departamentos`, {
+      const response = await fetchWithAuth(`${API_URL}/departamentos`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
       })
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
       const data = await response.json()
@@ -63,12 +65,12 @@ const DashDepartamento = () => {
 
   const obtenerOrganizaciones = async () => {
     try {
-      const response = await fetch(`${API_URL}/organizaciones`, {
+      const response = await fetchWithAuth(`${API_URL}/organizaciones`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
       })
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
       const data = await response.json()
@@ -80,12 +82,12 @@ const DashDepartamento = () => {
 
   const obtenerAreas = async () => {
     try {
-      const response = await fetch(`${API_URL}/areas`, {
+      const response = await fetchWithAuth(`${API_URL}/areas`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
       })
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
       const data = await response.json()
@@ -145,12 +147,12 @@ const DashDepartamento = () => {
         idOrganizacion: Number.parseInt(formData.idOrganizacion, 10),
       }
 
-      const response = await fetch(`${API_URL}/departamentos`, {
+      const response = await fetchWithAuth(`${API_URL}/departamentos`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
         body: JSON.stringify(dataToSend),
       })
 
@@ -204,12 +206,12 @@ const DashDepartamento = () => {
         idOrganizacion: Number.parseInt(formData.idOrganizacion, 10),
       }
 
-      const response = await fetch(`${API_URL}/departamentos/${formData.idDepartamento}`, {
+      const response = await fetchWithAuth(`${API_URL}/departamentos/${formData.idDepartamento}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
         body: JSON.stringify(dataToSend),
       })
 
@@ -239,12 +241,12 @@ const DashDepartamento = () => {
 
     setLoading(true)
     try {
-      const response = await fetch(`${API_URL}/departamentos/${id}`, {
+      const response = await fetchWithAuth(`${API_URL}/departamentos/${id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
       })
 
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)

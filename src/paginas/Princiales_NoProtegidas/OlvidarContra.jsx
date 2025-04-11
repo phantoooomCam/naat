@@ -5,6 +5,8 @@ import { Link } from "react-router-dom";
 import NAAT from "../../assets/completo_blanco.png";
 import NAAT2 from "../../assets/naat.png";
 import { body } from "framer-motion/client";
+import fetchWithAuth from "../../utils/fetchWithAuth";
+
 
 export default function ForgotPassword() {
   const [isRegister, setIsRegister] = useState(true);
@@ -36,12 +38,12 @@ export default function ForgotPassword() {
     }
 
     try {
-      const response = await fetch("/api/usuarios/olvidepassword", {
+      const response = await fetchWithAuth("/api/usuarios/olvidepassword", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
         body: JSON.stringify({ correo: usuario }),
       });
 

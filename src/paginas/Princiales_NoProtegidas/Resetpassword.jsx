@@ -5,6 +5,8 @@ import { FaLock } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import NAAT from "../../assets/completo_blanco.png";
 import NAAT2 from "../../assets/naat.png";
+import fetchWithAuth from "../../utils/fetchWithAuth";
+
 
 export default function ResetPassword() {
   const [isRegister, setIsRegister] = useState(true);
@@ -52,7 +54,7 @@ export default function ResetPassword() {
 
       if (cambioForzado && idUsuario) {
         // 🔐 Cambio de contraseña forzado
-        response = await fetch("/api/usuarios/cambiar-contrasena-forzada", {
+        response = await fetchWithAuth("/api/usuarios/cambiar-contrasena-forzada", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -67,10 +69,10 @@ export default function ResetPassword() {
           return;
         }
 
-        response = await fetch("/api/usuarios/reset-password", {
+        response = await fetchWithAuth("/api/usuarios/reset-password", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          credentials: "include",
+        
           body: JSON.stringify({ newPassword: password }),
         });
       }

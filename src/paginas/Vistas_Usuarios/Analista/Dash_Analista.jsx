@@ -18,6 +18,8 @@ import {
   LineChart,
   Line,
 } from "recharts"
+import fetchWithAuth from "../../../utils/fetchWithAuth";
+
 
 const Dash_Analista = ({ activeView }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -93,12 +95,12 @@ const HomeView = ({ isSidebarCollapsed }) => {
     const fetchSabanas = async () => {
       try {
         // Intentamos obtener datos de sabanas si existe el endpoint
-        const response = await fetch("/api/sabanas", {
+        const response = await fetchWithAuth("/api/sabanas", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
+        
         }).catch(() => {
           // Si no existe el endpoint, usamos un valor por defecto
           return { ok: false }
@@ -130,12 +132,12 @@ const HomeView = ({ isSidebarCollapsed }) => {
   useEffect(() => {
     const fetchActividades = async () => {
       try {
-        const response = await fetch("/api/actividades", {
+        const response = await fetchWithAuth("/api/actividades", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
+        
         })
 
         if (!response.ok) throw new Error(`Error HTTP: ${response.status}`)

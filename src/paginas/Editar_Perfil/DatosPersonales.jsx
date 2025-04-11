@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { toast } from "react-hot-toast"
 import { FaUser, FaEnvelope, FaPhone, FaSave, FaTimes } from "react-icons/fa"
 import "./PerfilUsuario.css"
+import fetchWithAuth from "../../utils/fetchWithAuth";
+
 
 const PerfilUsuario = () => {
   // Estado para controlar si sidebar está colapsado
@@ -100,12 +102,12 @@ const PerfilUsuario = () => {
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/usuarios/perfil", {
+      const response = await fetchWithAuth("/api/usuarios/perfil", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include",
+      
         body: JSON.stringify(perfilData),
       })
 
@@ -130,7 +132,7 @@ const PerfilUsuario = () => {
       setIsEditing(false)
 
       // Mostrar notificación toast
-      toast.success("Perfil actualizado correctamente")
+      //toast.success("Perfil actualizado correctamente")
 
       setTimeout(() => {
         setStatusMessage({ type: "", message: "" })
@@ -142,9 +144,9 @@ const PerfilUsuario = () => {
       })
 
       // Mostrar notificación toast
-      toast.error(error.message)
-    } finally {
-      setIsLoading(false)
+    //   toast.error(error.message)
+    // } finally {
+    //   setIsLoading(false)
     }
   }
 

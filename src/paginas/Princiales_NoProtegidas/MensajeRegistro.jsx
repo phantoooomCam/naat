@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import NAAT from "../../assets/completo_blanco.png";
 import "./mensaje.css";
+import fetchWithAuth from "../../utils/fetchWithAuth";
+
 
 export default function MensajeRegistro() {
   const [isRegister, setIsRegister] = useState(false);

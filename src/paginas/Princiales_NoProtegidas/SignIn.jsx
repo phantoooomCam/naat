@@ -13,6 +13,7 @@ import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import { Link, useNavigate } from "react-router-dom";
 import NAAT from "../../assets/completo_blanco.png";
 import NAAT2 from "../../assets/naat.png";
+import fetchWithAuth from "../../utils/fetchWithAuth";
 
 export default function SignIn() {
   const [isRegister, setIsRegister] = useState(true);
@@ -92,14 +93,14 @@ export default function SignIn() {
     };
 
     try {
-      const response = await fetch(
+      const response = await fetchWithAuth(
         "/api/usuarios/register",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
+        
           body: JSON.stringify(userData),
         }
       );
@@ -131,10 +132,10 @@ export default function SignIn() {
     };
   
     try {
-      const response = await fetch("/api/usuarios/login", {
+      const response = await fetchWithAuth("/api/usuarios/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
+      
         body: JSON.stringify(requestBody),
       });
   
