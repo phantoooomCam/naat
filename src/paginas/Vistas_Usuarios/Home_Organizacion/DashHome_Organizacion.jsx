@@ -488,16 +488,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
         </div>
       </div>
       {/* Accesos rápidos */}
-      <h2 className="section-title">Accesos Rápidos</h2>
-      <div className="dashboard-grid">
-        {dashboardCards.map((card) => (
-          <div key={card.id} className="card" onClick={() => navigate(card.route)}>
-            <span className="icon">{card.icon}</span>
-            <h2>{card.title}</h2>
-            <p>Administrar {card.title.toLowerCase()}.</p>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }
