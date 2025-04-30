@@ -2,6 +2,7 @@ import { FiHome, FiUsers, FiSettings, FiHelpCircle } from 'react-icons/fi';
 import { LuBookHeadphones } from "react-icons/lu";
 import { SlOrganization } from "react-icons/sl";
 import { VscOrganization } from "react-icons/vsc";
+import { PiFolderUserDuotone } from "react-icons/pi";
 import fetchWithAuth from "../utils/fetchWithAuth";
 
 
@@ -81,6 +82,7 @@ export const menu={
       ],
       5:[
         { id: '/home_analista', icon: <FiHome />, label: 'Inicio' },
+        { id: '/casos', icon: <PiFolderUserDuotone />, label: 'Casos' },
         { id: '/sabana', icon: <LuBookHeadphones />, label: 'Sabanas' },
       ]
 

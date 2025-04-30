@@ -42,6 +42,7 @@ import ProtectedRoute from "./componentes/ProtectedRoute";
 
 // Funciones Analista
 import Sabana from "./paginas/Vistas_Usuarios/Analista/Sabana/Sabana";
+import Caso from "./paginas/Vistas_Usuarios/Analista/Caso/Caso";
 
 function App() {
   return (
@@ -80,6 +81,7 @@ function App() {
 
       {/* Funciones Analista */}
         <Route path="/sabana" element={<Sabana />} />
+        <Route path="/casos" element={<Caso />} />
         
 
 
