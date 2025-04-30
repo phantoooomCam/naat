@@ -25,7 +25,7 @@ const DashDepartamento = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
 
-  const API_URL = "/api"
+  const API_URL = "http://localhost:44444/api"
   const token = localStorage.getItem("token")
 
   // Observador del sidebar

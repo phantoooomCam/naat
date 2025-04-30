@@ -95,7 +95,7 @@ const HomeView = ({ isSidebarCollapsed }) => {
     const fetchSabanas = async () => {
       try {
         // Intentamos obtener datos de sabanas si existe el endpoint
-        const response = await fetchWithAuth("/api/sabanas", {
+        const response = await fetch("/api/sabanas", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

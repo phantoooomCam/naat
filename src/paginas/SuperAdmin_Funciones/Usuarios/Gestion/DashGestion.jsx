@@ -59,17 +59,19 @@ const GestionDash = () => {
         headers: {
           "Content-Type": "application/json",
         },
-      
       })
-
-      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
-
+  
+      if (!response || !response.ok) {
+        throw new Error(`Error: ${response?.status || "No response"}`)
+      }
+  
       const data = await response.json()
       setOrganizaciones(data)
     } catch (error) {
       console.error("Error al obtener organizaciones:", error)
     }
   }
+  
 
   const fetchAreas = async () => {
     try {
@@ -78,17 +80,19 @@ const GestionDash = () => {
         headers: {
           "Content-Type": "application/json",
         },
-      
-      })
-      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
-
-      const data = await response.json()
-      setAreas(data)
+      });
+  
+      if (!response || !response.ok) {
+        throw new Error(`Error: ${response?.status || "No response"}`);
+      }
+  
+      const data = await response.json();
+      setAreas(data);
     } catch (error) {
-      console.error("Error al obtener areas:", error)
+      console.error("Error al obtener areas:", error);
     }
-  }
-
+  };
+  
   const fetchDepartamentos = async () => {
     try {
       const response = await fetchWithAuth("/api/departamentos", {
@@ -96,15 +100,18 @@ const GestionDash = () => {
         headers: {
           "Content-Type": "application/json",
         },
-      
-      })
-      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
-      const data = await response.json()
-      setDepartamentos(data)
+      });
+  
+      if (!response || !response.ok) {
+        throw new Error(`Error: ${response?.status || "No response"}`);
+      }
+  
+      const data = await response.json();
+      setDepartamentos(data);
     } catch (error) {
-      console.error("Error al obtener departamentos: ", error)
+      console.error("Error al obtener departamentos:", error);
     }
-  }
+  };  
 
   // Observador para el sidebar
   useEffect(() => {
