@@ -3,6 +3,7 @@ import { useState } from "react"
 
 import Header from "../../../../componentes/Header"
 import Sidebar from "../../../../componentes/Sidebar"
+import Procesar_Caso from "./Procesar_Caso"
 import "./Caso.css"
 
 function Caso() {
@@ -19,6 +20,7 @@ function Caso() {
       />
       <main className={`main-content ${sidebarOpen ? "" : "collapsed"}`}>
         <Header />
+        <Procesar_Caso activeView={activeView} />
       </main>
     </div>
   )

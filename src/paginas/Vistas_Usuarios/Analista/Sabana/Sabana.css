@@ -672,3 +672,26 @@
   border-radius: 4px;
 }
 
+
+@media (max-width: 992px) {
+  .upload-area-grid,
+  .main-content-area-sabana {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  .files-card {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  
+  .filters-card {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  
+  .work-area-card {
+    grid-column: 1;
+    grid-row: 3;
+  }
+}
