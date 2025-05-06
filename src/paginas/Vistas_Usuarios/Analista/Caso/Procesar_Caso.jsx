@@ -79,6 +79,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           fechaCreacion: caso.fechaCreacion || "Sin fecha",
           asignado: caso.descripcion, // ← esto mostrará la descripción como "asignado"
         }));
+        
 
         setCasos(casosTransformados);
       } catch (error) {
@@ -521,7 +522,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                     </span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Asignado a:</span>
+                    <span className="detail-label">Descripcion del Caso:</span>
                     <span className="detail-value">
                       {selectedCaso.asignado}
                     </span>
