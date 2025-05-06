@@ -1,214 +1,244 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import PropTypes from "prop-types"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPlus, faFile, faTrash, faCheck, faSpinner, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons"
-import "./Caso.css"
+import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPlus,
+  faFile,
+  faTrash,
+  faCheck,
+  faSpinner,
+  faExclamationTriangle,
+} from "@fortawesome/free-solid-svg-icons";
+import "./Caso.css";
+import fetchWithAuth from "../../../../utils/fetchWithAuth";
 
 const Procesar_Caso = ({ activeView }) => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      const sidebar = document.querySelector(".sidebar")
+      const sidebar = document.querySelector(".sidebar");
       if (sidebar) {
-        setIsSidebarCollapsed(sidebar.classList.contains("closed"))
+        setIsSidebarCollapsed(sidebar.classList.contains("closed"));
       }
-    })
+    });
 
-    observer.observe(document.body, { attributes: true, subtree: true })
+    observer.observe(document.body, { attributes: true, subtree: true });
 
-    return () => observer.disconnect()
-  }, [])
+    return () => observer.disconnect();
+  }, []);
 
   const views = {
-    procesamiento: <ProcesamientoView isSidebarCollapsed={isSidebarCollapsed} />,
-  }
+    procesamiento: (
+      <ProcesamientoView isSidebarCollapsed={isSidebarCollapsed} />
+    ),
+  };
 
   return (
     <div className={`dash-home ${isSidebarCollapsed ? "collapsed" : ""}`}>
-      <div className="container">{views[activeView] || views.procesamiento}</div>
+      <div className="container">
+        {views[activeView] || views.procesamiento}
+      </div>
     </div>
-  )
-}
+  );
+};
 
 // Modificar el componente ProcesamientoView para mejorar la responsividad
 const ProcesamientoView = ({ isSidebarCollapsed }) => {
-  const [casos, setCasos] = useState([])
-  const [selectedCaso, setSelectedCaso] = useState(null)
-  const [titulo, setTitulo] = useState("")
-  const [descripcion, setDescripcion] = useState("")
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [processingStatus, setProcessingStatus] = useState(null) // 'success', 'error', null
-  const [statusMessage, setStatusMessage] = useState("")
+  const [casos, setCasos] = useState([]);
+  const [selectedCaso, setSelectedCaso] = useState(null);
+  const [titulo, setTitulo] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState(null); // 'success', 'error', null
+  const [statusMessage, setStatusMessage] = useState("");
 
   // Estado para filtros
   const [filters, setFilters] = useState({
     resuelto: false,
     sinResolver: false,
     enProceso: false,
-  })
+  });
 
   // Cargar casos de ejemplo
   useEffect(() => {
-    const casosDePrueba = [
-      {
-        id: 1,
-        titulo: "Investigación de fraude telefónico",
-        descripcion: "Cliente reporta llamadas sospechosas desde múltiples números",
-        estado: "En proceso",
-        fechaCreacion: "15/04/2023",
-        asignado: "Ana Martínez",
-      },
-      {
-        id: 2,
-        titulo: "Análisis de patrón de comunicaciones",
-        descripcion: "Revisar patrones de comunicación en horarios específicos",
-        estado: "Sin resolver",
-        fechaCreacion: "03/05/2023",
-        asignado: "Carlos Rodríguez",
-      },
-      {
-        id: 3,
-        titulo: "Verificación de ubicaciones sospechosas",
-        descripcion: "Analizar ubicaciones recurrentes en datos de sabana",
-        estado: "Resuelto",
-        fechaCreacion: "22/03/2023",
-        asignado: "Laura Sánchez",
-      },
-    ]
+    const fetchCasos = async () => {
+      try {
+        const response = await fetchWithAuth("/api/casos");
+        if (!response.ok) throw new Error("Error al obtener los casos");
 
-    setCasos(casosDePrueba)
-  }, [])
+        const data = await response.json();
 
-  const handleCrearCaso = () => {
+        const casosTransformados = data.map((caso) => ({
+          id: caso.idCaso,
+          titulo: caso.nombre,
+          descripcion: caso.descripcion,
+          estado: "Sin resolver",
+          fechaCreacion: caso.fechaCreacion || "Sin fecha",
+          asignado: caso.descripcion, // ← esto mostrará la descripción como "asignado"
+        }));
+
+        setCasos(casosTransformados);
+      } catch (error) {
+        console.error("Error al cargar casos desde el backend:", error);
+        setStatusMessage("No se pudieron cargar los casos");
+        setProcessingStatus("error");
+      }
+    };
+
+    fetchCasos();
+  }, []);
+
+  const handleCrearCaso = async () => {
     if (!titulo.trim()) {
-      setProcessingStatus("error")
-      setStatusMessage("El título del caso es obligatorio")
-      setTimeout(() => setProcessingStatus(null), 3000)
-      return
+      setProcessingStatus("error");
+      setStatusMessage("El título del caso es obligatorio");
+      setTimeout(() => setProcessingStatus(null), 3000);
+      return;
     }
 
-    setIsProcessing(true)
-    setProcessingStatus(null)
+    setIsProcessing(true);
+    setProcessingStatus(null);
 
-    // Simulación de creación de caso
-    setTimeout(() => {
+    try {
+      console.log("Enviando al backend:", { nombre: titulo, descripcion });
+
+      const response = await fetchWithAuth("/api/casos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nombre: titulo,
+          descripcion: descripcion,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Error en la creación del caso");
+
+      const result = await response.json();
+
       const nuevoCaso = {
-        id: Date.now() + Math.random(),
-        titulo: titulo,
-        descripcion: descripcion,
+        id: Date.now(),
+        titulo,
+        descripcion,
         estado: "Sin resolver",
         fechaCreacion: new Date().toLocaleDateString(),
         asignado: "Usuario Actual",
-      }
+      };
 
-      setCasos((prevCasos) => [nuevoCaso, ...prevCasos])
-      setTitulo("")
-      setDescripcion("")
-      setIsProcessing(false)
-      setProcessingStatus("success")
-      setStatusMessage("Caso creado correctamente")
-      setTimeout(() => setProcessingStatus(null), 3000)
-    }, 1500)
-  }
+      setCasos((prevCasos) => [nuevoCaso, ...prevCasos]);
+      setTitulo("");
+      setDescripcion("");
+      setProcessingStatus("success");
+      setStatusMessage(result.mensaje || "Caso creado correctamente");
+    } catch (error) {
+      console.error("ERROR al crear caso:", error);
+      setProcessingStatus("error");
+      setStatusMessage("Error al crear el caso");
+    } finally {
+      setIsProcessing(false);
+      setTimeout(() => setProcessingStatus(null), 3000);
+    }
+  };
 
   const handleFilterChange = (filterName, value) => {
     setFilters((prev) => ({
       ...prev,
       [filterName]: value,
-    }))
-  }
+    }));
+  };
 
   const handleCasoDelete = (casoId) => {
     setCasos((prevCasos) => {
-      const updatedCasos = prevCasos.filter((caso) => caso.id !== casoId)
+      const updatedCasos = prevCasos.filter((caso) => caso.id !== casoId);
       // Si el caso seleccionado es el que se está eliminando, deseleccionarlo
       if (selectedCaso && selectedCaso.id === casoId) {
-        setSelectedCaso(null)
+        setSelectedCaso(null);
       }
-      return updatedCasos
-    })
-  }
+      return updatedCasos;
+    });
+  };
 
   const handleCambiarEstado = (casoId, nuevoEstado) => {
     setCasos((prevCasos) => {
       return prevCasos.map((caso) => {
         if (caso.id === casoId) {
-          return { ...caso, estado: nuevoEstado }
+          return { ...caso, estado: nuevoEstado };
         }
-        return caso
-      })
-    })
+        return caso;
+      });
+    });
 
     // Si el caso seleccionado es el que se está modificando, actualizar también el seleccionado
     if (selectedCaso && selectedCaso.id === casoId) {
-      setSelectedCaso((prev) => ({ ...prev, estado: nuevoEstado }))
+      setSelectedCaso((prev) => ({ ...prev, estado: nuevoEstado }));
     }
-  }
+  };
 
   // Filtrar casos según los filtros seleccionados
   const filteredCasos = casos.filter((caso) => {
     // Si no hay filtros activos, mostrar todos
     if (!filters.resuelto && !filters.sinResolver && !filters.enProceso) {
-      return true
+      return true;
     }
 
     // Mostrar según los filtros seleccionados
-    if (filters.resuelto && caso.estado === "Resuelto") return true
-    if (filters.sinResolver && caso.estado === "Sin resolver") return true
-    if (filters.enProceso && caso.estado === "En proceso") return true
+    if (filters.resuelto && caso.estado === "Resuelto") return true;
+    if (filters.sinResolver && caso.estado === "Sin resolver") return true;
+    if (filters.enProceso && caso.estado === "En proceso") return true;
 
-    return false
-  })
+    return false;
+  });
 
   const handleGuardarEnBD = async () => {
     if (casos.length === 0) {
-      setProcessingStatus("error")
-      setStatusMessage("No hay casos para guardar")
-      setTimeout(() => setProcessingStatus(null), 3000)
-      return
+      setProcessingStatus("error");
+      setStatusMessage("No hay casos para guardar");
+      setTimeout(() => setProcessingStatus(null), 3000);
+      return;
     }
 
-    setIsProcessing(true)
-    setProcessingStatus(null)
+    setIsProcessing(true);
+    setProcessingStatus(null);
 
     try {
       // Simulación de guardado en base de datos
       setTimeout(() => {
-        setIsProcessing(false)
-        setProcessingStatus("success")
-        setStatusMessage("Casos guardados correctamente")
-        setTimeout(() => setProcessingStatus(null), 3000)
-      }, 2000)
+        setIsProcessing(false);
+        setProcessingStatus("success");
+        setStatusMessage("Casos guardados correctamente");
+        setTimeout(() => setProcessingStatus(null), 3000);
+      }, 2000);
     } catch (error) {
-      console.error(error)
-      setIsProcessing(false)
-      setProcessingStatus("error")
-      setStatusMessage("Error al guardar los casos")
-      setTimeout(() => setProcessingStatus(null), 3000)
+      console.error(error);
+      setIsProcessing(false);
+      setProcessingStatus("error");
+      setStatusMessage("Error al guardar los casos");
+      setTimeout(() => setProcessingStatus(null), 3000);
     }
-  }
+  };
 
   const handleClearAllCasos = () => {
-    setCasos([])
-    setSelectedCaso(null)
-  }
+    setCasos([]);
+    setSelectedCaso(null);
+  };
 
   // Obtener clase para el estado
   const getEstadoClass = (estado) => {
     switch (estado) {
       case "Resuelto":
-        return "estado-resuelto"
+        return "estado-resuelto";
       case "Sin resolver":
-        return "estado-sin-resolver"
+        return "estado-sin-resolver";
       case "En proceso":
-        return "estado-en-proceso"
+        return "estado-en-proceso";
       default:
-        return ""
+        return "";
     }
-  }
+  };
 
   return (
     <div className={`caso-container ${isSidebarCollapsed ? "collapsed" : ""}`}>
@@ -237,8 +267,17 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
             <FontAwesomeIcon icon={faPlus} className="crear-icon" />
             <h3>Crear Nuevo Caso</h3>
 
-            <div style={{ width: "100%", textAlign: "left", marginBottom: "15px" }}>
-              <label htmlFor="titulo-caso" style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
+            <div
+              style={{ width: "100%", textAlign: "left", marginBottom: "15px" }}
+            >
+              <label
+                htmlFor="titulo-caso"
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontWeight: "500",
+                }}
+              >
                 Título del Caso:
               </label>
               <input
@@ -252,8 +291,17 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
               />
             </div>
 
-            <div style={{ width: "100%", textAlign: "left", marginBottom: "15px" }}>
-              <label htmlFor="descripcion-caso" style={{ display: "block", marginBottom: "5px", fontWeight: "500" }}>
+            <div
+              style={{ width: "100%", textAlign: "left", marginBottom: "15px" }}
+            >
+              <label
+                htmlFor="descripcion-caso"
+                style={{
+                  display: "block",
+                  marginBottom: "5px",
+                  fontWeight: "500",
+                }}
+              >
                 Descripción:
               </label>
               <textarea
@@ -266,7 +314,11 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
               />
             </div>
 
-            <button onClick={handleCrearCaso} className="crear-button" disabled={isProcessing || !titulo.trim()}>
+            <button
+              onClick={handleCrearCaso}
+              className="crear-button"
+              disabled={isProcessing || !titulo.trim()}
+            >
               {isProcessing ? (
                 <>
                   <FontAwesomeIcon icon={faSpinner} spin />
@@ -290,7 +342,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                   <input
                     type="checkbox"
                     checked={filters.resuelto}
-                    onChange={() => handleFilterChange("resuelto", !filters.resuelto)}
+                    onChange={() =>
+                      handleFilterChange("resuelto", !filters.resuelto)
+                    }
                     disabled={isProcessing}
                   />
                   <span>Casos Resueltos</span>
@@ -299,7 +353,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                   <input
                     type="checkbox"
                     checked={filters.sinResolver}
-                    onChange={() => handleFilterChange("sinResolver", !filters.sinResolver)}
+                    onChange={() =>
+                      handleFilterChange("sinResolver", !filters.sinResolver)
+                    }
                     disabled={isProcessing}
                   />
                   <span>Casos Sin Resolver</span>
@@ -308,7 +364,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                   <input
                     type="checkbox"
                     checked={filters.enProceso}
-                    onChange={() => handleFilterChange("enProceso", !filters.enProceso)}
+                    onChange={() =>
+                      handleFilterChange("enProceso", !filters.enProceso)
+                    }
                     disabled={isProcessing}
                   />
                   <span>Casos En Proceso</span>
@@ -332,7 +390,11 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
               {filteredCasos.map((caso) => (
                 <div
                   key={caso.id}
-                  className={`caso-item ${selectedCaso && selectedCaso.id === caso.id ? "selected" : ""}`}
+                  className={`caso-item ${
+                    selectedCaso && selectedCaso.id === caso.id
+                      ? "selected"
+                      : ""
+                  }`}
                   onClick={() => setSelectedCaso(caso)}
                 >
                   <div className="caso-info">
@@ -340,7 +402,13 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                     <div className="caso-details">
                       <span className="caso-name">{caso.titulo}</span>
                       <span className="caso-meta">
-                        <span className={`estado-badge ${getEstadoClass(caso.estado)}`}>{caso.estado}</span>
+                        <span
+                          className={`estado-badge ${getEstadoClass(
+                            caso.estado
+                          )}`}
+                        >
+                          {caso.estado}
+                        </span>
                         <span className="caso-fecha-asignado">
                           {caso.fechaCreacion} • {caso.asignado}
                         </span>
@@ -351,8 +419,8 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                     <button
                       className="delete-caso-btn"
                       onClick={(e) => {
-                        e.stopPropagation()
-                        handleCasoDelete(caso.id)
+                        e.stopPropagation();
+                        handleCasoDelete(caso.id);
                       }}
                       disabled={isProcessing}
                       aria-label={`Eliminar caso ${caso.titulo}`}
@@ -380,18 +448,28 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
             <button
               className="process-button"
               onClick={() => {
-                if (selectedCaso) handleCambiarEstado(selectedCaso.id, "En proceso")
+                if (selectedCaso)
+                  handleCambiarEstado(selectedCaso.id, "En proceso");
               }}
-              disabled={isProcessing || !selectedCaso || selectedCaso?.estado === "En proceso"}
+              disabled={
+                isProcessing ||
+                !selectedCaso ||
+                selectedCaso?.estado === "En proceso"
+              }
             >
               Marcar En Proceso
             </button>
             <button
               className="save-button"
               onClick={() => {
-                if (selectedCaso) handleCambiarEstado(selectedCaso.id, "Resuelto")
+                if (selectedCaso)
+                  handleCambiarEstado(selectedCaso.id, "Resuelto");
               }}
-              disabled={isProcessing || !selectedCaso || selectedCaso?.estado === "Resuelto"}
+              disabled={
+                isProcessing ||
+                !selectedCaso ||
+                selectedCaso?.estado === "Resuelto"
+              }
             >
               Marcar Resuelto
             </button>
@@ -414,23 +492,39 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
               <div className="selected-caso-preview">
                 <FontAwesomeIcon icon={faFile} className="caso-preview-icon" />
                 <h4>{selectedCaso.titulo}</h4>
-                <p style={{ marginBottom: "20px", textAlign: "left", width: "100%" }}>{selectedCaso.descripcion}</p>
+                <p
+                  style={{
+                    marginBottom: "20px",
+                    textAlign: "left",
+                    width: "100%",
+                  }}
+                >
+                  {selectedCaso.descripcion}
+                </p>
                 <div className="caso-details-grid">
                   <div className="detail-row">
                     <span className="detail-label">Estado:</span>
                     <span className="detail-value">
-                      <span className={`estado-badge ${getEstadoClass(selectedCaso.estado)}`}>
+                      <span
+                        className={`estado-badge ${getEstadoClass(
+                          selectedCaso.estado
+                        )}`}
+                      >
                         {selectedCaso.estado}
                       </span>
                     </span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">Fecha de creación:</span>
-                    <span className="detail-value">{selectedCaso.fechaCreacion}</span>
+                    <span className="detail-value">
+                      {selectedCaso.fechaCreacion}
+                    </span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">Asignado a:</span>
-                    <span className="detail-value">{selectedCaso.asignado}</span>
+                    <span className="detail-value">
+                      {selectedCaso.asignado}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -444,15 +538,15 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 Procesar_Caso.propTypes = {
   activeView: PropTypes.string.isRequired,
-}
+};
 
 ProcesamientoView.propTypes = {
   isSidebarCollapsed: PropTypes.bool,
-}
+};
 
-export default Procesar_Caso
+export default Procesar_Caso;
