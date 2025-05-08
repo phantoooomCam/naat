@@ -22,7 +22,7 @@ const DashArea = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
 
-  const API_URL = "http://localhost:44444/api"
+  const API_URL = "/api"
   const token = localStorage.getItem("token")
 
   // Observador del sidebar

@@ -67,6 +67,7 @@ export const menu={
           ]
         },
         { id: '/depto', icon:<VscOrganization />, label: 'Departamenos' },
+        { id: '/casos', icon: <PiFolderUserDuotone />, label: 'Casos' },
       ],
       4:[
         { id: '/home_depto', icon: <FiHome />, label: 'Inicio' },
@@ -79,6 +80,7 @@ export const menu={
             { id: '/ingresos', label: 'Ingresos' }
           ]
         },
+        { id: '/casos', icon: <PiFolderUserDuotone />, label: 'Casos' },
       ],
       5:[
         { id: '/home_analista', icon: <FiHome />, label: 'Inicio' },
