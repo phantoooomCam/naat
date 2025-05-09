@@ -6,7 +6,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlus,
   faFile,
-  faTrash,
   faCheck,
   faSpinner,
   faExclamationTriangle,
@@ -46,7 +45,6 @@ const Procesar_Caso = ({ activeView }) => {
   );
 };
 
-// Modificar el componente ProcesamientoView para mejorar la responsividad
 const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [casos, setCasos] = useState([]);
   const [selectedCaso, setSelectedCaso] = useState(null);
@@ -104,7 +102,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     setProcessingStatus(null);
 
     try {
-      console.log("Enviando al backend:", { nombre: titulo, descripcion });
 
       const usuario = JSON.parse(localStorage.getItem("user"));
       const idUsuario = usuario?.id;
@@ -153,7 +150,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     const usuario = JSON.parse(localStorage.getItem("user"));
     const idUsuario = usuario?.id;
 
-    
+
       if (!idUsuario) {
         setProcessingStatus("error");
         setStatusMessage("Error al obtener el ID del usuario");
@@ -189,16 +186,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     }));
   };
 
-  const handleCasoDelete = (casoId) => {
-    setCasos((prevCasos) => {
-      const updatedCasos = prevCasos.filter((caso) => caso.id !== casoId);
-      // Si el caso seleccionado es el que se está eliminando, deseleccionarlo
-      if (selectedCaso && selectedCaso.id === casoId) {
-        setSelectedCaso(null);
-      }
-      return updatedCasos;
-    });
-  };
 
   const handleCambiarEstado = (casoId, nuevoEstado) => {
     setCasos((prevCasos) => {
@@ -232,10 +219,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     return false;
   });
 
-  const handleClearAllCasos = () => {
-    setCasos([]);
-    setSelectedCaso(null);
-  };
 
   // Obtener clase para el estado
   const getEstadoClass = (estado) => {
@@ -484,13 +467,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
             >
               Marcar Resuelto
             </button>
-            {/* <button
-              className="clear-button"
-              onClick={handleClearAllCasos}
-              disabled={isProcessing || casos.length === 0}
-            >
-              Limpiar Todo
-            </button> */}
           </div>
         </div>
 
