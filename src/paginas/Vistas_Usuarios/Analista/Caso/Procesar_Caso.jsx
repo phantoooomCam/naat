@@ -13,6 +13,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import "./Caso.css";
 import fetchWithAuth from "../../../../utils/fetchWithAuth";
+import { faBoxArchive } from "@fortawesome/free-solid-svg-icons";
 
 const Procesar_Caso = ({ activeView }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -79,7 +80,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           fechaCreacion: caso.fechaCreacion || "Sin fecha",
           asignado: caso.descripcion, // ← esto mostrará la descripción como "asignado"
         }));
-        
 
         setCasos(casosTransformados);
       } catch (error) {
@@ -106,6 +106,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     try {
       console.log("Enviando al backend:", { nombre: titulo, descripcion });
 
+      const usuario = JSON.parse(localStorage.getItem("user"));
+      const idUsuario = usuario?.id;
+
       const response = await fetchWithAuth("/api/casos", {
         method: "POST",
         headers: {
@@ -114,6 +117,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         body: JSON.stringify({
           nombre: titulo,
           descripcion: descripcion,
+          idUsuario: idUsuario, // importante
         }),
       });
 
@@ -143,6 +147,39 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       setIsProcessing(false);
       setTimeout(() => setProcessingStatus(null), 3000);
     }
+  };
+
+  const handleArchivarCaso = async (casoId) => {
+    const usuario = JSON.parse(localStorage.getItem("user"));
+    const idUsuario = usuario?.id;
+
+    
+      if (!idUsuario) {
+        setProcessingStatus("error");
+        setStatusMessage("Error al obtener el ID del usuario");
+        return;
+      }
+      try {
+        const response = await fetchWithAuth(
+          `/api/casos/${casoId}/archivar?idUsuario=${idUsuario}`,
+          {
+            method: "PUT",
+          }
+        );
+
+        if (!response.ok) throw new Error("Error al archivar el caso");
+
+        setCasos((prev) => prev.filter((caso) => caso.id !== casoId));
+        setSelectedCaso(null);
+        setProcessingStatus("success");
+        setStatusMessage("Caso archivado correctamente");
+      } catch (error) {
+        console.error("Error al archivar caso:", error);
+        setProcessingStatus("error");
+        setStatusMessage("No se pudo archivar el caso");
+      } finally {
+        setTimeout(() => setProcessingStatus(null), 3000);
+      }
   };
 
   const handleFilterChange = (filterName, value) => {
@@ -179,6 +216,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     }
   };
 
+
   // Filtrar casos según los filtros seleccionados
   const filteredCasos = casos.filter((caso) => {
     // Si no hay filtros activos, mostrar todos
@@ -193,34 +231,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
     return false;
   });
-
-  const handleGuardarEnBD = async () => {
-    if (casos.length === 0) {
-      setProcessingStatus("error");
-      setStatusMessage("No hay casos para guardar");
-      setTimeout(() => setProcessingStatus(null), 3000);
-      return;
-    }
-
-    setIsProcessing(true);
-    setProcessingStatus(null);
-
-    try {
-      // Simulación de guardado en base de datos
-      setTimeout(() => {
-        setIsProcessing(false);
-        setProcessingStatus("success");
-        setStatusMessage("Casos guardados correctamente");
-        setTimeout(() => setProcessingStatus(null), 3000);
-      }, 2000);
-    } catch (error) {
-      console.error(error);
-      setIsProcessing(false);
-      setProcessingStatus("error");
-      setStatusMessage("Error al guardar los casos");
-      setTimeout(() => setProcessingStatus(null), 3000);
-    }
-  };
 
   const handleClearAllCasos = () => {
     setCasos([]);
@@ -421,12 +431,12 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                       className="delete-caso-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleCasoDelete(caso.id);
+                        handleArchivarCaso(caso.id);
                       }}
                       disabled={isProcessing}
                       aria-label={`Eliminar caso ${caso.titulo}`}
                     >
-                      <FontAwesomeIcon icon={faTrash} />
+                      <FontAwesomeIcon icon={faBoxArchive} />
                     </button>
                   </div>
                 </div>
@@ -474,13 +484,13 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
             >
               Marcar Resuelto
             </button>
-            <button
+            {/* <button
               className="clear-button"
               onClick={handleClearAllCasos}
               disabled={isProcessing || casos.length === 0}
             >
               Limpiar Todo
-            </button>
+            </button> */}
           </div>
         </div>
 
