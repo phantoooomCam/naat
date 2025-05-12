@@ -400,13 +400,15 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                           {caso.estado}
                         </span>
                         <span className="caso-fecha-asignado">
-                          {new Date(selectedCaso.fechaCreacion).toLocaleString(
-                            "es-MX",
-                            {
-                              dateStyle: "medium",
-                              timeStyle: "short",
-                            }
-                          )}{" "}
+                          {caso.fechaCreacion
+                            ? new Date(caso.fechaCreacion).toLocaleString(
+                                "es-MX",
+                                {
+                                  dateStyle: "medium",
+                                  timeStyle: "short",
+                                }
+                              )
+                            : "Sin fecha"}{" "}
                           • {caso.asignado}
                         </span>
                       </span>
