@@ -56,9 +56,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
   // Estado para filtros
   const [filters, setFilters] = useState({
-    resuelto: false,
-    sinResolver: false,
-    enProceso: false,
+    activo: false,
+    archivado: false,
+    reactivado: false,
   });
 
   // Cargar casos de ejemplo
@@ -74,7 +74,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           id: caso.idCaso,
           titulo: caso.nombre,
           descripcion: caso.descripcion,
-          estado: "Sin resolver",
+          estado: caso.estado || "Sin estado",
           fechaCreacion: caso.fechaCreacion || "Sin fecha",
           asignado: caso.descripcion, // ← esto mostrará la descripción como "asignado"
         }));
@@ -102,7 +102,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     setProcessingStatus(null);
 
     try {
-
       const usuario = JSON.parse(localStorage.getItem("user"));
       const idUsuario = usuario?.id;
 
@@ -146,37 +145,38 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     }
   };
 
-  const handleArchivarCaso = async (casoId) => {
-    const usuario = JSON.parse(localStorage.getItem("user"));
-    const idUsuario = usuario?.id;
+  const actualizarEstadoCaso = async (casoId, nuevoEstado) => {
+    try {
+      const response = await fetchWithAuth(`/api/casos/${casoId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ estado: nuevoEstado }),
+      });
 
+      if (!response.ok) throw new Error("Error al actualizar estado");
 
-      if (!idUsuario) {
-        setProcessingStatus("error");
-        setStatusMessage("Error al obtener el ID del usuario");
-        return;
+      // Actualiza estado localmente
+      setCasos((prevCasos) =>
+        prevCasos.map((caso) =>
+          caso.id === casoId ? { ...caso, estado: nuevoEstado } : caso
+        )
+      );
+
+      if (selectedCaso?.id === casoId) {
+        setSelectedCaso((prev) => ({ ...prev, estado: nuevoEstado }));
       }
-      try {
-        const response = await fetchWithAuth(
-          `/api/casos/${casoId}/archivar?idUsuario=${idUsuario}`,
-          {
-            method: "PUT",
-          }
-        );
 
-        if (!response.ok) throw new Error("Error al archivar el caso");
-
-        setCasos((prev) => prev.filter((caso) => caso.id !== casoId));
-        setSelectedCaso(null);
-        setProcessingStatus("success");
-        setStatusMessage("Caso archivado correctamente");
-      } catch (error) {
-        console.error("Error al archivar caso:", error);
-        setProcessingStatus("error");
-        setStatusMessage("No se pudo archivar el caso");
-      } finally {
-        setTimeout(() => setProcessingStatus(null), 3000);
-      }
+      setProcessingStatus("success");
+      setStatusMessage(`Estado actualizado a "${nuevoEstado}"`);
+    } catch (error) {
+      console.error("Error al actualizar estado:", error);
+      setProcessingStatus("error");
+      setStatusMessage("No se pudo actualizar el estado");
+    } finally {
+      setTimeout(() => setProcessingStatus(null), 3000);
+    }
   };
 
   const handleFilterChange = (filterName, value) => {
@@ -185,7 +185,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       [filterName]: value,
     }));
   };
-
 
   const handleCambiarEstado = (casoId, nuevoEstado) => {
     setCasos((prevCasos) => {
@@ -203,22 +202,17 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     }
   };
 
-
   // Filtrar casos según los filtros seleccionados
   const filteredCasos = casos.filter((caso) => {
-    // Si no hay filtros activos, mostrar todos
-    if (!filters.resuelto && !filters.sinResolver && !filters.enProceso) {
+    if (!filters.activo && !filters.archivado && !filters.reactivado) {
       return true;
     }
-
-    // Mostrar según los filtros seleccionados
-    if (filters.resuelto && caso.estado === "Resuelto") return true;
-    if (filters.sinResolver && caso.estado === "Sin resolver") return true;
-    if (filters.enProceso && caso.estado === "En proceso") return true;
+    if (filters.activo && caso.estado === "activo") return true;
+    if (filters.archivado && caso.estado === "archivado") return true;
+    if (filters.reactivado && caso.estado === "reactivado") return true;
 
     return false;
   });
-
 
   // Obtener clase para el estado
   const getEstadoClass = (estado) => {
@@ -335,35 +329,37 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                 <label className="checkbox-label">
                   <input
                     type="checkbox"
-                    checked={filters.resuelto}
+                    checked={filters.activo}
                     onChange={() =>
-                      handleFilterChange("resuelto", !filters.resuelto)
+                      handleFilterChange("activo", !filters.activo)
                     }
                     disabled={isProcessing}
                   />
-                  <span>Casos Resueltos</span>
+                  <span>Casos Activos</span>
                 </label>
+
                 <label className="checkbox-label">
                   <input
                     type="checkbox"
-                    checked={filters.sinResolver}
+                    checked={filters.archivado}
                     onChange={() =>
-                      handleFilterChange("sinResolver", !filters.sinResolver)
+                      handleFilterChange("archivado", !filters.archivado)
                     }
                     disabled={isProcessing}
                   />
-                  <span>Casos Sin Resolver</span>
+                  <span>Casos Archivados</span>
                 </label>
+
                 <label className="checkbox-label">
                   <input
                     type="checkbox"
-                    checked={filters.enProceso}
+                    checked={filters.reactivado}
                     onChange={() =>
-                      handleFilterChange("enProceso", !filters.enProceso)
+                      handleFilterChange("reactivado", !filters.reactivado)
                     }
                     disabled={isProcessing}
                   />
-                  <span>Casos En Proceso</span>
+                  <span>Casos Reactivados</span>
                 </label>
               </div>
             </div>
@@ -414,7 +410,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                       className="delete-caso-btn"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleArchivarCaso(caso.id);
+                        actualizarEstadoCaso(caso.id, "archivado");
                       }}
                       disabled={isProcessing}
                       aria-label={`Eliminar caso ${caso.titulo}`}
@@ -443,29 +439,30 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
               className="process-button"
               onClick={() => {
                 if (selectedCaso)
-                  handleCambiarEstado(selectedCaso.id, "En proceso");
+                  actualizarEstadoCaso(selectedCaso.id, "reactivado");
               }}
               disabled={
                 isProcessing ||
                 !selectedCaso ||
-                selectedCaso?.estado === "En proceso"
+                selectedCaso.estado === "reactivado"
               }
             >
-              Marcar En Proceso
+              Marcar Reactivado
             </button>
+
             <button
               className="save-button"
               onClick={() => {
                 if (selectedCaso)
-                  handleCambiarEstado(selectedCaso.id, "Resuelto");
+                  actualizarEstadoCaso(selectedCaso.id, "activo");
               }}
               disabled={
                 isProcessing ||
                 !selectedCaso ||
-                selectedCaso?.estado === "Resuelto"
+                selectedCaso.estado === "activo"
               }
             >
-              Marcar Resuelto
+              Marcar Activo
             </button>
           </div>
         </div>

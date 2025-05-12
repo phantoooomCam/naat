@@ -1,48 +1,80 @@
-"use client"
-import { useState, useEffect, useRef } from "react"
-import PropTypes from "prop-types"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faUpload, faFile, faTrash, faCheck, faSpinner, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons"
-import "./Sabana.css"
+"use client";
+import { useState, useEffect, useRef } from "react";
+import PropTypes from "prop-types";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faUpload,
+  faFile,
+  faTrash,
+  faCheck,
+  faSpinner,
+  faExclamationTriangle,
+} from "@fortawesome/free-solid-svg-icons";
+import "./Sabana.css";
 import fetchWithAuth from "../../../../utils/fetchWithAuth";
 
-
 const Procesar_Sabana = ({ activeView }) => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      const sidebar = document.querySelector(".sidebar")
+      const sidebar = document.querySelector(".sidebar");
       if (sidebar) {
-        setIsSidebarCollapsed(sidebar.classList.contains("closed"))
+        setIsSidebarCollapsed(sidebar.classList.contains("closed"));
       }
-    })
+    });
 
-    observer.observe(document.body, { attributes: true, subtree: true })
+    observer.observe(document.body, { attributes: true, subtree: true });
 
-    return () => observer.disconnect()
-  }, [])
+    return () => observer.disconnect();
+  }, []);
 
   const views = {
-    procesamiento: <ProcesamientoView isSidebarCollapsed={isSidebarCollapsed} />,
-  }
+    procesamiento: (
+      <ProcesamientoView isSidebarCollapsed={isSidebarCollapsed} />
+    ),
+  };
 
   return (
     <div className={`dash-home ${isSidebarCollapsed ? "collapsed" : ""}`}>
-      <div className="container">{views[activeView] || views.procesamiento}</div>
+      <div className="container">
+        {views[activeView] || views.procesamiento}
+      </div>
     </div>
-  )
-}
+  );
+};
 
 const ProcesamientoView = ({ isSidebarCollapsed }) => {
-  const [files, setFiles] = useState([])
-  const [dragActive, setDragActive] = useState(false)
-  const [selectedFile, setSelectedFile] = useState(null)
-  const [telco, setTelco] = useState("")
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [processingStatus, setProcessingStatus] = useState(null) // 'success', 'error', null
-  const [statusMessage, setStatusMessage] = useState("")
+  const [files, setFiles] = useState([]);
+  const [dragActive, setDragActive] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [telco, setTelco] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState(null);
+  const [statusMessage, setStatusMessage] = useState("");
+  const [casos, setCasos] = useState([]);
+  const [casoSeleccionado, setCasoSeleccionado] = useState("");
+
+  useEffect(() => {
+    const fetchCasos = async () => {
+      try {
+        const response = await fetchWithAuth("/api/casos");
+        if (!response.ok) {
+          throw new Error("Error al obtener los casos");
+        }
+        const data = await response.json();
+        const casosTrasnformados = data.map((caso) => ({
+          id: caso.idCaso,
+          titulo: caso.nombre,
+        }));
+        setCasos(casosTrasnformados);
+      } catch (error) {
+        console.error("Error fetching casos:", error);
+      }
+    };
+    fetchCasos();
+  }, []);
 
   const processFiles = (newFiles) => {
     const processedFiles = newFiles.map((file) => ({
@@ -52,41 +84,41 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       size: file.size,
       uploadDate: new Date().toLocaleDateString(),
       rawFile: file,
-    }))
-    setFiles((prevFiles) => [...prevFiles, ...processedFiles])
-  }
+    }));
+    setFiles((prevFiles) => [...prevFiles, ...processedFiles]);
+  };
 
   const handleDrag = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(e.type === "dragenter" || e.type === "dragover")
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(e.type === "dragenter" || e.type === "dragover");
+  };
 
   const handleDrop = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      processFiles(Array.from(e.dataTransfer.files))
+      processFiles(Array.from(e.dataTransfer.files));
     }
-  }
+  };
 
   const handleFileInput = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      processFiles(Array.from(e.target.files))
+      processFiles(Array.from(e.target.files));
     }
-  }
+  };
 
   const handleFileDelete = (fileId) => {
     setFiles((prevFiles) => {
-      const updatedFiles = prevFiles.filter((file) => file.id !== fileId)
+      const updatedFiles = prevFiles.filter((file) => file.id !== fileId);
       // Si el archivo seleccionado es el que se está eliminando, deseleccionarlo
       if (selectedFile && selectedFile.id === fileId) {
-        setSelectedFile(null)
+        setSelectedFile(null);
       }
-      return updatedFiles
-    })
-  }
+      return updatedFiles;
+    });
+  };
 
   const [filters, setFilters] = useState({
     ubicacion: false,
@@ -97,58 +129,58 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     horaFin: "",
     ciudades: false,
     puntosInteres: false,
-  })
+  });
 
   const handleClearAllFiles = () => {
-    setFiles([])
-    setSelectedFile(null)
-  }
+    setFiles([]);
+    setSelectedFile(null);
+  };
 
   const handleFilterChange = (filterName, value) => {
     setFilters((prev) => ({
       ...prev,
       [filterName]: value,
-    }))
-  }
+    }));
+  };
 
-  const inputRef = useRef(null)
-  const filteredFiles = files.filter((file) => true)
+  const inputRef = useRef(null);
+  const filteredFiles = files.filter((file) => true);
 
   const handleProcessFiles = () => {
     if (files.length === 0) {
-      setProcessingStatus("error")
-      setStatusMessage("No hay archivos para procesar")
-      setTimeout(() => setProcessingStatus(null), 3000)
-      return
+      setProcessingStatus("error");
+      setStatusMessage("No hay archivos para procesar");
+      setTimeout(() => setProcessingStatus(null), 3000);
+      return;
     }
 
-    setIsProcessing(true)
-    setProcessingStatus(null)
+    setIsProcessing(true);
+    setProcessingStatus(null);
 
     // Simulación de procesamiento
     setTimeout(() => {
-      setIsProcessing(false)
-      setProcessingStatus("success")
-      setStatusMessage("Archivos procesados correctamente")
-      setTimeout(() => setProcessingStatus(null), 3000)
-    }, 2000)
-  }
+      setIsProcessing(false);
+      setProcessingStatus("success");
+      setStatusMessage("Archivos procesados correctamente");
+      setTimeout(() => setProcessingStatus(null), 3000);
+    }, 2000);
+  };
 
   const handleGuardarEnBD = async () => {
     if (files.length === 0) {
-      setProcessingStatus("error")
-      setStatusMessage("No hay archivos para guardar")
-      setTimeout(() => setProcessingStatus(null), 3000)
-      return
+      setProcessingStatus("error");
+      setStatusMessage("No hay archivos para guardar");
+      setTimeout(() => setProcessingStatus(null), 3000);
+      return;
     }
 
-    setIsProcessing(true)
-    setProcessingStatus(null)
+    setIsProcessing(true);
+    setProcessingStatus(null);
 
-    const formData = new FormData()
+    const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
       if (files[i].rawFile) {
-        formData.append("archivos", files[i].rawFile)
+        formData.append("archivos", files[i].rawFile);
       }
     }
 
@@ -156,37 +188,39 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       const response = await fetchWithAuth("/api/archivos/subirftp", {
         method: "POST",
         body: formData,
-      })
+      });
 
-      const data = await response.json()
-      setIsProcessing(false)
+      const data = await response.json();
+      setIsProcessing(false);
 
       if (response.ok) {
-        setProcessingStatus("success")
-        setStatusMessage("Archivos guardados correctamente")
+        setProcessingStatus("success");
+        setStatusMessage("Archivos guardados correctamente");
       } else {
-        setProcessingStatus("error")
-        setStatusMessage(data.message || "Error al guardar los archivos")
+        setProcessingStatus("error");
+        setStatusMessage(data.message || "Error al guardar los archivos");
       }
 
-      setTimeout(() => setProcessingStatus(null), 3000)
+      setTimeout(() => setProcessingStatus(null), 3000);
     } catch (error) {
-      console.error(error)
-      setIsProcessing(false)
-      setProcessingStatus("error")
-      setStatusMessage("Error de conexión al servidor")
-      setTimeout(() => setProcessingStatus(null), 3000)
+      console.error(error);
+      setIsProcessing(false);
+      setProcessingStatus("error");
+      setStatusMessage("Error de conexión al servidor");
+      setTimeout(() => setProcessingStatus(null), 3000);
     }
-  }
+  };
 
   const formatFileSize = (bytes) => {
-    if (bytes < 1024) return bytes + " B"
-    else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + " KB"
-    else return (bytes / 1048576).toFixed(2) + " MB"
-  }
+    if (bytes < 1024) return bytes + " B";
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + " KB";
+    else return (bytes / 1048576).toFixed(2) + " MB";
+  };
 
   return (
-    <div className={`sabana-container ${isSidebarCollapsed ? "collapsed" : ""}`}>
+    <div
+      className={`sabana-container ${isSidebarCollapsed ? "collapsed" : ""}`}
+    >
       {/* Status message */}
       {processingStatus && (
         <div className={`status-message ${processingStatus}`}>
@@ -225,7 +259,11 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           <div className="upload-content">
             <FontAwesomeIcon icon={faUpload} className="upload-icon" />
             <p>Arrastra y suelta archivos aquí o</p>
-            <button onClick={() => inputRef.current.click()} className="upload-button" disabled={isProcessing}>
+            <button
+              onClick={() => inputRef.current.click()}
+              className="upload-button"
+              disabled={isProcessing}
+            >
               Selecciona Archivos
             </button>
           </div>
@@ -233,7 +271,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
         <div className="filters-card">
           <div className="card-header">
-            <h3>Compañía Telefónica</h3>
+            <h3>Detalles de Sabana</h3>
           </div>
           <div className="filters-content">
             <div className="filter-group">
@@ -260,7 +298,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                   <option value="Personalizada">Personalizada</option>
                   <option value="ALTAN">ALTAN</option>
                   <option value="ATTNuevoFormato">ATTNuevoFormato</option>
-                  <option value="TelcelIMEINuevoFormato">TelcelIMEINuevoFormato</option>
+                  <option value="TelcelIMEINuevoFormato">
+                    TelcelIMEINuevoFormato
+                  </option>
                 </select>
               </label>
               <label htmlFor="phone-input">
@@ -272,11 +312,28 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                   placeholder="Número telefónico"
                   value={phoneNumber}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, "")
-                    if (value.length <= 10) setPhoneNumber(value)
+                    const value = e.target.value.replace(/\D/g, "");
+                    if (value.length <= 10) setPhoneNumber(value);
                   }}
                   disabled={isProcessing}
                 />
+              </label>
+              <label htmlFor="caso-select">
+                Caso relacionado:
+                <select
+                  id="caso-select"
+                  className="phone-select"
+                  value={casoSeleccionado}
+                  onChange={(e) => setCasoSeleccionado(e.target.value)}
+                  disabled={isProcessing}
+                >
+                  <option value="">Selecciona un caso</option>
+                  {casos.map((caso) => (
+                    <option key={caso.id} value={caso.id}>
+                      {caso.titulo}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
           </div>
@@ -295,7 +352,11 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
               {filteredFiles.map((file) => (
                 <div
                   key={file.id}
-                  className={`file-item ${selectedFile && selectedFile.id === file.id ? "selected" : ""}`}
+                  className={`file-item ${
+                    selectedFile && selectedFile.id === file.id
+                      ? "selected"
+                      : ""
+                  }`}
                   onClick={() => setSelectedFile(file)}
                 >
                   <div className="file-info">
@@ -311,8 +372,8 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                     <button
                       className="delete-file-btn"
                       onClick={(e) => {
-                        e.stopPropagation()
-                        handleFileDelete(file.id)
+                        e.stopPropagation();
+                        handleFileDelete(file.id);
                       }}
                       disabled={isProcessing}
                       aria-label={`Eliminar archivo ${file.name}`}
@@ -326,7 +387,11 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           ) : (
             <div className="empty-files">
               <p>No hay archivos subidos</p>
-              <button onClick={() => inputRef.current.click()} className="upload-button-small" disabled={isProcessing}>
+              <button
+                onClick={() => inputRef.current.click()}
+                className="upload-button-small"
+                disabled={isProcessing}
+              >
                 Subir archivos
               </button>
             </div>
@@ -347,7 +412,11 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                 <span>Procesar Archivos</span>
               )}
             </button>
-            <button className="save-button" onClick={handleGuardarEnBD} disabled={isProcessing || files.length === 0}>
+            <button
+              className="save-button"
+              onClick={handleGuardarEnBD}
+              disabled={isProcessing || files.length === 0}
+            >
               {isProcessing ? (
                 <>
                   <FontAwesomeIcon icon={faSpinner} spin />
@@ -378,7 +447,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                   <input
                     type="checkbox"
                     checked={filters.ubicacion}
-                    onChange={() => handleFilterChange("ubicacion", !filters.ubicacion)}
+                    onChange={() =>
+                      handleFilterChange("ubicacion", !filters.ubicacion)
+                    }
                     disabled={isProcessing}
                   />
                   <span>Buscar coincidencias de ubicación</span>
@@ -387,7 +458,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                   <input
                     type="checkbox"
                     checked={filters.contactos}
-                    onChange={() => handleFilterChange("contactos", !filters.contactos)}
+                    onChange={() =>
+                      handleFilterChange("contactos", !filters.contactos)
+                    }
                     disabled={isProcessing}
                   />
                   <span>Buscar coincidencias de contactos</span>
@@ -396,7 +469,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                   <input
                     type="checkbox"
                     checked={filters.ciudades}
-                    onChange={() => handleFilterChange("ciudades", !filters.ciudades)}
+                    onChange={() =>
+                      handleFilterChange("ciudades", !filters.ciudades)
+                    }
                     disabled={isProcessing}
                   />
                   <span>Buscar localización en ciudades</span>
@@ -405,7 +480,12 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                   <input
                     type="checkbox"
                     checked={filters.puntosInteres}
-                    onChange={() => handleFilterChange("puntosInteres", !filters.puntosInteres)}
+                    onChange={() =>
+                      handleFilterChange(
+                        "puntosInteres",
+                        !filters.puntosInteres
+                      )
+                    }
                     disabled={isProcessing}
                   />
                   <span>Buscar cercanía en puntos de interés</span>
@@ -418,7 +498,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                     id="fecha-inicio"
                     type="date"
                     value={filters.fechaInicio}
-                    onChange={(e) => handleFilterChange("fechaInicio", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("fechaInicio", e.target.value)
+                    }
                     className="date-input"
                     disabled={isProcessing}
                   />
@@ -429,7 +511,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                     id="fecha-fin"
                     type="date"
                     value={filters.fechaFin}
-                    onChange={(e) => handleFilterChange("fechaFin", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("fechaFin", e.target.value)
+                    }
                     className="date-input"
                     disabled={isProcessing}
                   />
@@ -440,7 +524,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                     id="hora-inicio"
                     type="time"
                     value={filters.horaInicio}
-                    onChange={(e) => handleFilterChange("horaInicio", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("horaInicio", e.target.value)
+                    }
                     className="time-input"
                     disabled={isProcessing}
                   />
@@ -451,7 +537,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                     id="hora-fin"
                     type="time"
                     value={filters.horaFin}
-                    onChange={(e) => handleFilterChange("horaFin", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("horaFin", e.target.value)
+                    }
                     className="time-input"
                     disabled={isProcessing}
                   />
@@ -473,15 +561,21 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                 <div className="file-details-grid">
                   <div className="detail-row">
                     <span className="detail-label">Tipo:</span>
-                    <span className="detail-value">{selectedFile.type || "Desconocido"}</span>
+                    <span className="detail-value">
+                      {selectedFile.type || "Desconocido"}
+                    </span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">Tamaño:</span>
-                    <span className="detail-value">{formatFileSize(selectedFile.size)}</span>
+                    <span className="detail-value">
+                      {formatFileSize(selectedFile.size)}
+                    </span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">Fecha de subida:</span>
-                    <span className="detail-value">{selectedFile.uploadDate}</span>
+                    <span className="detail-value">
+                      {selectedFile.uploadDate}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -495,16 +589,15 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
 Procesar_Sabana.propTypes = {
   activeView: PropTypes.string.isRequired,
-}
+};
 
 ProcesamientoView.propTypes = {
   isSidebarCollapsed: PropTypes.bool,
-}
+};
 
-export default Procesar_Sabana
-
+export default Procesar_Sabana;
