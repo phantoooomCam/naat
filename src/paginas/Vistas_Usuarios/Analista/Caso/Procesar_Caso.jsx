@@ -147,13 +147,19 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
   const actualizarEstadoCaso = async (casoId, nuevoEstado) => {
     try {
-      const response = await fetchWithAuth(`/api/casos/${casoId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ estado: nuevoEstado }),
-      });
+      const usuario = JSON.parse(localStorage.getItem("user"));
+      const idUsuario = usuario?.id;
+
+      const response = await fetchWithAuth(
+        `/api/casos/${casoId}/estado?idUsuario=${idUsuario}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(nuevoEstado), // <-- ENVÍA SOLO EL STRING
+        }
+      );
 
       if (!response.ok) throw new Error("Error al actualizar estado");
 
