@@ -38,6 +38,7 @@ export const menu={
     
           ]
         },
+        { id: '/casos', icon: <PiFolderUserDuotone />, label: 'Casos' },
       ],
       2:[
         { id: '/home_org', icon: <FiHome />, label: 'Inicio' },
@@ -53,6 +54,7 @@ export const menu={
         },
         { id: '/area', icon: <SlOrganization />, label: 'Areas' },
         { id: '/depto', icon:<VscOrganization />, label: 'Departamenos' },
+        { id: '/casos', icon: <PiFolderUserDuotone />, label: 'Casos' },
       ],
       3:[
         { id: '/home_area', icon: <FiHome />, label: 'Inicio' },

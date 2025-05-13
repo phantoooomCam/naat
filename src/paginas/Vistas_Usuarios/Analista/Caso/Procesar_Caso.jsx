@@ -3,16 +3,16 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import "./Caso.css";
+import fetchWithAuth from "../../../../utils/fetchWithAuth";
 import {
   faPlus,
   faFile,
   faCheck,
   faSpinner,
   faExclamationTriangle,
+  faBoxArchive,
 } from "@fortawesome/free-solid-svg-icons";
-import "./Caso.css";
-import fetchWithAuth from "../../../../utils/fetchWithAuth";
-import { faBoxArchive } from "@fortawesome/free-solid-svg-icons";
 
 const Procesar_Caso = ({ activeView }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -54,12 +54,45 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [processingStatus, setProcessingStatus] = useState(null); // 'success', 'error', null
   const [statusMessage, setStatusMessage] = useState("");
 
+  const [userLevel, setUserLevel] = useState(5); // Por defecto nivel 5
+  const [organizaciones, setOrganizaciones] = useState([]);
+  const [departamentos, setDepartamentos] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [selectedOrg, setSelectedOrg] = useState("");
+  const [selectedDept, setSelectedDept] = useState("");
+  const [selectedArea, setSelectedArea] = useState("");
+  const [filteredDepartamentos, setFilteredDepartamentos] = useState([]);
+  const [filteredAreas, setFilteredAreas] = useState([]);
+  const [userOrgId, setUserOrgId] = useState(null);
+
   // Estado para filtros
   const [filters, setFilters] = useState({
     activo: false,
     archivado: false,
     reactivado: false,
   });
+  useEffect(() => {
+    const areasFiltradas = areas.filter(
+      (a) => a.idOrganizacion === Number(selectedOrg)
+    );
+    setFilteredAreas(areasFiltradas);
+  }, [selectedOrg, areas]);
+
+  useEffect(() => {
+    if (selectedArea) {
+      const departamentosFiltrados = departamentos.filter(
+        (d) => d.idArea === Number(selectedArea)
+      );
+      setFilteredDepartamentos(departamentosFiltrados);
+    } else {
+      setFilteredDepartamentos([]);
+    }
+  }, [selectedArea, departamentos]);
+  useEffect(() => {
+    if (selectedArea) {
+      fetchDepartamentosByArea(selectedArea);
+    }
+  }, [selectedArea]);
 
   // Cargar casos de ejemplo
   useEffect(() => {
@@ -90,10 +123,150 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     fetchCasos();
   }, []);
 
+  // Obtener nivel del usuario
+  useEffect(() => {
+    try {
+      const userData = JSON.parse(localStorage.getItem("user"));
+      if (userData && userData.nivel) {
+        setUserLevel(Number.parseInt(userData.nivel));
+      }
+
+      if (userData?.idOrganizacion) {
+        setUserOrgId(userData.idOrganizacion);
+      }
+
+      fetchOrganizaciones();
+    } catch (error) {
+      console.error("Error al obtener nivel del usuario:", error);
+    }
+  }, []);
+
+  useEffect(() => {
+  if (userLevel === 2 && userOrgId) {
+    fetchAreasByOrg(userOrgId);
+    setSelectedOrg(String(userOrgId)); 
+  }
+}, [userLevel, userOrgId]);
+
+ 
+
+  // Funciones para cargar datos de selects
+  const fetchOrganizaciones = async () => {
+    try {
+      const response = await fetchWithAuth("/api/organizaciones");
+      if (response.ok) {
+        const data = await response.json();
+        setOrganizaciones(data);
+      }
+    } catch (error) {
+      console.error("Error al cargar organizaciones:", error);
+    }
+  };
+
+  const fetchDepartamentos = async (orgId) => {
+    try {
+      const url = orgId
+        ? `/api/departamentos?orgId=${orgId}`
+        : "/api/departamentos";
+      const response = await fetchWithAuth(url);
+      if (response.ok) {
+        const data = await response.json();
+        setDepartamentos(data);
+        setSelectedDept("");
+        setSelectedArea("");
+      }
+    } catch (error) {
+      console.error("Error al cargar departamentos:", error);
+    }
+  };
+
+  const fetchAreas = async (deptId) => {
+    try {
+      const response = await fetchWithAuth(`/api/areas?deptId=${deptId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setAreas(data);
+        setSelectedArea("");
+      }
+    } catch (error) {
+      console.error("Error al cargar áreas:", error);
+    }
+  };
+
+  // Manejadores de cambio para selects
+  const handleOrgChange = (e) => {
+    const orgId = e.target.value;
+    if (orgId === selectedOrg) return; // 🛑 No hagas nada si no cambió
+
+    setSelectedOrg(orgId);
+    setSelectedArea("");
+    setSelectedDept("");
+    setFilteredAreas([]);
+    setFilteredDepartamentos([]);
+    fetchAreasByOrg(orgId);
+  };
+
+  const handleDeptChange = (e) => {
+    const deptId = e.target.value;
+    setSelectedDept(deptId);
+  };
+
+  const fetchAreasByOrg = async (orgId) => {
+    try {
+      const res = await fetchWithAuth(`/api/areas?orgId=${orgId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAreas(data);
+      }
+    } catch (error) {
+      console.error("Error al cargar áreas:", error);
+    }
+  };
+  const fetchDepartamentosByArea = async (areaId) => {
+    try {
+      const res = await fetchWithAuth(`/api/departamentos?areaId=${areaId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setDepartamentos(data);
+      }
+    } catch (error) {
+      console.error("Error al cargar departamentos:", error);
+    }
+  };
+
   const handleCrearCaso = async () => {
     if (!titulo.trim()) {
       setProcessingStatus("error");
       setStatusMessage("El título del caso es obligatorio");
+      setTimeout(() => setProcessingStatus(null), 3000);
+      return;
+    }
+
+    // Validar selects según nivel
+    if (userLevel === 1 && !selectedOrg) {
+      setProcessingStatus("error");
+      setStatusMessage("Debe seleccionar una organización");
+      setTimeout(() => setProcessingStatus(null), 3000);
+      return;
+    }
+
+    if ((userLevel === 1 || userLevel === 2) && !selectedDept) {
+      setProcessingStatus("error");
+      setStatusMessage("Debe seleccionar un departamento");
+      setTimeout(() => setProcessingStatus(null), 3000);
+      return;
+    }
+
+    if ((userLevel === 1 || userLevel === 2) && !selectedArea) {
+      setProcessingStatus("error");
+      setStatusMessage("Debe seleccionar un área");
+      setTimeout(() => setProcessingStatus(null), 3000);
+      return;
+    }
+
+    if (userLevel === 3 && !selectedDept) {
+      setProcessingStatus("error");
+      setStatusMessage("Debe seleccionar un departamento");
       setTimeout(() => setProcessingStatus(null), 3000);
       return;
     }
@@ -105,16 +278,30 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       const usuario = JSON.parse(localStorage.getItem("user"));
       const idUsuario = usuario?.id;
 
+      const casoData = {
+        nombre: titulo,
+        descripcion: descripcion,
+        idUsuario: idUsuario,
+      };
+
+      // Añadir campos según nivel
+      if (userLevel === 1) {
+        casoData.idOrganizacion = selectedOrg;
+        casoData.idDepartamento = selectedDept;
+        casoData.idArea = selectedArea;
+      } else if (userLevel === 2) {
+        casoData.idDepartamento = selectedDept;
+        casoData.idArea = selectedArea;
+      } else if (userLevel === 3) {
+        casoData.idDepartamento = selectedDept;
+      }
+
       const response = await fetchWithAuth("/api/casos", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          nombre: titulo,
-          descripcion: descripcion,
-          idUsuario: idUsuario, // importante
-        }),
+        body: JSON.stringify(casoData),
       });
 
       if (!response.ok) throw new Error("Error en la creación del caso");
@@ -133,6 +320,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       setCasos((prevCasos) => [nuevoCaso, ...prevCasos]);
       setTitulo("");
       setDescripcion("");
+      setSelectedOrg("");
+      setSelectedDept("");
+      setSelectedArea("");
       setProcessingStatus("success");
       setStatusMessage(result.mensaje || "Caso creado correctamente");
     } catch (error) {
@@ -307,6 +497,191 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                 disabled={isProcessing}
               />
             </div>
+
+            {/* Selects condicionales según nivel de usuario */}
+            {userLevel === 1 && (
+              <>
+                <div
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    marginBottom: "15px",
+                  }}
+                >
+                  <label
+                    htmlFor="organizacion"
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Organización:
+                  </label>
+                  <select value={selectedOrg} onChange={handleOrgChange}>
+                    <option value="">Organización</option>
+                    {organizaciones.map((o) => (
+                      <option key={o.idOrganizacion} value={o.idOrganizacion}>
+                        {o.nombreOrganizacion}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    marginBottom: "15px",
+                  }}
+                >
+                  <label
+                    htmlFor="area"
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Área:
+                  </label>
+                  <select
+                    value={selectedArea}
+                    onChange={(e) => setSelectedArea(e.target.value)}
+                  >
+                    <option value="">Seleccione un área</option>
+                    {filteredAreas.map((a) => (
+                      <option key={a.idArea} value={a.idArea}>
+                        {a.nombreArea}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    marginBottom: "15px",
+                  }}
+                >
+                  <label
+                    htmlFor="departamento"
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Departamento:
+                  </label>
+                  <select value={selectedDept} onChange={handleDeptChange}>
+                    <option value="">Seleccione un departamento</option>
+                    {filteredDepartamentos.map((d) => (
+                      <option key={d.idDepartamento} value={d.idDepartamento}>
+                        {d.nombreDepartamento}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+
+            {userLevel === 2 && (
+              <>
+                <div
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    marginBottom: "15px",
+                  }}
+                >
+                  <label
+                    htmlFor="area"
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Área:
+                  </label>
+                  <select
+                    value={selectedArea}
+                    onChange={(e) => setSelectedArea(e.target.value)}
+                  >
+                    <option value="">Seleccione un área</option>
+                    {filteredAreas.map((a) => (
+                      <option key={a.idArea} value={a.idArea}>
+                        {a.nombreArea}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    marginBottom: "15px",
+                  }}
+                >
+                  <label
+                    htmlFor="departamento"
+                    style={{
+                      display: "block",
+                      marginBottom: "5px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    Departamento:
+                  </label>
+                  <select value={selectedDept} onChange={handleDeptChange}>
+                    <option value="">Seleccione un departamento</option>
+                    {filteredDepartamentos.map((d) => (
+                      <option key={d.idDepartamento} value={d.idDepartamento}>
+                        {d.nombreDepartamento}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
+
+            {userLevel === 3 && (
+              <div
+                style={{
+                  width: "100%",
+                  textAlign: "left",
+                  marginBottom: "15px",
+                }}
+              >
+                <label
+                  htmlFor="departamento"
+                  style={{
+                    display: "block",
+                    marginBottom: "5px",
+                    fontWeight: "500",
+                  }}
+                >
+                  Departamento:
+                </label>
+                <select
+                  id="departamento"
+                  className="caso-input"
+                  value={selectedDept}
+                  onChange={(e) => setSelectedDept(e.target.value)}
+                  disabled={isProcessing}
+                >
+                  <option key="empty-dept" value="">
+                    Seleccione un departamento
+                  </option>
+                  {departamentos.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <button
               onClick={handleCrearCaso}
