@@ -1,21 +1,20 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faPencilAlt, faTrash } from "@fortawesome/free-solid-svg-icons"
+import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faTrash } from "@fortawesome/free-solid-svg-icons";
 import fetchWithAuth from "../../../../utils/fetchWithAuth";
-
 
 const GestionDash = () => {
   // Estados para el colapso de sidebar
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-  const [formErrors, setFormErrors] = useState({})
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
 
   // Estados para la gestión de usuarios
-  const [users, setUsers] = useState([])
-  const [filteredUsers, setFilteredUsers] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [users, setUsers] = useState([]);
+  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     nombre: "",
     apellidoPaterno: "",
@@ -29,28 +28,28 @@ const GestionDash = () => {
     rol: "Lector",
     idArea: 0,
     idDepartamento: 0,
-  })
-  const [isEditing, setIsEditing] = useState(false)
-  const [searchText, setSearchText] = useState("")
-  const [isCreating, setIsCreating] = useState(false)
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
-  const [successMessage, setSuccessMessage] = useState("")
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Estados para la paginación
-  const [paginaActual, setPaginaActual] = useState(1)
-  const registrosPorPagina = 7
+  const [paginaActual, setPaginaActual] = useState(1);
+  const registrosPorPagina = 7;
 
   // Estados para opciones filtradas
-  const [filteredAreas, setFilteredAreas] = useState([])
-  const [filteredDepartamentos, setFilteredDepartamentos] = useState([])
+  const [filteredAreas, setFilteredAreas] = useState([]);
+  const [filteredDepartamentos, setFilteredDepartamentos] = useState([]);
 
-  const usuario = JSON.parse(localStorage.getItem("user"))
-  const token = localStorage.getItem("token")
+  const usuario = JSON.parse(localStorage.getItem("user"));
+  const token = localStorage.getItem("token");
 
   //Organizaciones
-  const [organizaciones, setOrganizaciones] = useState([])
-  const [areas, setAreas] = useState([])
-  const [departamentos, setDepartamentos] = useState([])
+  const [organizaciones, setOrganizaciones] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [departamentos, setDepartamentos] = useState([]);
 
   const fetchOrganizaciones = async () => {
     try {
@@ -59,19 +58,18 @@ const GestionDash = () => {
         headers: {
           "Content-Type": "application/json",
         },
-      })
-  
+      });
+
       if (!response || !response.ok) {
-        throw new Error(`Error: ${response?.status || "No response"}`)
+        throw new Error(`Error: ${response?.status || "No response"}`);
       }
-  
-      const data = await response.json()
-      setOrganizaciones(data)
+
+      const data = await response.json();
+      setOrganizaciones(data);
     } catch (error) {
-      console.error("Error al obtener organizaciones:", error)
+      console.error("Error al obtener organizaciones:", error);
     }
-  }
-  
+  };
 
   const fetchAreas = async () => {
     try {
@@ -81,18 +79,18 @@ const GestionDash = () => {
           "Content-Type": "application/json",
         },
       });
-  
+
       if (!response || !response.ok) {
         throw new Error(`Error: ${response?.status || "No response"}`);
       }
-  
+
       const data = await response.json();
       setAreas(data);
     } catch (error) {
       console.error("Error al obtener areas:", error);
     }
   };
-  
+
   const fetchDepartamentos = async () => {
     try {
       const response = await fetchWithAuth("/api/departamentos", {
@@ -101,190 +99,226 @@ const GestionDash = () => {
           "Content-Type": "application/json",
         },
       });
-  
+
       if (!response || !response.ok) {
-        throw new Error(`Error: ${response?.status || "No response"}`);
+        throw new Error(`Error: ${response?.status || "Sin respuesta"}`);
       }
-  
+
       const data = await response.json();
-      setDepartamentos(data);
+
+      // Manejo de diferentes posibles estructuras de respuesta
+      const deptosArray = Array.isArray(data)
+        ? data
+        : Array.isArray(data.departamentos)
+        ? data.departamentos
+        : [];
+
+      // Si no hay departamentos y viene un mensaje
+      if (!deptosArray.length && data.mensaje) {
+        setError(data.mensaje); // Asegúrate de tener `const [error, setError] = useState(null);`
+      }
+
+      setDepartamentos(deptosArray);
     } catch (error) {
       console.error("Error al obtener departamentos:", error);
+      setError("No se pudieron cargar los departamentos. Intente más tarde.");
     }
-  };  
+  };
 
   // Observador para el sidebar
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      const sidebar = document.querySelector(".sidebar")
+      const sidebar = document.querySelector(".sidebar");
       if (sidebar) {
-        setIsSidebarCollapsed(sidebar.classList.contains("closed"))
+        setIsSidebarCollapsed(sidebar.classList.contains("closed"));
       }
-    })
+    });
 
-    observer.observe(document.body, { attributes: true, subtree: true })
-    return () => observer.disconnect()
-  }, [])
+    observer.observe(document.body, { attributes: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
 
   // Fetch usuarios
   const fetchUsers = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     try {
       const response = await fetchWithAuth("/api/usuarios/", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-      
-      })
+      });
 
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
 
-      const text = await response.text()
-      if (!text) throw new Error("No se recibieron datos del servidor")
+      const text = await response.text();
+      if (!text) throw new Error("No se recibieron datos del servidor");
 
-      const data = JSON.parse(text)
+      const data = JSON.parse(text);
       if (Array.isArray(data)) {
-        setUsers(data)
-        setFilteredUsers(data)
+        setUsers(data);
+        setFilteredUsers(data);
       } else {
-        throw new Error("Formato de datos inesperado")
+        throw new Error("Formato de datos inesperado");
       }
     } catch (error) {
-      setError(error.message)
-      setUsers([])
-      setFilteredUsers([])
+      setError(error.message);
+      setUsers([]);
+      setFilteredUsers([]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchUsers()
-    fetchOrganizaciones()
-    fetchAreas()
-    fetchDepartamentos()
-  }, [])
+    fetchUsers();
+    fetchOrganizaciones();
+    fetchAreas();
+    fetchDepartamentos();
+  }, []);
 
   // Filtrado de usuarios
   useEffect(() => {
-    const lowercasedSearchText = searchText.toLowerCase()
+    const lowercasedSearchText = searchText.toLowerCase();
     const filtered = users.filter((user) =>
       `${user.nombre} ${user.apellidoPaterno} ${user.apellidoMaterno} ${user.nombreUsuario}`
         .toLowerCase()
-        .includes(lowercasedSearchText),
-    )
-    setFilteredUsers(filtered)
-    setPaginaActual(1) // Reset a la primera página cuando se filtra
-  }, [searchText, users])
+        .includes(lowercasedSearchText)
+    );
+    setFilteredUsers(filtered);
+    setPaginaActual(1); // Reset a la primera página cuando se filtra
+  }, [searchText, users]);
 
   // Filtrar áreas basadas en la organización seleccionada
   useEffect(() => {
     if (formData.idOrganizacion) {
       const areasDeOrganizacion = areas.filter(
-        (area) => area.idOrganizacion === Number.parseInt(formData.idOrganizacion),
-      )
-      setFilteredAreas(areasDeOrganizacion)
+        (area) =>
+          area.idOrganizacion === Number.parseInt(formData.idOrganizacion)
+      );
+      setFilteredAreas(areasDeOrganizacion);
 
       // Reset área seleccionada si la organización cambia
       setFormData((prev) => ({
         ...prev,
         idArea: 0,
         idDepartamento: 0,
-      }))
+      }));
     } else {
-      setFilteredAreas([])
+      setFilteredAreas([]);
     }
-  }, [formData.idOrganizacion, areas])
+  }, [formData.idOrganizacion, areas]);
 
   // Filtrar departamentos basados en el área seleccionada
   useEffect(() => {
     if (formData.idArea) {
-      const departamentosDeArea = departamentos.filter((depto) => depto.idArea === Number.parseInt(formData.idArea))
-      setFilteredDepartamentos(departamentosDeArea)
+      const departamentosDeArea = departamentos.filter(
+        (depto) => depto.idArea === Number.parseInt(formData.idArea)
+      );
+      setFilteredDepartamentos(departamentosDeArea);
 
       // Reset departamento seleccionado si el área cambia
       setFormData((prev) => ({
         ...prev,
         idDepartamento: 0,
-      }))
+      }));
     } else {
-      setFilteredDepartamentos([])
+      setFilteredDepartamentos([]);
     }
-  }, [formData.idArea, departamentos])
+  }, [formData.idArea, departamentos]);
 
   // Paginación
-  const indexUltimo = paginaActual * registrosPorPagina
-  const indexPrimero = indexUltimo - registrosPorPagina
-  const usersPaginados = filteredUsers.slice(indexPrimero, indexUltimo)
-  const totalPaginas = Math.ceil(filteredUsers.length / registrosPorPagina)
+  const indexUltimo = paginaActual * registrosPorPagina;
+  const indexPrimero = indexUltimo - registrosPorPagina;
+  const usersPaginados = filteredUsers.slice(indexPrimero, indexUltimo);
+  const totalPaginas = Math.ceil(filteredUsers.length / registrosPorPagina);
 
   // Handlers
   const handleChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     const numValue =
-      name === "idOrganizacion" || name === "idArea" || name === "idDepartamento" ? Number(value) || 0 : value
+      name === "idOrganizacion" ||
+      name === "idArea" ||
+      name === "idDepartamento"
+        ? Number(value) || 0
+        : value;
 
     setFormData({
       ...formData,
       [name]: numValue,
-    })
-  }
+    });
+  };
 
   const validarFormulario = () => {
-    const errores = {}
+    const errores = {};
 
     if (formData.telefono && !/^\d{10}$/.test(formData.telefono)) {
-      errores.telefono = "El teléfono debe contener exactamente 10 dígitos."
+      errores.telefono = "El teléfono debe contener exactamente 10 dígitos.";
     }
 
-    if (formData.contraseña && !/^.*(?=.{8,})(?=.*[!@#$%^&*()\-_=+{};:,<.>]).*$/.test(formData.contraseña)) {
-      errores.contraseña = "La contraseña debe tener al menos 8 caracteres y un carácter especial."
+    if (
+      formData.contraseña &&
+      !/^.*(?=.{8,})(?=.*[!@#$%^&*()\-_=+{};:,<.>]).*$/.test(
+        formData.contraseña
+      )
+    ) {
+      errores.contraseña =
+        "La contraseña debe tener al menos 8 caracteres y un carácter especial.";
     }
 
-    setFormErrors(errores)
-    return Object.keys(errores).length === 0
-  }
+    setFormErrors(errores);
+    return Object.keys(errores).length === 0;
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!validarFormulario()) return
+    e.preventDefault();
+    if (!validarFormulario()) return;
 
-    if (!formData.id_usuario) return
+    if (!formData.id_usuario) return;
 
     try {
-      const response = await fetchWithAuth(`/api/usuarios/${formData.id_usuario}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      
-        body: JSON.stringify(formData),
-      })
+      const response = await fetchWithAuth(
+        `/api/usuarios/${formData.id_usuario}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify(formData),
+        }
+      );
       if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`Error al actualizar: ${response.status} - ${errorText}`)
+        const errorText = await response.text();
+        throw new Error(
+          `Error al actualizar: ${response.status} - ${errorText}`
+        );
       }
 
-      setIsEditing(false)
-      setSuccessMessage("Usuario actualizado correctamente")
-      setShowSuccessMessage(true)
+      setIsEditing(false);
+      setSuccessMessage("Usuario actualizado correctamente");
+      setShowSuccessMessage(true);
 
       setTimeout(() => {
-        setShowSuccessMessage(false)
-      }, 3000)
+        setShowSuccessMessage(false);
+      }, 3000);
 
-      fetchUsers()
+      fetchUsers();
     } catch (error) {
-      setError(error.message)
+      setError(error.message);
     }
-  }
+  };
 
   const handleEdit = (user) => {
-    const org = organizaciones.find((o) => o.nombreOrganizacion === user.organizacion)
-    const area = areas.find((a) => a.nombreArea === user.area)
-    const departamento = departamentos.find((d) => d.nombreDepartamento === user.departamento)
+    const org = organizaciones.find(
+      (o) => o.nombreOrganizacion === user.organizacion
+    );
+    const area = areas.find((a) => a.nombreArea === user.area);
+    const departamento = departamentos.find(
+      (d) => d.nombreDepartamento === user.departamento
+    );
 
     const userData = {
       id_usuario: user.id,
@@ -299,47 +333,60 @@ const GestionDash = () => {
       idDepartamento: departamento ? departamento.idDepartamento : "",
       rol: user.rol,
       contraseña: "",
-    }
+    };
 
-    setFormData(userData)
-    setIsEditing(true)
-  }
+    setFormData(userData);
+    setIsEditing(true);
+  };
 
   useEffect(() => {
     if (formData.idOrganizacion && areas.length > 0) {
       const areasDeOrganizacion = areas.filter(
-        (area) => area.idOrganizacion === Number.parseInt(formData.idOrganizacion),
-      )
-      setFilteredAreas(areasDeOrganizacion)
+        (area) =>
+          area.idOrganizacion === Number.parseInt(formData.idOrganizacion)
+      );
+      setFilteredAreas(areasDeOrganizacion);
 
       // Selecciona automáticamente el área correspondiente si ya existe
       if (!areasDeOrganizacion.some((a) => a.idArea == formData.idArea)) {
         setFormData((prev) => ({
           ...prev,
-          idArea: areasDeOrganizacion.length > 0 ? areasDeOrganizacion[0].idArea.toString() : "",
-        }))
+          idArea:
+            areasDeOrganizacion.length > 0
+              ? areasDeOrganizacion[0].idArea.toString()
+              : "",
+        }));
       }
     }
-  }, [formData.idOrganizacion, areas])
+  }, [formData.idOrganizacion, areas]);
 
   useEffect(() => {
     if (formData.idArea && departamentos.length > 0) {
-      const departamentosDeArea = departamentos.filter((depto) => depto.idArea === Number.parseInt(formData.idArea))
-      setFilteredDepartamentos(departamentosDeArea)
+      const departamentosDeArea = departamentos.filter(
+        (depto) => depto.idArea === Number.parseInt(formData.idArea)
+      );
+      setFilteredDepartamentos(departamentosDeArea);
 
       // Selecciona automáticamente el departamento correspondiente si ya existe
-      if (!departamentosDeArea.some((d) => d.idDepartamento == formData.idDepartamento)) {
+      if (
+        !departamentosDeArea.some(
+          (d) => d.idDepartamento == formData.idDepartamento
+        )
+      ) {
         setFormData((prev) => ({
           ...prev,
-          idDepartamento: departamentosDeArea.length > 0 ? departamentosDeArea[0].idDepartamento.toString() : "",
-        }))
+          idDepartamento:
+            departamentosDeArea.length > 0
+              ? departamentosDeArea[0].idDepartamento.toString()
+              : "",
+        }));
       }
     }
-  }, [formData.idArea, departamentos])
+  }, [formData.idArea, departamentos]);
 
   const handleDelete = async (id) => {
     if (window.confirm("¿Está seguro que desea eliminar este usuario?")) {
-      if (!id) return
+      if (!id) return;
 
       try {
         const response = await fetchWithAuth(`/api/usuarios/${id}`, {
@@ -347,34 +394,35 @@ const GestionDash = () => {
           headers: {
             "Content-Type": "application/json",
           },
-        
-        })
+        });
 
         if (!response.ok) {
-          const errorText = await response.text()
-          throw new Error(`Error al eliminar: ${response.status} - ${errorText}`)
+          const errorText = await response.text();
+          throw new Error(
+            `Error al eliminar: ${response.status} - ${errorText}`
+          );
         }
 
-        setUsers(users.filter((user) => user.id !== id))
-        setFilteredUsers(filteredUsers.filter((user) => user.id !== id))
+        setUsers(users.filter((user) => user.id !== id));
+        setFilteredUsers(filteredUsers.filter((user) => user.id !== id));
 
-        setSuccessMessage("Usuario eliminado correctamente")
-        setShowSuccessMessage(true)
+        setSuccessMessage("Usuario eliminado correctamente");
+        setShowSuccessMessage(true);
 
         setTimeout(() => {
-          setShowSuccessMessage(false)
-        }, 3000)
+          setShowSuccessMessage(false);
+        }, 3000);
       } catch (error) {
-        setError(error.message)
+        setError(error.message);
       }
     }
-  }
+  };
 
   const handleCreate = async (e) => {
-    e.preventDefault()
-    if (!validarFormulario()) return
+    e.preventDefault();
+    if (!validarFormulario()) return;
 
-    if (!formData.nombre || !formData.correo || !formData.contraseña) return
+    if (!formData.nombre || !formData.correo || !formData.contraseña) return;
 
     const userToCreate = {
       nombre: formData.nombre,
@@ -389,7 +437,7 @@ const GestionDash = () => {
       idDepartamento: formData.idDepartamento,
       nivel: Number.parseInt(formData.nivel, 10),
       rol: formData.rol,
-    }
+    };
 
     try {
       const response = await fetchWithAuth("/api/usuarios/crear-usuario", {
@@ -397,16 +445,16 @@ const GestionDash = () => {
         headers: {
           "Content-Type": "application/json",
         },
-      
+
         body: JSON.stringify(userToCreate),
-      })
+      });
 
       if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`Error al crear: ${response.status} - ${errorText}`)
+        const errorText = await response.text();
+        throw new Error(`Error al crear: ${response.status} - ${errorText}`);
       }
 
-      fetchUsers()
+      fetchUsers();
 
       // Limpiar el formulario
       setFormData({
@@ -422,21 +470,21 @@ const GestionDash = () => {
         idDepartamento: 0,
         nivel: 5,
         rol: "Lector",
-      })
+      });
 
       // Cerrar el formulario
-      setIsCreating(false)
+      setIsCreating(false);
 
-      setSuccessMessage("Usuario creado correctamente")
-      setShowSuccessMessage(true)
+      setSuccessMessage("Usuario creado correctamente");
+      setShowSuccessMessage(true);
 
       setTimeout(() => {
-        setShowSuccessMessage(false)
-      }, 3000)
+        setShowSuccessMessage(false);
+      }, 3000);
     } catch (error) {
-      setError(error.message)
+      setError(error.message);
     }
-  }
+  };
 
   // Función para abrir el formulario y limpiarlo
   const handleOpenCreateForm = () => {
@@ -453,9 +501,9 @@ const GestionDash = () => {
       idDepartamento: 0,
       nivel: 5,
       rol: "Lector",
-    })
-    setIsCreating(true) // Mostrar el formulario
-  }
+    });
+    setIsCreating(true); // Mostrar el formulario
+  };
 
   if (loading) {
     return (
@@ -469,7 +517,7 @@ const GestionDash = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -487,7 +535,7 @@ const GestionDash = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -501,17 +549,25 @@ const GestionDash = () => {
         </div>
       )}
 
-      <div className={`content-wrapper ${isEditing || isCreating ? "editing-mode" : ""}`}>
+      <div
+        className={`content-wrapper ${
+          isEditing || isCreating ? "editing-mode" : ""
+        }`}
+      >
         <div className="content-container">
           <div className="section-header">
             <h2>Gestión de Usuarios</h2>
-            <p className="section-description">Administra la información de los usuarios del sistema</p>
+            <p className="section-description">
+              Administra la información de los usuarios del sistema
+            </p>
           </div>
 
           {isEditing || isCreating ? (
             <form
               onSubmit={isCreating ? handleCreate : handleSubmit}
-              className={`gestion-form ${isEditing || isCreating ? "editing-mode" : ""}`}
+              className={`gestion-form ${
+                isEditing || isCreating ? "editing-mode" : ""
+              }`}
             >
               <div className="form-grid">
                 <div className="form-field">
@@ -568,7 +624,9 @@ const GestionDash = () => {
                     className="inputedit"
                     placeholder="Contraseña"
                   />
-                  {formErrors.contraseña && <p className="error-text">{formErrors.contraseña}</p>}
+                  {formErrors.contraseña && (
+                    <p className="error-text">{formErrors.contraseña}</p>
+                  )}
                 </div>
 
                 <div className="form-field">
@@ -581,12 +639,19 @@ const GestionDash = () => {
                     className="inputedit"
                     placeholder="Teléfono"
                   />
-                  {formErrors.telefono && <p className="error-text">{formErrors.telefono}</p>}
+                  {formErrors.telefono && (
+                    <p className="error-text">{formErrors.telefono}</p>
+                  )}
                 </div>
 
                 <div className="form-field">
                   <label>Nivel</label>
-                  <select name="nivel" value={formData.nivel ?? 4} onChange={handleChange} className="inputedit">
+                  <select
+                    name="nivel"
+                    value={formData.nivel ?? 4}
+                    onChange={handleChange}
+                    className="inputedit"
+                  >
                     <option value={null}>Pendiente</option>
                     <option value={1}>Super Administrador</option>
                     <option value={2}>Administrador de Organización</option>
@@ -605,7 +670,10 @@ const GestionDash = () => {
                   >
                     <option value="">Seleccione una organización</option>
                     {organizaciones.map((org) => (
-                      <option key={org.idOrganizacion} value={org.idOrganizacion}>
+                      <option
+                        key={org.idOrganizacion}
+                        value={org.idOrganizacion}
+                      >
                         {org.nombreOrganizacion}
                       </option>
                     ))}
@@ -639,7 +707,10 @@ const GestionDash = () => {
                   >
                     <option value="">Seleccione un departamento</option>
                     {filteredDepartamentos.map((depto) => (
-                      <option key={depto.idDepartamento} value={depto.idDepartamento}>
+                      <option
+                        key={depto.idDepartamento}
+                        value={depto.idDepartamento}
+                      >
                         {depto.nombreDepartamento}
                       </option>
                     ))}
@@ -647,7 +718,12 @@ const GestionDash = () => {
                 </div>
                 <div className="form-field">
                   <label>Rol</label>
-                  <select name="rol" value={formData.rol ?? "Lector"} onChange={handleChange} className="inputedit">
+                  <select
+                    name="rol"
+                    value={formData.rol ?? "Lector"}
+                    onChange={handleChange}
+                    className="inputedit"
+                  >
                     <option value="Lector">Lector</option>
                     <option value="Editor">Editor</option>
                   </select>
@@ -662,8 +738,8 @@ const GestionDash = () => {
                   type="button"
                   className="btn-cancel"
                   onClick={() => {
-                    setIsEditing(false)
-                    setIsCreating(false)
+                    setIsEditing(false);
+                    setIsCreating(false);
                   }}
                 >
                   Cancelar
@@ -683,12 +759,20 @@ const GestionDash = () => {
                       className="search-input"
                     />
                     {searchText && (
-                      <button className="clear-search" onClick={() => setSearchText("")} type="button">
+                      <button
+                        className="clear-search"
+                        onClick={() => setSearchText("")}
+                        type="button"
+                      >
                         ×
                       </button>
                     )}
                   </div>
-                  <button type="button" onClick={handleOpenCreateForm} className="add-button">
+                  <button
+                    type="button"
+                    onClick={handleOpenCreateForm}
+                    className="add-button"
+                  >
                     <span className="button-icon">+</span>
                     <span className="button-text">Agregar Usuario</span>
                   </button>
@@ -727,41 +811,53 @@ const GestionDash = () => {
                             <span className={`nivel-badge nivel-${user.nivel}`}>
                               {(() => {
                                 if (user.nivel === null) {
-                                  return "Nivel no asignado"
+                                  return "Nivel no asignado";
                                 }
                                 switch (user.nivel) {
                                   case 1:
-                                    return "SuperAdmin"
+                                    return "SuperAdmin";
                                   case 2:
-                                    return "AdminOrganización"
+                                    return "AdminOrganización";
                                   case 3:
-                                    return "Jefe de Área"
+                                    return "Jefe de Área";
                                   case 4:
-                                    return "Jefe de Departamento"
+                                    return "Jefe de Departamento";
                                   case 5:
-                                    return "Analista"
+                                    return "Analista";
                                   default:
-                                    return "Sin nivel"
+                                    return "Sin nivel";
                                 }
                               })()}
                             </span>
                           </td>
                           <td>
                             {(() => {
-                              const org = organizaciones.find((o) => o.idOrganizacion == user.organizacion)
-                              return org ? org.nombreOrganizacion : user.nombreOrganizacion || "-"
+                              const org = organizaciones.find(
+                                (o) => o.idOrganizacion == user.organizacion
+                              );
+                              return org
+                                ? org.nombreOrganizacion
+                                : user.nombreOrganizacion || "-";
                             })()}
                           </td>
                           <td>
                             {(() => {
-                              const area = areas.find((a) => a.idArea == user.area)
-                              return area ? area.nombreArea : user.nombreArea || "-"
+                              const area = areas.find(
+                                (a) => a.idArea == user.area
+                              );
+                              return area
+                                ? area.nombreArea
+                                : user.nombreArea || "-";
                             })()}
                           </td>
                           <td>
                             {(() => {
-                              const departamento = departamentos.find((d) => d.idDepartamento == user.departamento)
-                              return departamento ? departamento.nombreDepartamento : user.nombreDepartamento || "-"
+                              const departamento = departamentos.find(
+                                (d) => d.idDepartamento == user.departamento
+                              );
+                              return departamento
+                                ? departamento.nombreDepartamento
+                                : user.nombreDepartamento || "-";
                             })()}
                           </td>
                           <td>{user.rol}</td>
@@ -771,14 +867,20 @@ const GestionDash = () => {
                               className="action-button edit-button"
                               title="Editar usuario"
                             >
-                              <FontAwesomeIcon icon={faPencilAlt} className="action-icon" />
+                              <FontAwesomeIcon
+                                icon={faPencilAlt}
+                                className="action-icon"
+                              />
                             </button>
                             <button
                               onClick={() => handleDelete(user.id)}
                               className="action-button delete-button"
                               title="Eliminar usuario"
                             >
-                              <FontAwesomeIcon icon={faTrash} className="action-icon" />
+                              <FontAwesomeIcon
+                                icon={faTrash}
+                                className="action-icon"
+                              />
                             </button>
                           </td>
                         </tr>
@@ -808,11 +910,15 @@ const GestionDash = () => {
                     <span>
                       Página {paginaActual} de {totalPaginas || 1}
                     </span>
-                    <span className="pagination-total">{filteredUsers.length} usuarios</span>
+                    <span className="pagination-total">
+                      {filteredUsers.length} usuarios
+                    </span>
                   </div>
                   <button
                     onClick={() => setPaginaActual(paginaActual + 1)}
-                    disabled={paginaActual === totalPaginas || totalPaginas === 0}
+                    disabled={
+                      paginaActual === totalPaginas || totalPaginas === 0
+                    }
                     className="pagination-button"
                   >
                     Siguiente →
@@ -824,8 +930,7 @@ const GestionDash = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default GestionDash
-
+export default GestionDash;
