@@ -13,6 +13,7 @@ import {
   faExclamationTriangle,
   faBoxArchive,
 } from "@fortawesome/free-solid-svg-icons";
+import { use } from "react";
 
 const Procesar_Caso = ({ activeView }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -143,29 +144,26 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   }, []);
 
   useEffect(() => {
-  const cargarAreasYFiltrar = async () => {
-    if (userLevel === 2 && userOrgId) {
-      const res = await fetchWithAuth(`/api/areas?orgId=${userOrgId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setAreas(data);
+    const cargarAreasYFiltrar = async () => {
+      if (userLevel === 2 && userOrgId) {
+        const res = await fetchWithAuth(`/api/areas?orgId=${userOrgId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setAreas(data);
 
-        // Filtro inmediato tras carga
-        const filtradas = Array.isArray(data)
-          ? data.filter(
-              (a) => String(a.idOrganizacion) === String(userOrgId)
-            )
-          : [];
-        setFilteredAreas(filtradas);
+          // Filtro inmediato tras carga
+          const filtradas = Array.isArray(data)
+            ? data.filter((a) => String(a.idOrganizacion) === String(userOrgId))
+            : [];
+          setFilteredAreas(filtradas);
 
-        setSelectedOrg(String(userOrgId)); // opcional, si necesitas mantenerlo para validaciones
+          setSelectedOrg(String(userOrgId)); // opcional, si necesitas mantenerlo para validaciones
+        }
       }
-    }
-  };
+    };
 
-  cargarAreasYFiltrar();
-}, [userLevel, userOrgId]);
-
+    cargarAreasYFiltrar();
+  }, [userLevel, userOrgId]);
 
   // Funciones para cargar datos de selects
   const fetchOrganizaciones = async () => {
@@ -242,12 +240,11 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const fetchDepartamentosByArea = async (areaId) => {
     try {
       const res = await fetchWithAuth(`/api/departamentos?areaId=${areaId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setDepartamentos(data);
-      }
+      const data = await res.json();
+      console.log("📦 Departamentos cargados para área", areaId, "→", data);
+      setDepartamentos(data);
     } catch (error) {
-      console.error("Error al cargar departamentos:", error);
+      console.error("❌ Error al cargar departamentos:", error);
     }
   };
 
@@ -415,63 +412,51 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     }
   };
 
+  useEffect(() => {
+    const rawUser = localStorage.getItem("user");
+    if (rawUser) {
+      const userData = JSON.parse(rawUser);
+      const nivel = Number(userData.nivel);
+      console.log(userData);
 
+      setUserLevel(nivel);
+      setUserOrgId(userData.idOrganizacion);
 
+      if (nivel === 2 && userData.idOrganizacion) {
+        setSelectedOrg(String(userData.idOrganizacion));
+      }
 
-
-useEffect(() => {
-  const rawUser = localStorage.getItem("user");
-  if (rawUser) {
-    const userData = JSON.parse(rawUser);
-    const nivel = Number(userData.nivel);
-    setUserLevel(nivel);
-
-    // 🟢 Para nivel 2, asignar selectedOrg buscando por nombre
-    if (nivel === 2 && userData.organizacion && organizaciones.length > 0) {
-      const orgMatch = organizaciones.find(
-        (org) => org.nombreOrganizacion === userData.organizacion
-      );
-      if (orgMatch) {
-        setSelectedOrg(String(orgMatch.idOrganizacion));
-      } else {
-        console.warn("❌ No se encontró la organización por nombre.");
+      if (nivel === 3 && userData.idArea) {
+        console.log("🟢 Asignando área desde ID directo:", userData.idArea);
+        setSelectedArea(String(userData.idArea));
       }
     }
-  }
-}, [organizaciones]);
+  }, []);
 
+  useEffect(() => {
+    const fetchAreas = async () => {
+      if (selectedOrg) {
+        try {
+          const res = await fetchWithAuth(`/api/areas?orgId=${selectedOrg}`);
+          const data = await res.json();
 
-
-
-useEffect(() => {
-  const fetchAreas = async () => {
-    if (selectedOrg) {
-      try {
-        const res = await fetchWithAuth(`/api/areas?orgId=${selectedOrg}`);
-        const data = await res.json();
-
-        console.log("📦 Áreas cargadas para organización", selectedOrg, "→", data);
-
-        setAreas(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error("❌ Error al cargar áreas:", error);
-        setAreas([]);
+          setAreas(Array.isArray(data) ? data : []);
+        } catch (error) {
+          console.error("❌ Error al cargar áreas:", error);
+          setAreas([]);
+        }
       }
-    }
-  };
+    };
 
-  fetchAreas();
-}, [selectedOrg]);
+    fetchAreas();
+  }, [selectedOrg]);
 
-
-useEffect(() => {
-  const filtradas = areas.filter(
-    (a) => String(a.idOrganizacion) === selectedOrg
-  );
-  setFilteredAreas(filtradas);
-}, [areas, selectedOrg]);
-
-
+  useEffect(() => {
+    const filtradas = areas.filter(
+      (a) => String(a.idOrganizacion) === selectedOrg
+    );
+    setFilteredAreas(filtradas);
+  }, [areas, selectedOrg]);
 
   // Filtrar casos según los filtros seleccionados
   const filteredCasos = casos.filter((caso) => {
@@ -750,8 +735,11 @@ useEffect(() => {
                     Seleccione un departamento
                   </option>
                   {departamentos.map((dept) => (
-                    <option key={dept.id} value={dept.id}>
-                      {dept.nombre}
+                    <option
+                      key={dept.idDepartamento}
+                      value={dept.idDepartamento}
+                    >
+                      {dept.nombreDepartamento}
                     </option>
                   ))}
                 </select>
