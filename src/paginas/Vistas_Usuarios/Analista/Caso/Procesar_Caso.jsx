@@ -72,11 +72,12 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     reactivado: false,
   });
   useEffect(() => {
-    const areasFiltradas = areas.filter(
-      (a) => a.idOrganizacion === Number(selectedOrg)
+    const orgId = userLevel === 2 ? userOrgId : selectedOrg;
+    const filtradas = areas.filter(
+      (a) => String(a.idOrganizacion) === String(orgId)
     );
-    setFilteredAreas(areasFiltradas);
-  }, [selectedOrg, areas]);
+    setFilteredAreas(filtradas);
+  }, [selectedOrg, userOrgId, userLevel, areas]);
 
   useEffect(() => {
     if (selectedArea) {
@@ -142,13 +143,29 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   }, []);
 
   useEffect(() => {
-  if (userLevel === 2 && userOrgId) {
-    fetchAreasByOrg(userOrgId);
-    setSelectedOrg(String(userOrgId)); 
-  }
+  const cargarAreasYFiltrar = async () => {
+    if (userLevel === 2 && userOrgId) {
+      const res = await fetchWithAuth(`/api/areas?orgId=${userOrgId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setAreas(data);
+
+        // Filtro inmediato tras carga
+        const filtradas = Array.isArray(data)
+          ? data.filter(
+              (a) => String(a.idOrganizacion) === String(userOrgId)
+            )
+          : [];
+        setFilteredAreas(filtradas);
+
+        setSelectedOrg(String(userOrgId)); // opcional, si necesitas mantenerlo para validaciones
+      }
+    }
+  };
+
+  cargarAreasYFiltrar();
 }, [userLevel, userOrgId]);
 
- 
 
   // Funciones para cargar datos de selects
   const fetchOrganizaciones = async () => {
@@ -397,6 +414,64 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       setSelectedCaso((prev) => ({ ...prev, estado: nuevoEstado }));
     }
   };
+
+
+
+
+
+useEffect(() => {
+  const rawUser = localStorage.getItem("user");
+  if (rawUser) {
+    const userData = JSON.parse(rawUser);
+    const nivel = Number(userData.nivel);
+    setUserLevel(nivel);
+
+    // 🟢 Para nivel 2, asignar selectedOrg buscando por nombre
+    if (nivel === 2 && userData.organizacion && organizaciones.length > 0) {
+      const orgMatch = organizaciones.find(
+        (org) => org.nombreOrganizacion === userData.organizacion
+      );
+      if (orgMatch) {
+        setSelectedOrg(String(orgMatch.idOrganizacion));
+      } else {
+        console.warn("❌ No se encontró la organización por nombre.");
+      }
+    }
+  }
+}, [organizaciones]);
+
+
+
+
+useEffect(() => {
+  const fetchAreas = async () => {
+    if (selectedOrg) {
+      try {
+        const res = await fetchWithAuth(`/api/areas?orgId=${selectedOrg}`);
+        const data = await res.json();
+
+        console.log("📦 Áreas cargadas para organización", selectedOrg, "→", data);
+
+        setAreas(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("❌ Error al cargar áreas:", error);
+        setAreas([]);
+      }
+    }
+  };
+
+  fetchAreas();
+}, [selectedOrg]);
+
+
+useEffect(() => {
+  const filtradas = areas.filter(
+    (a) => String(a.idOrganizacion) === selectedOrg
+  );
+  setFilteredAreas(filtradas);
+}, [areas, selectedOrg]);
+
+
 
   // Filtrar casos según los filtros seleccionados
   const filteredCasos = casos.filter((caso) => {
