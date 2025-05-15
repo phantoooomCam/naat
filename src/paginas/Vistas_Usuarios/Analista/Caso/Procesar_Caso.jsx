@@ -421,22 +421,22 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   }, []);
 
   useEffect(() => {
-    const fetchAreas = async () => {
-      if (selectedOrg) {
-        try {
-          const res = await fetchWithAuth(`/api/areas?orgId=${selectedOrg}`);
-          const data = await res.json();
-
-          setAreas(Array.isArray(data) ? data : []);
-        } catch (error) {
-          console.error("❌ Error al cargar áreas:", error);
-          setAreas([]);
-        }
+  const fetchAreas = async () => {
+    if (selectedOrg && userLevel <= 3) {
+      try {
+        const res = await fetchWithAuth(`/api/areas?orgId=${selectedOrg}`);
+        const data = await res.json();
+        setAreas(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("❌ Error al cargar áreas:", error);
+        setAreas([]);
       }
-    };
+    }
+  };
 
-    fetchAreas();
-  }, [selectedOrg]);
+  fetchAreas();
+}, [selectedOrg, userLevel]);
+
 
   useEffect(() => {
     const filtradas = areas.filter(
