@@ -60,7 +60,7 @@ const DashSolicitud = () => {
         headers: {
           "Content-Type": "application/json",
         },
-      
+
       })
 
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
@@ -94,7 +94,7 @@ const DashSolicitud = () => {
   const fetchOrganizaciones = async () => {
     try {
       const response = await fetchWithAuth("/api/organizaciones", {
-      
+
       });
 
       if (!response.ok) {
@@ -153,7 +153,7 @@ const DashSolicitud = () => {
         headers: {
           "Content-Type": "application/json",
         },
-      
+
         body: JSON.stringify(payload), // 👈 Usa el payload aquí
       })
 
@@ -168,8 +168,10 @@ const DashSolicitud = () => {
         headers: {
           "Content-Type": "application/json",
         },
-      
-        body: JSON.stringify({ idUsuario: formData.id_usuario }),
+        body: JSON.stringify({
+          idUsuario: formData.id_usuario,
+          esReactivacion: false  // 👈 clave para evitar forzar cambio de contraseña
+        }),
       })
 
       const activarResult = await activarResponse.json()
@@ -222,7 +224,7 @@ const DashSolicitud = () => {
           headers: {
             "Content-Type": "application/json",
           },
-        
+
         })
 
         if (!response.ok) {
