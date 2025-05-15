@@ -271,12 +271,12 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     return;
   }
 
-  if (!selectedDept) {
-    setProcessingStatus("error");
-    setStatusMessage("Debe seleccionar un departamento");
-    setTimeout(() => setProcessingStatus(null), 3000);
-    return;
-  }
+  if (userLevel <= 3 && !selectedDept) {
+  setProcessingStatus("error");
+  setStatusMessage("Debe seleccionar un departamento");
+  setTimeout(() => setProcessingStatus(null), 3000);
+  return;
+}
 
   setIsProcessing(true);
   setProcessingStatus(null);
@@ -302,9 +302,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     } else if (userLevel === 3) {
       casoData.idDepartamento = Number(selectedDept);
     }
-    // Nivel 4 y 5: el backend pondrá organización, área y departamento
 
-    console.log("📤 Enviando caso al backend:", casoData);
+
+
 
     const response = await fetchWithAuth("/api/casos", {
       method: "POST",
@@ -315,6 +315,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     });
 
     if (!response.ok) throw new Error("Error en la creación del caso");
+    
 
     const result = await response.json();
 
@@ -405,7 +406,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     if (rawUser) {
       const userData = JSON.parse(rawUser);
       const nivel = Number(userData.nivel);
-      console.log(userData);
 
       setUserLevel(nivel);
       setUserOrgId(userData.idOrganizacion);
