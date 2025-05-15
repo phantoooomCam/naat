@@ -249,105 +249,93 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   };
 
   const handleCrearCaso = async () => {
-    if (!titulo.trim()) {
-      setProcessingStatus("error");
-      setStatusMessage("El título del caso es obligatorio");
-      setTimeout(() => setProcessingStatus(null), 3000);
-      return;
+  if (!titulo.trim()) {
+    setProcessingStatus("error");
+    setStatusMessage("El título del caso es obligatorio");
+    setTimeout(() => setProcessingStatus(null), 3000);
+    return;
+  }
+
+  // Validaciones por nivel
+  if (userLevel === 1 && !selectedOrg) {
+    setProcessingStatus("error");
+    setStatusMessage("Debe seleccionar una organización");
+    setTimeout(() => setProcessingStatus(null), 3000);
+    return;
+  }
+
+  if ((userLevel === 1 || userLevel === 2) && !selectedArea) {
+    setProcessingStatus("error");
+    setStatusMessage("Debe seleccionar un área");
+    setTimeout(() => setProcessingStatus(null), 3000);
+    return;
+  }
+
+  if (!selectedDept) {
+    setProcessingStatus("error");
+    setStatusMessage("Debe seleccionar un departamento");
+    setTimeout(() => setProcessingStatus(null), 3000);
+    return;
+  }
+
+  setIsProcessing(true);
+  setProcessingStatus(null);
+
+  try {
+    const usuario = JSON.parse(localStorage.getItem("user"));
+    const idUsuario = usuario?.id;
+
+    const casoData = {
+      nombre: titulo,
+      descripcion,
+      idUsuario,
+    };
+
+    // 🔄 Añadir campos según nivel
+    if (userLevel === 1) {
+      casoData.idOrganizacion = Number(selectedOrg);
+      casoData.idArea = Number(selectedArea);
+      casoData.idDepartamento = Number(selectedDept);
+    } else if (userLevel === 2) {
+      casoData.idArea = Number(selectedArea);
+      casoData.idDepartamento = Number(selectedDept);
+    } else if (userLevel === 3) {
+      casoData.idDepartamento = Number(selectedDept);
     }
+    // Nivel 4 y 5: el backend pondrá organización, área y departamento
 
-    // Validar selects según nivel
-    if (userLevel === 1 && !selectedOrg) {
-      setProcessingStatus("error");
-      setStatusMessage("Debe seleccionar una organización");
-      setTimeout(() => setProcessingStatus(null), 3000);
-      return;
-    }
+    console.log("📤 Enviando caso al backend:", casoData);
 
-    if ((userLevel === 1 || userLevel === 2) && !selectedDept) {
-      setProcessingStatus("error");
-      setStatusMessage("Debe seleccionar un departamento");
-      setTimeout(() => setProcessingStatus(null), 3000);
-      return;
-    }
+    const response = await fetchWithAuth("/api/casos", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(casoData),
+    });
 
-    if ((userLevel === 1 || userLevel === 2) && !selectedArea) {
-      setProcessingStatus("error");
-      setStatusMessage("Debe seleccionar un área");
-      setTimeout(() => setProcessingStatus(null), 3000);
-      return;
-    }
+    if (!response.ok) throw new Error("Error en la creación del caso");
 
-    if (userLevel === 3 && !selectedDept) {
-      setProcessingStatus("error");
-      setStatusMessage("Debe seleccionar un departamento");
-      setTimeout(() => setProcessingStatus(null), 3000);
-      return;
-    }
+    const result = await response.json();
 
-    setIsProcessing(true);
-    setProcessingStatus(null);
+    // Limpieza de campos y mensaje de éxito
+    setTitulo("");
+    setDescripcion("");
+    setSelectedOrg("");
+    setSelectedDept("");
+    setSelectedArea("");
+    setProcessingStatus("success");
+    setStatusMessage(result.mensaje || "Caso creado correctamente");
+  } catch (error) {
+    console.error("ERROR al crear caso:", error);
+    setProcessingStatus("error");
+    setStatusMessage("Error al crear el caso");
+  } finally {
+    setIsProcessing(false);
+    setTimeout(() => setProcessingStatus(null), 3000);
+  }
+};
 
-    try {
-      const usuario = JSON.parse(localStorage.getItem("user"));
-      const idUsuario = usuario?.id;
-
-      const casoData = {
-        nombre: titulo,
-        descripcion: descripcion,
-        idUsuario: idUsuario,
-      };
-
-      // Añadir campos según nivel
-      if (userLevel === 1) {
-        casoData.idOrganizacion = selectedOrg;
-        casoData.idDepartamento = selectedDept;
-        casoData.idArea = selectedArea;
-      } else if (userLevel === 2) {
-        casoData.idDepartamento = selectedDept;
-        casoData.idArea = selectedArea;
-      } else if (userLevel === 3) {
-        casoData.idDepartamento = selectedDept;
-      }
-
-      const response = await fetchWithAuth("/api/casos", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(casoData),
-      });
-
-      if (!response.ok) throw new Error("Error en la creación del caso");
-
-      const result = await response.json();
-
-      const nuevoCaso = {
-        id: Date.now(),
-        titulo,
-        descripcion,
-        estado: "Sin resolver",
-        fechaCreacion: new Date().toLocaleDateString(),
-        asignado: "Usuario Actual",
-      };
-
-      setCasos((prevCasos) => [nuevoCaso, ...prevCasos]);
-      setTitulo("");
-      setDescripcion("");
-      setSelectedOrg("");
-      setSelectedDept("");
-      setSelectedArea("");
-      setProcessingStatus("success");
-      setStatusMessage(result.mensaje || "Caso creado correctamente");
-    } catch (error) {
-      console.error("ERROR al crear caso:", error);
-      setProcessingStatus("error");
-      setStatusMessage("Error al crear el caso");
-    } finally {
-      setIsProcessing(false);
-      setTimeout(() => setProcessingStatus(null), 3000);
-    }
-  };
 
   const actualizarEstadoCaso = async (casoId, nuevoEstado) => {
     try {
@@ -427,7 +415,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       }
 
       if (nivel === 3 && userData.idArea) {
-        console.log("🟢 Asignando área desde ID directo:", userData.idArea);
         setSelectedArea(String(userData.idArea));
       }
     }
@@ -748,6 +735,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
             <button
               onClick={handleCrearCaso}
+              type="button"
               className="crear-button"
               disabled={isProcessing || !titulo.trim()}
             >
@@ -760,6 +748,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                 <span>Crear Caso</span>
               )}
             </button>
+            <p>Organización seleccionada: {selectedOrg}</p>
+            <p>Área seleccionada: {selectedArea}</p>
+            <p>Departamento seleccionado: {selectedDept}</p>
           </div>
         </div>
 
