@@ -42,7 +42,7 @@ const ActividadesSist = () => {
         headers: {
           "Content-Type": "application/json",
         },
-      
+
       })
 
       if (!response.ok) throw new Error(`Error HTTP: ${response.status}`)
@@ -135,19 +135,34 @@ const ActividadesSist = () => {
                       <th>Autor</th>
                       <th>Entidad</th>
                       <th>Acción</th>
+                      <th>Detalles</th>
                       <th>ID Usuario</th>
                       <th>Nombre Usuario</th>
                       <th>Fecha</th>
                     </tr>
                   </thead>
+
                   <tbody>
                     {datosPaginados.length > 0 ? (
                       datosPaginados.map((item) => (
                         <tr key={item.idActividad}>
                           <td>{item.idActividad}</td>
-                          <td>{item.nombreAutor}</td>
+                          <td>{item.nombreAutor || "Desconocido"}</td>
                           <td>{item.entidad}</td>
                           <td>{item.accion}</td>
+                          <td style={{ whiteSpace: "pre-wrap" }}>
+                            {item.detalles && item.detalles.startsWith("{") ? (
+                              <ul style={{ paddingLeft: "1rem", margin: 0 }}>
+                                {Object.entries(JSON.parse(item.detalles)).map(([campo, { antes, despues }]) => (
+                                  <li key={campo}>
+                                    <strong>{campo}:</strong> <span style={{ color: "#999" }}>'{antes}'</span> → <span style={{ color: "#000" }}>'{despues}'</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              item.detalles || "—"
+                            )}
+                          </td>
                           <td>{item.idUsuario}</td>
                           <td>{item.nombreUsuario || "N/A"}</td>
                           <td>{formatearFecha(item.fecha)}</td>
@@ -155,12 +170,13 @@ const ActividadesSist = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="7" className="no-results">
+                        <td colSpan="8" className="no-results">
                           No se encontraron resultados
                         </td>
                       </tr>
                     )}
                   </tbody>
+
                 </table>
               </div>
 
