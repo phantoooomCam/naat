@@ -57,10 +57,10 @@ const LogsCasosTabla = () => {
   const datosFiltrados = logs.filter((item) => {
     const textoBusqueda = busqueda.toLowerCase()
     return (
-      (item.idAcciones?.toString() || "").includes(textoBusqueda) ||
+      (item.idAccion?.toString() || "").includes(textoBusqueda) ||
       (item.idUsuario?.toString() || "").includes(textoBusqueda) ||
       (item.idCaso?.toString() || "").includes(textoBusqueda) ||
-      (item.accion?.toLowerCase() || "").includes(textoBusqueda)
+      (item.detalleAccion?.toLowerCase() || "").includes(textoBusqueda)
     )
   })
 
@@ -137,11 +137,11 @@ const LogsCasosTabla = () => {
                   <tbody>
                     {datosPaginados.length > 0 ? (
                       datosPaginados.map((item) => (
-                        <tr key={item.idAcciones}>
-                          <td>{item.idAcciones}</td>
+                        <tr key={item.idAccion}>
+                          <td>{item.idAccion}</td>
                           <td>{item.idUsuario}</td>
                           <td>{item.idCaso}</td>
-                          <td>{item.accion}</td>
+                          <td>{item.detalleAccion}</td>
                           <td>{formatearFecha(item.fecha)}</td>
                         </tr>
                       ))
