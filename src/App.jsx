@@ -43,6 +43,7 @@ import ProtectedRoute from "./componentes/ProtectedRoute";
 // Funciones Analista
 import Sabana from "./paginas/Vistas_Usuarios/Analista/Sabana/Sabana";
 import Caso from "./paginas/Vistas_Usuarios/Analista/Caso/Caso";
+import LogsCasos from "./paginas/Vistas_Usuarios/Analista/Caso/LogsCasos";
 
 function App() {
   return (
@@ -53,39 +54,39 @@ function App() {
       <Route path="/mensaje" element={<MensajeRegistro />} />
       <Route path="*" element={<PageNotFound />} />
       <Route path="forgot_password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword  />} />
-      <Route path="/cuenta_bloqueada" element={<CuentaBloqueada  />} />
-      
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/cuenta_bloqueada" element={<CuentaBloqueada />} />
+
       <Route element={<ProtectedRoute />}>
-      {/* RUtas de SuperAdmin */}
+        {/* RUtas de SuperAdmin */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/gestion" element={<Gestion />} />
         <Route path="/solicitudes" element={<Solicitud />} />
         <Route path="/ingresos" element={<IngresoSist />} />
         <Route path="/actividad" element={<ActividadesGestion />} />
 
-      {/* Rutas de CRUD's Organizacion/Area/Departamento */}
+        {/* Rutas de CRUD's Organizacion/Area/Departamento */}
         <Route path="/orga" element={<Gestion_Orga />} />
         <Route path="/depto" element={<Gestion_Depto />} />
         <Route path="/area" element={<Gestion_Area />} />
 
-      {/* Personalizar Perfil c/Usuario */}
+        {/* Personalizar Perfil c/Usuario */}
         <Route path="/administrarcuenta" element={<AdministrarCuenta />} />
         <Route path="/cambiarcontra" element={<Cambiar />} />
 
-      {/* Vistas Home Usuarios */}
+        {/* Vistas Home Usuarios */}
         <Route path="/home_org" element={<Home_Organizacion />} />
         <Route path="/home_area" element={<Home_Area />} />
         <Route path="/home_depto" element={<Home_Depto />} />
         <Route path="/home_analista" element={<Home_Analista />} />
 
-      {/* Funciones Analista */}
+        {/* Funciones Analista */}
         <Route path="/sabana" element={<Sabana />} />
+        <Route path="/logscasos" element={<LogsCasos />} />
         <Route path="/casos" element={<Caso />} />
-        
-
 
       </Route>
+
 
     </Routes>
   );

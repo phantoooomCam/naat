@@ -38,7 +38,15 @@ export const menu={
     
           ]
         },
-        { id: '/casos', icon: <PiFolderUserDuotone />, label: 'Casos' },
+        {
+          id: 'casos',
+          icon: <PiFolderUserDuotone />,
+          label: 'Casos',
+          subItems: [
+            { id: '/casos', label: 'Gestion Casos' },
+            { id: '/logscasos', label: 'Actividad Casos' }
+          ]
+        },
       ],
       2:[
         { id: '/home_org', icon: <FiHome />, label: 'Inicio' },
@@ -54,7 +62,15 @@ export const menu={
         },
         { id: '/area', icon: <SlOrganization />, label: 'Areas' },
         { id: '/depto', icon:<VscOrganization />, label: 'Departamenos' },
-        { id: '/casos', icon: <PiFolderUserDuotone />, label: 'Casos' },
+        {
+          id: 'casos',
+          icon: <PiFolderUserDuotone />,
+          label: 'Casos',
+          subItems: [
+            { id: '/casos', label: 'Gestion Casos' },
+            { id: '/logscasos', label: 'Actividad Casos' }
+          ]
+        },
       ],
       3:[
         { id: '/home_area', icon: <FiHome />, label: 'Inicio' },
@@ -69,7 +85,15 @@ export const menu={
           ]
         },
         { id: '/depto', icon:<VscOrganization />, label: 'Departamenos' },
-        { id: '/casos', icon: <PiFolderUserDuotone />, label: 'Casos' },
+        {
+          id: 'casos',
+          icon: <PiFolderUserDuotone />,
+          label: 'Casos',
+          subItems: [
+            { id: '/casos', label: 'Gestion Casos' },
+            { id: '/logscasos', label: 'Actividad Casos' }
+          ]
+        },
       ],
       4:[
         { id: '/home_depto', icon: <FiHome />, label: 'Inicio' },
@@ -82,12 +106,28 @@ export const menu={
             { id: '/ingresos', label: 'Ingresos' }
           ]
         },
-        { id: '/casos', icon: <PiFolderUserDuotone />, label: 'Casos' },
+        {
+          id: 'casos',
+          icon: <PiFolderUserDuotone />,
+          label: 'Casos',
+          subItems: [
+            { id: '/casos', label: 'Gestion Casos' },
+            { id: '/logscasos', label: 'Actividad Casos' }
+          ]
+        },
       ],
       5:[
         { id: '/home_analista', icon: <FiHome />, label: 'Inicio' },
         { id: '/casos', icon: <PiFolderUserDuotone />, label: 'Casos' },
-        { id: '/sabana', icon: <LuBookHeadphones />, label: 'Sabanas' },
+        {
+          id: 'casos',
+          icon: <PiFolderUserDuotone />,
+          label: 'Casos',
+          subItems: [
+            { id: '/casos', label: 'Gestion Casos' },
+            { id: '/logscasos', label: 'Actividad Casos' }
+          ]
+        },
       ]
 
 }
