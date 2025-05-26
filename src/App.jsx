@@ -2,7 +2,7 @@ import { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // -----------------------------------------------------Principales_NoProtegidas
-//Rutas NO Protegidas 
+//Rutas NO Protegidas
 import SignIn from "./paginas/Princiales_NoProtegidas/SignIn";
 import Login from "./paginas/Princiales_NoProtegidas/Registro";
 import MensajeRegistro from "./paginas/Princiales_NoProtegidas/MensajeRegistro";
@@ -28,17 +28,14 @@ import Gestion_Area from "./paginas/SuperAdmin_Funciones/Organizaciones/Gestion_
 import AdministrarCuenta from "./paginas/Editar_Perfil/Administrar";
 import Cambiar from "./paginas/Editar_Perfil/Cambiar";
 
-
 // Vista Home Usuarios
 import Home_Organizacion from "./paginas/Vistas_Usuarios/Home_Organizacion/Home_Organizacion";
 import Home_Area from "./paginas/Vistas_Usuarios/Areas_Organizacion/Home_Area";
 import Home_Depto from "./paginas/Vistas_Usuarios/Departamentos_organizacion/Home_Depto";
 import Home_Analista from "./paginas/Vistas_Usuarios/Analista/Home_Analista";
 
-
 // Componentes
 import ProtectedRoute from "./componentes/ProtectedRoute";
-
 
 // Funciones Analista
 import Sabana from "./paginas/Vistas_Usuarios/Analista/Sabana/Sabana";
@@ -82,12 +79,13 @@ function App() {
 
         {/* Funciones Analista */}
         <Route path="/sabana" element={<Sabana />} />
-        <Route path="/logscasos" element={<LogsCasos />} />
-        <Route path="/casos" element={<Caso />} />
-
+        {/* <Route path="/logscasos" element={<LogsCasos />} /> */}
+        {/* <Route path="/casos" element={<Caso />} />
+         */}
       </Route>
 
-
+      <Route path="/casos" element={<Caso />} />
+      <Route path="/logscasos" element={<LogsCasos />} />
     </Routes>
   );
 }
