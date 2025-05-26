@@ -125,7 +125,7 @@ export const menu={
           label: 'Casos',
           subItems: [
             { id: '/casos', label: 'Gestion Casos' },
-            { id: '/logscasos', label: 'Actividad Casos' }
+            { id: '/sabana', icon: <LuBookHeadphones />, label: 'Sabanas' },
           ]
         },
       ]

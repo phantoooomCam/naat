@@ -185,7 +185,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     }
 
     try {
-      const response = await fetchWithAuth("/api/archivos/subirftp", {
+      const response = await fetchWithAuth("/api/sabanas/archivos/subirftp", {
         method: "POST",
         body: formData,
       });
