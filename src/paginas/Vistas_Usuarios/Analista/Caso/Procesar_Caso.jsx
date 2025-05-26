@@ -370,7 +370,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         setTimeout(() => setProcessingStatus(null), 3000);
       }, 1000);
 
-      /*
+      
       const usuario = JSON.parse(localStorage.getItem("user"))
       const idUsuario = usuario?.id
 
@@ -393,7 +393,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
       setProcessingStatus("success")
       setStatusMessage(`Estado actualizado a "${nuevoEstado}"`)
-      */
+      
     } catch (error) {
       console.error("Error al actualizar estado:", error);
       setProcessingStatus("error");
