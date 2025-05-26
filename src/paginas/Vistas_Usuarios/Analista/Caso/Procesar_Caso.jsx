@@ -349,27 +349,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const actualizarEstadoCaso = async (casoId, nuevoEstado) => {
     try {
       setIsProcessing(true);
-
-      // Simular una respuesta exitosa para pruebas
-      // Comentar esta sección y descomentar la siguiente para producción
-      setTimeout(() => {
-        // Actualiza estado localmente
-        setCasos((prevCasos) =>
-          prevCasos.map((caso) =>
-            caso.id === casoId ? { ...caso, estado: nuevoEstado } : caso
-          )
-        );
-
-        if (selectedCaso?.id === casoId) {
-          setSelectedCaso((prev) => ({ ...prev, estado: nuevoEstado }));
-        }
-
-        setProcessingStatus("success");
-        setStatusMessage(`Estado actualizado a "${nuevoEstado}"`);
-        setIsProcessing(false);
-        setTimeout(() => setProcessingStatus(null), 3000);
-      }, 1000);
-
       
       const usuario = JSON.parse(localStorage.getItem("user"))
       const idUsuario = usuario?.id
@@ -379,7 +358,8 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(nuevoEstado),
+        body: JSON.stringify(nuevoEstado), 
+
       })
 
       if (!response.ok) throw new Error("Error al actualizar estado")
