@@ -124,8 +124,9 @@ export const menu = {
       label: "Casos",
       subItems: [
         { id: "/casos", label: "Gestion Casos" },
-        { id: "/sabana", icon: <LuBookHeadphones />, label: "Sabanas" },
+        
       ],
     },
+    { id: "/sabana", icon: <LuBookHeadphones />, label: "Sabanas" },
   ],
 };
