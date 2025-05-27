@@ -55,6 +55,24 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [statusMessage, setStatusMessage] = useState("");
   const [casos, setCasos] = useState([]);
   const [casoSeleccionado, setCasoSeleccionado] = useState("");
+  const [companias, setCompanias] = useState([]);
+
+  useEffect(() => {
+    const fetchCompanias = async () => {
+      try {
+        const response = await fetchWithAuth("/api/sabanas/companias");
+        if (!response.ok) {
+          throw new Error("Error al obtener las compañías");
+        }
+        const data = await response.json();
+        setCompanias(data);
+      } catch (error) {
+        console.error("Error fetching compañías:", error);
+      }
+    };
+
+    fetchCompanias();
+  }, []);
 
   useEffect(() => {
     const fetchCasos = async () => {
@@ -285,22 +303,11 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                   disabled={isProcessing}
                 >
                   <option value="">Selecciona una compañía</option>
-                  <option value="Telcel">Telcel</option>
-                  <option value="TelcelNuevoFormato">TelcelNuevoFormato</option>
-                  <option value="TelcelIMEI">TelcelIMEI</option>
-                  <option value="ATT">AT&T</option>
-                  <option value="Movistar">Movistar</option>
-                  <option value="VirginMobile">VirginMobile</option>
-                  <option value="Bait">Bait</option>
-                  <option value="Telmex">Telmex</option>
-                  <option value="OXXO">OXXO</option>
-                  <option value="IZZI">IZZI</option>
-                  <option value="Personalizada">Personalizada</option>
-                  <option value="ALTAN">ALTAN</option>
-                  <option value="ATTNuevoFormato">ATTNuevoFormato</option>
-                  <option value="TelcelIMEINuevoFormato">
-                    TelcelIMEINuevoFormato
-                  </option>
+                  {companias.map((compania) => (
+                    <option key={compania.id} value={compania.nombre}>
+                      {compania.nombre}
+                    </option>
+                  ))}
                 </select>
               </label>
               <label htmlFor="phone-input">
