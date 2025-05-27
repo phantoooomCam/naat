@@ -165,7 +165,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         setUserLevel(nivel);
 
         if (nivel === 1) {
-          fetchOrganizaciones(); // ✅ solo nivel 1 ejecuta esto
+          fetchOrganizaciones(); //
         }
       }
 
@@ -272,108 +272,113 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
   // Modificar la función handleCrearCaso para asegurar que los botones funcionen correctamente
   const handleCrearCaso = async () => {
-  if (!titulo.trim()) {
-    setProcessingStatus("error");
-    setStatusMessage("El título del caso es obligatorio");
-    setTimeout(() => setProcessingStatus(null), 3000);
-    return;
-  }
-
-  setIsProcessing(true);
-  setProcessingStatus(null);
-
-  try {
-    const usuario = JSON.parse(localStorage.getItem("user"));
-    const idUsuario = usuario?.id;
-
-    const casoData = {
-      nombre: titulo,
-      descripcion,
-      idUsuario: idUsuario || 1,
-    };
-
-    if (userLevel === 1) {
-      casoData.idOrganizacion = Number(selectedOrg);
-      casoData.idDepartamento = Number(selectedDept);
-      casoData.idArea = Number(selectedArea);
-    } else if (userLevel === 2) {
-      casoData.idDepartamento = Number(selectedDept);
-      casoData.idArea = Number(selectedArea);
-    } else if (userLevel === 3) {
-      casoData.idDepartamento = Number(selectedDept);
+    if (!titulo.trim()) {
+      setProcessingStatus("error");
+      setStatusMessage("El título del caso es obligatorio");
+      setTimeout(() => setProcessingStatus(null), 3000);
+      return;
     }
 
-    console.log("📤 Enviando al backend:", casoData);
+    setIsProcessing(true);
+    setProcessingStatus(null);
 
-    const response = await fetchWithAuth("/api/casos", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(casoData),
-    });
+    try {
+      const usuario = JSON.parse(localStorage.getItem("user"));
+      const idUsuario = usuario?.id;
 
-    if (!response.ok) throw new Error("Error en la creación del caso");
+      const casoData = {
+        nombre: titulo,
+        descripcion,
+        idUsuario: idUsuario || 1,
+      };
 
-    const result = await response.json();
+      if (userLevel === 1) {
+        casoData.idOrganizacion = Number(selectedOrg);
+        casoData.idDepartamento = Number(selectedDept);
+        casoData.idArea = Number(selectedArea);
+      } else if (userLevel === 2) {
+        casoData.idDepartamento = Number(selectedDept);
+        casoData.idArea = Number(selectedArea);
+      } else if (userLevel === 3) {
+        casoData.idDepartamento = Number(selectedDept);
+      }
 
-    const nuevoCaso = {
-      id: Date.now(),
-      titulo,
-      descripcion,
-      estado: "activo",
-      fechaCreacion: new Date().toLocaleDateString(),
-      asignado: "Usuario Actual",
-    };
+      console.log("📤 Enviando al backend:", casoData);
 
-    setCasos((prevCasos) => [nuevoCaso, ...prevCasos]);
-    setTitulo("");
-    setDescripcion("");
-    setSelectedOrg("");
-    setSelectedDept("");
-    setSelectedArea("");
-    setProcessingStatus("success");
-    setStatusMessage(result.mensaje || "Caso creado correctamente");
-  } catch (error) {
-    console.error("ERROR al crear caso:", error);
-    setProcessingStatus("error");
-    setStatusMessage("Error al crear el caso");
-  } finally {
-    setIsProcessing(false);
-    setTimeout(() => setProcessingStatus(null), 3000);
-  }
-};
+      const response = await fetchWithAuth("/api/casos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(casoData),
+      });
 
+      if (!response.ok) throw new Error("Error en la creación del caso");
+
+      const result = await response.json();
+
+      const nuevoCaso = {
+        id: Date.now(),
+        titulo,
+        descripcion,
+        estado: "activo",
+        fechaCreacion: new Date().toLocaleDateString(),
+        asignado: "Usuario Actual",
+      };
+
+      setCasos((prevCasos) => [nuevoCaso, ...prevCasos]);
+      setTitulo("");
+      setDescripcion("");
+      setSelectedOrg("");
+      setSelectedDept("");
+      setSelectedArea("");
+      setProcessingStatus("success");
+      setStatusMessage(result.mensaje || "Caso creado correctamente");
+    } catch (error) {
+      console.error("ERROR al crear caso:", error);
+      setProcessingStatus("error");
+      setStatusMessage("Error al crear el caso");
+    } finally {
+      setIsProcessing(false);
+      setTimeout(() => setProcessingStatus(null), 3000);
+    }
+  };
 
   // Modificar la función actualizarEstadoCaso para asegurar que funcione correctamente
   const actualizarEstadoCaso = async (casoId, nuevoEstado) => {
     try {
       setIsProcessing(true);
-      
-      const usuario = JSON.parse(localStorage.getItem("user"))
-      const idUsuario = usuario?.id
 
-      const response = await fetchWithAuth(`/api/casos/${casoId}/estado?idUsuario=${idUsuario}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(nuevoEstado), 
+      const usuario = JSON.parse(localStorage.getItem("user"));
+      const idUsuario = usuario?.id;
 
-      })
+      const response = await fetchWithAuth(
+        `/api/casos/${casoId}/estado?idUsuario=${idUsuario}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(nuevoEstado),
+        }
+      );
 
-      if (!response.ok) throw new Error("Error al actualizar estado")
+      if (!response.ok) throw new Error("Error al actualizar estado");
 
-      // Actualiza estado localmente
-      setCasos((prevCasos) => prevCasos.map((caso) => (caso.id === casoId ? { ...caso, estado: nuevoEstado } : caso)))
+      // ✅ Actualiza estado localmente
+      setCasos((prevCasos) =>
+        prevCasos.map((caso) =>
+          caso.id === casoId ? { ...caso, estado: nuevoEstado } : caso
+        )
+      );
 
       if (selectedCaso?.id === casoId) {
-        setSelectedCaso((prev) => ({ ...prev, estado: nuevoEstado }))
+        setSelectedCaso((prev) => ({ ...prev, estado: nuevoEstado }));
       }
 
-      setProcessingStatus("success")
-      setStatusMessage(`Estado actualizado a "${nuevoEstado}"`)
-      
+      setProcessingStatus("success");
+      setStatusMessage(`Estado actualizado a "${nuevoEstado}"`);
+      setIsProcessing(false);
     } catch (error) {
       console.error("Error al actualizar estado:", error);
       setProcessingStatus("error");
@@ -500,13 +505,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       {/* Status message */}
       {processingStatus && (
         <div className={`status-message ${processingStatus}`}>
-          <div className="status-icon">
-            {processingStatus === "success" ? (
-              <FontAwesomeIcon icon={faCheck} />
-            ) : (
-              <FontAwesomeIcon icon={faExclamationTriangle} />
-            )}
-          </div>
           <span>{statusMessage}</span>
         </div>
       )}
