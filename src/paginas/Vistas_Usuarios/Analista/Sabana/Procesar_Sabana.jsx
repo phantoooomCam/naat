@@ -56,6 +56,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [casos, setCasos] = useState([]);
   const [casoSeleccionado, setCasoSeleccionado] = useState("");
   const [companias, setCompanias] = useState([]);
+  const [codigoPais, setCodigoPais] = useState("+52");
 
   useEffect(() => {
     const fetchCompanias = async () => {
@@ -185,14 +186,13 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   };
 
   const handleGuardarEnBD = async () => {
-
     const companiaSeleccionada = companias.find(
-      (compania) => compania.nombre === telco);
+      (compania) => compania.nombre === telco
+    );
     const idCompania = companiaSeleccionada ? companiaSeleccionada.id : null;
 
     console.log("Datos a guardar:");
     console.log("ID Compañía:", idCompania);
-    console.log("Número telefónico:", Number(phoneNumber));
     console.log("Caso seleccionado:", Number(casoSeleccionado));
 
     if (files.length === 0) {
@@ -210,6 +210,33 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       if (files[i].rawFile) {
         formData.append("archivos", files[i].rawFile);
       }
+    }
+    
+    try {
+      const numeroPayload = {
+        numero: phoneNumber,
+        codigoArea: codigoPais, 
+      };
+
+      const numeroResponse = await fetchWithAuth("/api/sabanas/numeros", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(numeroPayload),
+      });
+
+      if (!numeroResponse.ok) {
+        const errorData = await numeroResponse.json();
+        console.warn(
+          "⚠️ Error al guardar número:",
+          errorData?.mensaje || "Desconocido"
+        );
+      } else {
+        console.log("✅ Número telefónico guardado exitosamente.");
+      }
+    } catch (error) {
+      console.error("❌ Error al enviar número telefónico:", error);
     }
 
     try {
@@ -322,19 +349,32 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
               </label>
               <label htmlFor="phone-input">
                 Número telefónico:
-                <input
-                  id="phone-input"
-                  type="text"
-                  className="phone-input"
-                  placeholder="Número telefónico"
-                  value={phoneNumber}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, "");
-                    if (value.length <= 10) setPhoneNumber(value);
-                  }}
-                  disabled={isProcessing}
-                />
+                <div style={{ display: "flex", gap: "8px" }}>
+                  <select
+                    className="phone-select"
+                    value={codigoPais}
+                    onChange={(e) => setCodigoPais(e.target.value)}
+                    disabled={isProcessing}
+                  >
+                    <option value="+52">🇲🇽 +52</option>
+                    <option value="+1">🇺🇸 +1</option>
+                  </select>
+
+                  <input
+                    id="phone-input"
+                    type="text"
+                    className="phone-input"
+                    placeholder="Número"
+                    value={phoneNumber}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
+                      if (value.length <= 10) setPhoneNumber(value);
+                    }}
+                    disabled={isProcessing}
+                  />
+                </div>
               </label>
+
               <label htmlFor="caso-select">
                 Caso relacionado:
                 <select
