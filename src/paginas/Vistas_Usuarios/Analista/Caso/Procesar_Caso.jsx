@@ -263,7 +263,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     try {
       const res = await fetchWithAuth(`/api/departamentos?areaId=${areaId}`);
       const data = await res.json();
-      console.log("📦 Departamentos cargados para área", areaId, "→", data);
       setDepartamentos(data);
     } catch (error) {
       console.error("❌ Error al cargar departamentos:", error);
@@ -303,7 +302,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         casoData.idDepartamento = Number(selectedDept);
       }
 
-      console.log("📤 Enviando al backend:", casoData);
 
       const response = await fetchWithAuth("/api/casos", {
         method: "POST",
@@ -417,7 +415,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     if (rawUser) {
       const userData = JSON.parse(rawUser);
       const nivel = Number(userData.nivel);
-      console.log(userData);
 
       setUserLevel(nivel);
       setUserOrgId(userData.idOrganizacion);
@@ -427,7 +424,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       }
 
       if (nivel === 3 && userData.idArea) {
-        console.log("🟢 Asignando área desde ID directo:", userData.idArea);
         setSelectedArea(String(userData.idArea));
       }
     }
