@@ -185,6 +185,16 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   };
 
   const handleGuardarEnBD = async () => {
+
+    const companiaSeleccionada = companias.find(
+      (compania) => compania.nombre === telco);
+    const idCompania = companiaSeleccionada ? companiaSeleccionada.id : null;
+
+    console.log("Datos a guardar:");
+    console.log("ID Compañía:", idCompania);
+    console.log("Número telefónico:", Number(phoneNumber));
+    console.log("Caso seleccionado:", Number(casoSeleccionado));
+
     if (files.length === 0) {
       setProcessingStatus("error");
       setStatusMessage("No hay archivos para guardar");
