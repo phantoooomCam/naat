@@ -68,7 +68,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         const data = await response.json();
         setCompanias(data);
       } catch (error) {
-        console.error("Error fetching compañías:", error);
+        // console.error("Error fetching compañías:", error);
       }
     };
 
@@ -89,7 +89,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         }));
         setCasos(casosTrasnformados);
       } catch (error) {
-        console.error("Error fetching casos:", error);
+        // console.error("Error fetching casos:", error);
       }
     };
     fetchCasos();
@@ -191,10 +191,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     );
     const idCompania = companiaSeleccionada ? companiaSeleccionada.id : null;
 
-    console.log("Datos a guardar:");
-    console.log("ID Compañía:", idCompania);
-    console.log("Caso seleccionado:", Number(casoSeleccionado));
-
     if (files.length === 0) {
       setProcessingStatus("error");
       setStatusMessage("No hay archivos para guardar");
@@ -233,10 +229,10 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           errorData?.mensaje || "Desconocido"
         );
       } else {
-        console.log("✅ Número telefónico guardado exitosamente.");
+        // console.log("✅ Número telefónico guardado exitosamente.");
       }
     } catch (error) {
-      console.error("❌ Error al enviar número telefónico:", error);
+      // console.error("❌ Error al enviar número telefónico:", error);
     }
 
     try {

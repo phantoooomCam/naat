@@ -4,7 +4,17 @@ import PropTypes from "prop-types"
 import "../../SuperAdmin_Funciones/Inicio/DashHome.css"
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
-import { FaClipboardList, FaChartLine, FaExclamationTriangle } from "react-icons/fa"
+import { 
+  FaClipboardList, 
+  FaChartLine, 
+  FaExclamationTriangle, 
+  FaFileAlt,
+  FaPlus,
+  FaHistory,
+  FaArchive,
+  FaCheckCircle,
+  FaSpinner
+} from "react-icons/fa"
 import { LuBookHeadphones } from "react-icons/lu"
 import {
   BarChart,
@@ -15,11 +25,11 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  LineChart,
-  Line,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts"
-import fetchWithAuth from "../../../utils/fetchWithAuth";
-
+import fetchWithAuth from "../../../utils/fetchWithAuth"
 
 const Dash_Analista = ({ activeView }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -55,15 +65,21 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const organizacion = usuario?.organizacion || "tu organización"
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200)
 
-  // Estados para datos
-  const [totalSabanas, setTotalSabanas] = useState(0)
-  const [actividadReciente, setActividadReciente] = useState([])
-  const [actividadPorDia, setActividadPorDia] = useState([])
-  const [rendimientoData, setRendimientoData] = useState([])
+  // Estados para datos reales
+  const [casos, setCasos] = useState([])
+  const [sabanas, setSabanas] = useState([])
+  const [logs, setLogs] = useState([])
+  const [companias, setCompanias] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [tareasPendientes, setTareasPendientes] = useState(3) // Valor por defecto
-  const [rendimientoActual, setRendimientoActual] = useState(85) // Valor por defecto
+
+  // Estados calculados
+  const [estadisticasCasos, setEstadisticasCasos] = useState({
+    total: 0,
+    activos: 0,
+    archivados: 0,
+    reactivados: 0
+  })
 
   // Detectar cambios en el ancho de la ventana
   useEffect(() => {
@@ -75,165 +91,118 @@ const HomeView = ({ isSidebarCollapsed }) => {
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
-  const getRangoSemanaActual = () => {
-    const hoy = new Date()
-    const diaSemana = hoy.getDay() // 0=Dom, 1=Lun, ..., 6=Sáb
-
-    const inicioSemana = new Date(hoy)
-    inicioSemana.setDate(hoy.getDate() - diaSemana)
-    inicioSemana.setHours(0, 0, 0, 0)
-
-    const finSemana = new Date(inicioSemana)
-    finSemana.setDate(inicioSemana.getDate() + 6)
-    finSemana.setHours(23, 59, 59, 999)
-
-    return { inicioSemana, finSemana }
-  }
-
-  // Fetch sabanas procesadas
+  // Fetch datos reales
   useEffect(() => {
-    const fetchSabanas = async () => {
+    const fetchAllData = async () => {
+      setLoading(true)
       try {
-        // Intentamos obtener datos de sabanas si existe el endpoint
-        const response = await fetch("/api/sabanas", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        
-        }).catch(() => {
-          // Si no existe el endpoint, usamos un valor por defecto
-          return { ok: false }
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          // Filtrar sabanas por usuario actual
-          const sabanasFiltradas = data.filter((sabana) => sabana.idUsuario === usuario.id)
-          setTotalSabanas(sabanasFiltradas.length)
-        } else {
-          // Si no hay endpoint o falla, usamos un valor por defecto
-          setTotalSabanas(12)
+        // Obtener casos
+        const casosResponse = await fetchWithAuth("/api/casos")
+        if (casosResponse.ok) {
+          const casosData = await casosResponse.json()
+          setCasos(casosData)
+          
+          // Calcular estadísticas de casos
+          const stats = {
+            total: casosData.length,
+            activos: casosData.filter(c => c.estado === 'activo').length,
+            archivados: casosData.filter(c => c.estado === 'archivado').length,
+            reactivados: casosData.filter(c => c.estado === 'reactivado').length
+          }
+          setEstadisticasCasos(stats)
         }
 
-        setLoading(false)
+        // Obtener logs de actividad
+        try {
+          const logsResponse = await fetchWithAuth("/api/acciones")
+          if (logsResponse.ok) {
+            const logsData = await logsResponse.json()
+            // Filtrar logs del usuario actual y ordenar por fecha
+            const userLogs = logsData
+              .filter(log => log.idUsuario === usuario.id)
+              .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
+              .slice(0, 5)
+            setLogs(userLogs)
+          }
+        } catch (error) {
+          console.log("No se pudieron cargar los logs")
+        }
+
+        // Obtener compañías para sabanas
+        try {
+          const companiasResponse = await fetchWithAuth("/api/sabanas/companias")
+          if (companiasResponse.ok) {
+            const companiasData = await companiasResponse.json()
+            setCompanias(companiasData)
+          }
+        } catch (error) {
+          console.log("No se pudieron cargar las compañías")
+        }
+
       } catch (error) {
-        console.error("Error al obtener sabanas:", error)
-        // En caso de error, usamos un valor por defecto
-        setTotalSabanas(12)
+        console.error("Error al cargar datos:", error)
+        setError("Error al cargar los datos del dashboard")
+      } finally {
         setLoading(false)
       }
     }
 
-    fetchSabanas()
+    fetchAllData()
   }, [usuario.id])
 
-  // Fetch actividades
-  useEffect(() => {
-    const fetchActividades = async () => {
-      try {
-        const response = await fetchWithAuth("/api/actividades", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        
-        })
+  // Preparar datos para gráficos
+  const casosEstadoData = [
+    { name: 'Activos', value: estadisticasCasos.activos, color: '#2c7a7b' },
+    { name: 'Archivados', value: estadisticasCasos.archivados, color: '#64748b' },
+    { name: 'Reactivados', value: estadisticasCasos.reactivados, color: '#6b46c1' }
+  ].filter(item => item.value > 0)
 
-        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`)
+  // Datos de actividad por día (últimos 7 días)
+  const getActividadSemanal = () => {
+    const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+    const hoy = new Date()
+    const actividadPorDia = []
 
-        const data = await response.json()
+    for (let i = 6; i >= 0; i--) {
+      const fecha = new Date(hoy)
+      fecha.setDate(hoy.getDate() - i)
+      const diaNombre = dias[fecha.getDay()]
+      
+      const casosDelDia = casos.filter(caso => {
+        const fechaCaso = new Date(caso.fechaCreacion)
+        return fechaCaso.toDateString() === fecha.toDateString()
+      }).length
 
-        const dias = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
-
-        // === FILTRAR SEMANA ACTUAL PARA LA GRÁFICA ===
-        const { inicioSemana, finSemana } = getRangoSemanaActual()
-
-        // Filtrar actividades por usuario
-        const actividadesFiltradas = data.filter((actividad) => {
-          const fecha = new Date(actividad.fecha || actividad.fechaHora || actividad.createdAt)
-          return fecha >= inicioSemana && fecha <= finSemana && actividad.idUsuario == usuario.id
-        })
-
-        // === GRÁFICA POR DÍA ===
-        const resumen = {}
-        dias.forEach((dia) => {
-          resumen[dia] = {
-            name: dia,
-            Procesadas: 0,
-            Subidas: 0,
-          }
-        })
-
-        actividadesFiltradas.forEach((actividad) => {
-          const accion = (actividad.accion || "").toLowerCase()
-          const fecha = new Date(actividad.fecha || actividad.fechaHora || actividad.createdAt)
-          const dia = dias[fecha.getDay()]
-
-          if (!resumen[dia]) return
-
-          if (accion.includes("procesar") || accion.includes("analizar")) {
-            resumen[dia].Procesadas += 1
-          } else if (accion.includes("subir") || accion.includes("cargar")) {
-            resumen[dia].Subidas += 1
-          }
-        })
-
-        const datosGrafica = dias.map((dia) => resumen[dia])
-        setActividadPorDia(datosGrafica)
-
-        // === ACTIVIDAD RECIENTE (últimas 5) ===
-        const recientes = [...actividadesFiltradas]
-          .filter((a) => !!a.fecha)
-          .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
-          .slice(0, 5)
-
-        setActividadReciente(recientes)
-
-        // Generar datos de rendimiento para las últimas 4 semanas
-        // Esto es simulado ya que no tenemos un endpoint específico para rendimiento
-        const rendimientoSemanal = [
-          { name: "Semana 1", rendimiento: Math.floor(Math.random() * 20) + 65 },
-          { name: "Semana 2", rendimiento: Math.floor(Math.random() * 20) + 65 },
-          { name: "Semana 3", rendimiento: Math.floor(Math.random() * 20) + 65 },
-          { name: "Semana 4", rendimiento: rendimientoActual },
-        ]
-
-        setRendimientoData(rendimientoSemanal)
-      } catch (error) {
-        console.error("Error al obtener actividades:", error)
-        setActividadPorDia([])
-        setActividadReciente([])
-
-        // Datos de rendimiento por defecto en caso de error
-        const rendimientoDefault = [
-          { name: "Semana 1", rendimiento: 65 },
-          { name: "Semana 2", rendimiento: 75 },
-          { name: "Semana 3", rendimiento: 70 },
-          { name: "Semana 4", rendimiento: 85 },
-        ]
-        setRendimientoData(rendimientoDefault)
-      }
+      actividadPorDia.push({
+        name: diaNombre,
+        casos: casosDelDia
+      })
     }
 
-    fetchActividades()
-  }, [usuario.id, rendimientoActual])
-
-  // Datos de las tarjetas con iconos
-  const dashboardCards = [{ id: 1, title: "Sabanas", route: "/sabana", icon: <LuBookHeadphones /> }]
-
-  // Determinar qué barras mostrar según el tamaño de pantalla
-  const getVisibleBars = () => {
-    return (
-      <>
-        <Bar dataKey="Procesadas" fill="#33608d" />
-        <Bar dataKey="Subidas" fill="#1f77b4" />
-      </>
-    )
+    return actividadPorDia
   }
+
+  // Accesos rápidos actualizados
+  const dashboardCards = [
+    { 
+      id: 1, 
+      title: "Crear Caso", 
+      route: "/casos", 
+      icon: <FaPlus />,
+      description: "Crear un nuevo caso de investigación"
+    },
+    { 
+      id: 2, 
+      title: "Procesar Sabana", 
+      route: "/sabana", 
+      icon: <LuBookHeadphones />,
+      description: "Subir y procesar archivos de sabana"
+    },
+  ]
 
   // Formatear fecha
   const formatearFecha = (fechaISO) => {
+    if (!fechaISO) return "Sin fecha"
     const fecha = new Date(fechaISO)
     return fecha.toLocaleString("es-MX", {
       year: "numeric",
@@ -244,12 +213,18 @@ const HomeView = ({ isSidebarCollapsed }) => {
     })
   }
 
+  // Obtener casos recientes del usuario
+  const casosRecientes = casos
+    .filter(caso => caso.idUsuario === usuario.id)
+    .sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion))
+    .slice(0, 5)
+
   if (loading) {
     return (
       <div className="home-view">
-        <h1>Cargando datos...</h1>
         <div className="loading-container">
           <div className="loading-spinner"></div>
+          <p>Cargando dashboard...</p>
         </div>
       </div>
     )
@@ -258,9 +233,12 @@ const HomeView = ({ isSidebarCollapsed }) => {
   if (error) {
     return (
       <div className="home-view">
-        <h1>Error al cargar datos</h1>
         <div className="error-container">
+          <h2>Error al cargar datos</h2>
           <p>{error}</p>
+          <button onClick={() => window.location.reload()} className="retry-button">
+            Reintentar
+          </button>
         </div>
       </div>
     )
@@ -276,31 +254,31 @@ const HomeView = ({ isSidebarCollapsed }) => {
       <div className="stats-overview">
         <div className="stat-card">
           <div className="stat-icon">
-            <LuBookHeadphones />
-          </div>
-          <div className="stat-content">
-            <h3>{totalSabanas}</h3>
-            <p>Sabanas Procesadas</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">
             <FaClipboardList />
           </div>
           <div className="stat-content">
-            <h3>{tareasPendientes}</h3>
-            <p>Tareas Pendientes</p>
+            <h3>{estadisticasCasos.total}</h3>
+            <p>Total de Casos</p>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon success">
+            <FaCheckCircle />
+          </div>
+          <div className="stat-content">
+            <h3>{estadisticasCasos.activos}</h3>
+            <p>Casos Activos</p>
           </div>
         </div>
 
         <div className="stat-card">
           <div className="stat-icon">
-            <FaChartLine />
+            <FaArchive />
           </div>
           <div className="stat-content">
-            <h3>{rendimientoActual}%</h3>
-            <p>Rendimiento</p>
+            <h3>{estadisticasCasos.archivados}</h3>
+            <p>Casos Archivados</p>
           </div>
         </div>
 
@@ -309,8 +287,8 @@ const HomeView = ({ isSidebarCollapsed }) => {
             <FaExclamationTriangle />
           </div>
           <div className="stat-content">
-            <h3>0</h3>
-            <p>Alertas</p>
+            <h3>{estadisticasCasos.reactivados}</h3>
+            <p>Casos Reactivados</p>
           </div>
         </div>
       </div>
@@ -318,43 +296,32 @@ const HomeView = ({ isSidebarCollapsed }) => {
       {/* Gráficos y visualizaciones */}
       <div className="charts-container">
         <div className="chart-card">
-          <h3>Actividad Semanal</h3>
+          <h3>Casos Creados (Últimos 7 días)</h3>
           <div className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}>
             <div className="chart-scroll-container">
               {windowWidth <= 768 ? (
-                // Versión móvil con ancho fijo y scroll
                 <BarChart
                   width={windowWidth <= 480 ? 500 : 600}
                   height={300}
-                  data={actividadPorDia}
+                  data={getActividadSemanal()}
                   margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis allowDecimals={false} />
                   <Tooltip />
-                  <Legend
-                    layout="horizontal"
-                    verticalAlign="bottom"
-                    align="center"
-                    wrapperStyle={{
-                      bottom: 0,
-                      fontSize: windowWidth <= 480 ? "9px" : "11px",
-                    }}
-                  />
-                  {getVisibleBars()}
+                  <Legend />
+                  <Bar dataKey="casos" fill="#33608d" />
                 </BarChart>
               ) : (
-                // Versión escritorio con ResponsiveContainer
                 <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={actividadPorDia} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
+                  <BarChart data={getActividadSemanal()} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis allowDecimals={false} />
                     <Tooltip />
-                    <Legend layout="horizontal" verticalAlign="bottom" align="center" />
-                    <Bar dataKey="Procesadas" fill="#33608d" />
-                    <Bar dataKey="Subidas" fill="#1f77b4" />
+                    <Legend />
+                    <Bar dataKey="casos" fill="#33608d" />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -363,69 +330,90 @@ const HomeView = ({ isSidebarCollapsed }) => {
         </div>
 
         <div className="chart-card">
-          <h3>Rendimiento Mensual</h3>
+          <h3>Distribución de Casos por Estado</h3>
           <div className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}>
             <div className="chart-scroll-container">
-              {windowWidth <= 768 ? (
-                // Versión móvil con ancho fijo
-                <LineChart
-                  width={windowWidth <= 480 ? 500 : 600}
-                  height={300}
-                  data={rendimientoData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="rendimiento" stroke="#33608d" activeDot={{ r: 8 }} />
-                </LineChart>
-              ) : (
-                // Versión escritorio con ResponsiveContainer
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={rendimientoData} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis domain={[0, 100]} />
+              {casosEstadoData.length > 0 ? (
+                windowWidth <= 768 ? (
+                  <PieChart width={windowWidth <= 480 ? 300 : 400} height={300}>
+                    <Pie
+                      data={casosEstadoData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value }) => `${name}: ${value}`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {casosEstadoData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
                     <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="rendimiento" stroke="#33608d" activeDot={{ r: 8 }} />
-                  </LineChart>
-                </ResponsiveContainer>
+                  </PieChart>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={casosEstadoData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, value }) => `${name}: ${value}`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {casosEstadoData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )
+              ) : (
+                <div className="no-results">
+                  <p>No hay casos para mostrar</p>
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tabla de actividad reciente */}
+      {/* Casos recientes */}
       <div className="recent-activity-card">
-        <h3>Actividad Reciente</h3>
+        <h3>Mis Casos Recientes</h3>
         <div className="table-responsive">
           <table className="activity-table">
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Usuario</th>
-                <th>Acción</th>
-                <th>Fecha y Hora</th>
+                <th>Título</th>
+                <th>Estado</th>
+                <th>Fecha de Creación</th>
               </tr>
             </thead>
             <tbody>
-              {actividadReciente.length > 0 ? (
-                actividadReciente.map((activity) => (
-                  <tr key={activity.idActividad}>
-                    <td>{activity.idActividad}</td>
-                    <td>{activity.nombreAutor || "Desconocido"}</td>
-                    <td>{activity.accion}</td>
-                    <td>{formatearFecha(activity.fecha)}</td>
+              {casosRecientes.length > 0 ? (
+                casosRecientes.map((caso) => (
+                  <tr key={caso.idCaso}>
+                    <td>{caso.idCaso}</td>
+                    <td>{caso.nombre}</td>
+                    <td>
+                      <span className={`status-badge ${caso.estado}`}>
+                        {caso.estado || 'Sin estado'}
+                      </span>
+                    </td>
+                    <td>{formatearFecha(caso.fechaCreacion)}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td colSpan="4" className="no-results">
-                    No hay actividades recientes
+                    No tienes casos creados
                   </td>
                 </tr>
               )}
@@ -434,6 +422,35 @@ const HomeView = ({ isSidebarCollapsed }) => {
         </div>
       </div>
 
+      {/* Actividad reciente */}
+      {logs.length > 0 && (
+        <div className="recent-activity-card">
+          <h3>Mi Actividad Reciente</h3>
+          <div className="table-responsive">
+            <table className="activity-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Caso</th>
+                  <th>Acción</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.idAccion}>
+                    <td>{log.idAccion}</td>
+                    <td>{log.idCaso}</td>
+                    <td>{log.detalleAccion}</td>
+                    <td>{formatearFecha(log.fecha)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Accesos rápidos */}
       <h2 className="section-title">Accesos Rápidos</h2>
       <div className="dashboard-grid">
@@ -441,7 +458,7 @@ const HomeView = ({ isSidebarCollapsed }) => {
           <div key={card.id} className="card" onClick={() => navigate(card.route)}>
             <span className="icon">{card.icon}</span>
             <h2>{card.title}</h2>
-            <p>Administrar {card.title.toLowerCase()}.</p>
+            <p>{card.description}</p>
           </div>
         ))}
       </div>
@@ -458,4 +475,3 @@ HomeView.propTypes = {
 }
 
 export default Dash_Analista
-
