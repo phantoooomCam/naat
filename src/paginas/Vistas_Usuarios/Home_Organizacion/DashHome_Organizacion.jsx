@@ -195,7 +195,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
     return tipo || "N/A"
   }
 
-  // Datos de las tarjetas con iconos (sin alerta de organización, con casos)
   const dashboardCards = [
     {
       id: 1,
