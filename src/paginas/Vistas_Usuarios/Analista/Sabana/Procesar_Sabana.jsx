@@ -435,7 +435,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                     </button>
                   </div>
                 </div>
-              ))}
+               ))} 
             </div>
           ) : (
             <div className="empty-files">
