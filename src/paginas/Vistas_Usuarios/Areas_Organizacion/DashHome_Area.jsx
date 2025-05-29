@@ -4,22 +4,9 @@ import PropTypes from "prop-types"
 import "../../SuperAdmin_Funciones/Inicio/DashHome.css"
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect } from "react"
-import { FaUsers, FaChartLine, FaSignInAlt, FaTasks, FaUserClock, FaExclamationTriangle } from "react-icons/fa"
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts"
-import fetchWithAuth from "../../../utils/fetchWithAuth";
-
+import { FaClipboardList } from "react-icons/fa"
+import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
+import fetchWithAuth from "../../../utils/fetchWithAuth"
 
 const DashHome_Area = ({ activeView }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -53,15 +40,15 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const nombre = usuario?.nombre || "Usuario"
   const navigate = useNavigate()
   const organizacion = usuario?.organizacion || "tu organización"
+  const area = usuario?.area || "tu área"
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200)
 
-  // Estados para datos
-  const [totalUsuarios, setTotalUsuarios] = useState(0)
-  const [totalDepartamentos, setTotalDepartamentos] = useState(0)
-  const [pendientes, setPendientes] = useState(0)
-  const [actividadPorDia, setActividadPorDia] = useState([])
-  const [userTypeData, setUserTypeData] = useState([])
-  const [actividadReciente, setActividadReciente] = useState([])
+  // Estados para datos reales
+  const [usuarios, setUsuarios] = useState([])
+  const [departamentos, setDepartamentos] = useState([])
+  const [organizaciones, setOrganizaciones] = useState([])
+  const [areas, setAreas] = useState([])
+  const [ingresos, setIngresos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -75,256 +62,144 @@ const HomeView = ({ isSidebarCollapsed }) => {
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
-  const getRangoSemanaActual = () => {
-    const hoy = new Date()
-    const diaSemana = hoy.getDay() // 0=Dom, 1=Lun, ..., 6=Sáb
-
-    const inicioSemana = new Date(hoy)
-    inicioSemana.setDate(hoy.getDate() - diaSemana)
-    inicioSemana.setHours(0, 0, 0, 0)
-
-    const finSemana = new Date(inicioSemana)
-    finSemana.setDate(inicioSemana.getDate() + 6)
-    finSemana.setHours(23, 59, 59, 999)
-
-    return { inicioSemana, finSemana }
-  }
-
-  // Fetch usuarios
+  // Fetch datos reales
   useEffect(() => {
-    const fetchUsuarios = async () => {
+    const fetchAllData = async () => {
+      setLoading(true)
       try {
-        const response = await fetchWithAuth("/api/usuarios", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        
-        })
-
-        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
-
-        const data = await response.json()
-        setTotalUsuarios(data.length)
-
-        // Usuarios pendientes (nivel null, undefined, 0, "null", "0")
-        const pendientesUsuarios = data.filter((user) => {
-          const nivel = user.nivel
-          return nivel === null || nivel === undefined || nivel === "null" || nivel === "0" || nivel === 0
-        })
-        setPendientes(pendientesUsuarios.length)
-
-        // Agrupar por nivel
-        const conteoPorNivel = {
-          "Super Admin": 0,
-          "Admin Org": 0,
-          "Jefe de Área": 0,
-          "Jefe de Departamento": 0,
-          Analista: 0,
+        // Obtener usuarios del área
+        const usuariosResponse = await fetchWithAuth("/api/usuarios")
+        let usuariosArea = []
+        if (usuariosResponse.ok) {
+          const usuariosData = await usuariosResponse.json()
+          // Filtrar usuarios del mismo área
+          usuariosArea = usuariosData.filter((u) => u.idArea === usuario.idArea)
+          setUsuarios(usuariosArea)
         }
 
-        data.forEach((user) => {
-          switch (user.nivel) {
-            case 1:
-              conteoPorNivel["Super Admin"]++
-              break
-            case 2:
-              conteoPorNivel["Admin Org"]++
-              break
-            case 3:
-              conteoPorNivel["Jefe de Área"]++
-              break
-            case 4:
-              conteoPorNivel["Jefe de Departamento"]++
-              break
-            case 5:
-              conteoPorNivel["Analista"]++
-              break
-            default:
-              break
+        // Obtener departamentos
+        const deptosResponse = await fetchWithAuth("/api/departamentos")
+        if (deptosResponse.ok) {
+          const deptosData = await deptosResponse.json()
+          // Filtrar departamentos del área
+          const deptosArea = Array.isArray(deptosData)
+            ? deptosData.filter((d) => d.idArea === usuario.idArea)
+            : Array.isArray(deptosData.departamentos)
+              ? deptosData.departamentos.filter((d) => d.idArea === usuario.idArea)
+              : []
+          setDepartamentos(deptosArea)
+        }
+
+        // Obtener organizaciones
+        const orgResponse = await fetchWithAuth("/api/organizaciones")
+        if (orgResponse.ok) {
+          const orgData = await orgResponse.json()
+          setOrganizaciones(orgData)
+        }
+
+        // Obtener áreas
+        const areasResponse = await fetchWithAuth("/api/areas")
+        if (areasResponse.ok) {
+          const areasData = await areasResponse.json()
+          setAreas(areasData)
+        }
+
+        // Obtener ingresos completos - USAR usuariosArea en lugar de usuarios
+        if (usuariosArea.length > 0) {
+          const ingresosResponse = await fetchWithAuth("/api/ingresos")
+          if (ingresosResponse.ok) {
+            const ingresosData = await ingresosResponse.json()
+            // Filtrar ingresos de usuarios del área y tomar los más recientes
+            const usuariosIds = usuariosArea.map((u) => u.id)
+            const ingresosArea = ingresosData
+              .filter((ingreso) => usuariosIds.includes(ingreso.idUsuario))
+              .sort((a, b) => new Date(b.hora || b.fechaHora) - new Date(a.hora || a.fechaHora))
+              .slice(0, 10)
+            setIngresos(ingresosArea)
           }
-        })
-
-        // Convertir a formato para PieChart
-        const datosGrafico = Object.entries(conteoPorNivel)
-          .filter(([_, value]) => value > 0)
-          .map(([name, value]) => ({ name, value }))
-
-        setUserTypeData(datosGrafico)
+        }
       } catch (error) {
-        console.error("Error al obtener usuarios:", error)
-      }
-    }
-
-    fetchUsuarios()
-  }, [])
-
-  // Fetch departamentos
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetchWithAuth("/api/departamentos", {
-          headers: { "Content-Type": "application/json" },
-        
-        })
-
-        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
-
-        // Filtrar departamentos por área del usuario
-        const deptosData = await response.json()
-        const deptosFiltrados = deptosData.filter((depto) => depto.idArea == usuario.idArea)
-        setTotalDepartamentos(deptosFiltrados.length)
-
-        setLoading(false)
-      } catch (error) {
-        console.error("Error al obtener departamentos:", error)
-        setError(error.message)
+        console.error("Error al cargar datos:", error)
+        setError("Error al cargar los datos del dashboard")
+      } finally {
         setLoading(false)
       }
     }
 
-    fetchData()
+    fetchAllData()
   }, [usuario.idArea])
 
-  // Fetch actividades
-  useEffect(() => {
-    const fetchActividades = async () => {
-      try {
-        const response = await fetchWithAuth("/api/actividades", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        
-        })
-
-        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`)
-
-        const data = await response.json()
-
-        const dias = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
-
-        // === FILTRAR SEMANA ACTUAL PARA LA GRÁFICA ===
-        const { inicioSemana, finSemana } = getRangoSemanaActual()
-
-        // Filtrar actividades por área del usuario
-        const actividadesFiltradas = data.filter((actividad) => {
-          const fecha = new Date(actividad.fecha || actividad.fechaHora || actividad.createdAt)
-          return fecha >= inicioSemana && fecha <= finSemana && actividad.area == usuario.area
-        })
-
-        // === GRÁFICA POR DÍA ===
-        const resumen = {}
-        dias.forEach((dia) => {
-          resumen[dia] = {
-            name: dia,
-            Crear: 0,
-            Actualizar: 0,
-            Eliminar: 0,
-          }
-        })
-
-        actividadesFiltradas.forEach((actividad) => {
-          const accion = (actividad.accion || "").toLowerCase()
-          const fecha = new Date(actividad.fecha || actividad.fechaHora || actividad.createdAt)
-          const dia = dias[fecha.getDay()]
-
-          if (!resumen[dia]) return
-
-          if (accion.includes("crear")) resumen[dia].Crear += 1
-          else if (accion.includes("actualizar")) resumen[dia].Actualizar += 1
-          else if (accion.includes("eliminar")) resumen[dia].Eliminar += 1
-        })
-
-        const datosGrafica = dias.map((dia) => resumen[dia])
-        setActividadPorDia(datosGrafica)
-
-        // === ACTIVIDAD RECIENTE (últimas 5) ===
-        const recientes = [...actividadesFiltradas]
-          .filter((a) => !!a.fecha)
-          .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
-          .slice(0, 5)
-
-        setActividadReciente(recientes)
-      } catch (error) {
-        console.error("Error al obtener actividades:", error)
-        setActividadPorDia([])
-        setActividadReciente([])
-      }
+  // Preparar datos para gráfica de usuarios por nivel
+  const usuariosPorNivel = usuarios.reduce((acc, usuario) => {
+    let nivelNombre = ""
+    switch (usuario.nivel) {
+      case 1:
+        nivelNombre = "Super Admin"
+        break
+      case 2:
+        nivelNombre = "Admin Org"
+        break
+      case 3:
+        nivelNombre = "Jefe de Área"
+        break
+      case 4:
+        nivelNombre = "Jefe de Departamento"
+        break
+      case 5:
+        nivelNombre = "Analista"
+        break
+      default:
+        nivelNombre = "Sin Nivel"
+        break
     }
+    acc[nivelNombre] = (acc[nivelNombre] || 0) + 1
+    return acc
+  }, {})
 
-    fetchActividades()
-  }, [usuario.area])
+  const usuariosNivelData = Object.entries(usuariosPorNivel).map(([nivel, cantidad], index) => ({
+    name: nivel,
+    value: cantidad,
+    color: ["#33608d", "#2c7a7b", "#6b46c1", "#d69e2e", "#e53e3e"][index % 5],
+  }))
 
-  const COLORS = [
-    "#2c3e50", // azul oscuro elegante
-    "#1976d2", // azul brillante
-    "#3f7cac", // azul intermedio
-    "#90caf9", // azul claro
-    "#546e7a", // gris azulado
-  ]
+  // Preparar datos para gráfica de departamentos con nombres reales
+  const departamentosData = departamentos.map((depto, index) => ({
+    name: depto.nombreDepartamento || `Departamento ${depto.idDepartamento}`,
+    value: 1, // Valor fijo para que todos los departamentos tengan el mismo peso en la gráfica
+    color: ["#33608d", "#2c7a7b", "#6b46c1", "#d69e2e", "#e53e3e", "#8b5cf6"][index % 6],
+  }))
 
-  // Determinar qué barras mostrar según el tamaño de pantalla
-  const getVisibleBars = () => {
-    if (windowWidth <= 480) {
-      return (
-        <>
-          <Bar dataKey="Crear" fill="#33608d" />
-          <Bar dataKey="Actualizar" fill="#1f77b4" />
-          <Bar dataKey="Eliminar" fill="#d62728" />
-        </>
-      )
-    }
-    return (
-      <>
-        <Bar dataKey="Crear" fill="#33608d" />
-        <Bar dataKey="Actualizar" fill="#1f77b4" />
-        <Bar dataKey="Eliminar" fill="#d62728" />
-      </>
-    )
-  }
-
-  // Formatear fecha
-  const formatearFecha = (fechaISO) => {
-    const fecha = new Date(fechaISO)
-    return fecha.toLocaleString("es-MX", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    })
-  }
-
-  // Datos de las tarjetas con iconos
+  // Accesos rápidos
   const dashboardCards = [
-    { id: 1, title: "Gestión Usuarios", route: "/gestion", icon: <FaUsers /> },
     {
-      id: 3,
-      title: "Actividad del Sistema",
-      route: "/actividad",
-      icon: <FaChartLine />,
-    },
-    {
-      id: 4,
-      title: "Ingresos del Sistema",
-      route: "/ingresos",
-      icon: <FaSignInAlt />,
-    },
-    {
-      id: 6,
-      title: "Gestión Departamento",
-      route: "/depto",
-      icon: <FaTasks />,
+      id: 1,
+      title: "Casos",
+      route: "/caso",
+      icon: <FaClipboardList />,
+      description: "Gestionar casos del área",
     },
   ]
+
+  // Formatear fecha como en IngresosSist
+  const formatearFecha = (fechaISO) => {
+    if (!fechaISO) return "Sin fecha"
+    const fecha = new Date(fechaISO)
+    return fecha.toLocaleString()
+  }
+
+  // Traducir tipo como en IngresosSist
+  const traducirTipo = (tipo) => {
+    if (tipo === "Iniciar Sesión") return "Inicio Sesión"
+    if (tipo === "Cerrar Sesión") return "Cerró Sesión"
+    return tipo || "N/A"
+  }
 
   if (loading) {
     return (
       <div className="home-view">
-        <h1>Cargando datos...</h1>
         <div className="loading-container">
           <div className="loading-spinner"></div>
+          <p>Cargando dashboard del área...</p>
         </div>
       </div>
     )
@@ -333,9 +208,12 @@ const HomeView = ({ isSidebarCollapsed }) => {
   if (error) {
     return (
       <div className="home-view">
-        <h1>Error al cargar datos</h1>
         <div className="error-container">
+          <h2>Error al cargar datos</h2>
           <p>{error}</p>
+          <button onClick={() => window.location.reload()} className="retry-button">
+            Reintentar
+          </button>
         </div>
       </div>
     )
@@ -347,85 +225,167 @@ const HomeView = ({ isSidebarCollapsed }) => {
         Bienvenido {nombre} a {organizacion}
       </h1>
 
-      {/* Estadísticas resumidas */}
-      <div className="stats-overview">
-        <div className="stat-card">
-          <div className="stat-icon">
-            <FaUsers />
-          </div>
-          <div className="stat-content">
-            <h3>{totalUsuarios}</h3>
-            <p>Usuarios en el Área</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon warning">
-            <FaExclamationTriangle />
-          </div>
-          <div className="stat-content">
-            <h3>1</h3>
-            <p>Alertas del Área</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Gráficos y visualizaciones */}
+      {/* Gráficos */}
       <div className="charts-container">
-
         <div className="chart-card">
-          <h3>Distribución de Usuarios</h3>
+          <h3>Usuarios por Nivel</h3>
           <div className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}>
             <div className="chart-scroll-container">
-              {windowWidth <= 768 ? (
-                // Versión móvil con ancho fijo
-                <PieChart width={300} height={300}>
-                  <Pie
-                    data={userTypeData}
-                    cx={150}
-                    cy={150}
-                    outerRadius={windowWidth <= 480 ? 80 : 90}
-                    fill="#8884d8"
-                    dataKey="value"
-                    labelLine={windowWidth > 480}
-                    label={windowWidth > 480 ? ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%` : null}
-                  >
-                    {userTypeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value, name) => [`${value} usuario(s)`, name]} />
-                </PieChart>
-              ) : (
-                // Versión escritorio con ResponsiveContainer
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
+              {usuariosNivelData.length > 0 ? (
+                windowWidth <= 768 ? (
+                  <PieChart width={windowWidth <= 480 ? 300 : 400} height={300}>
                     <Pie
-                      data={userTypeData}
+                      data={usuariosNivelData}
                       cx="50%"
                       cy="50%"
-                      outerRadius={100}
+                      labelLine={false}
+                      label={({ name, value }) => `${name}: ${value}`}
+                      outerRadius={80}
                       fill="#8884d8"
                       dataKey="value"
-                      labelLine={true}
-                      stroke="#ffffff"
-                      strokeWidth={2}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                     >
-                      {userTypeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      {usuariosNivelData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value, name) => [`${value} usuario(s)`, name]} />
+                    <Tooltip />
                   </PieChart>
-                </ResponsiveContainer>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={usuariosNivelData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, value }) => `${name}: ${value}`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {usuariosNivelData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )
+              ) : (
+                <div className="no-results">
+                  <p>No hay usuarios para mostrar</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="chart-card">
+          <h3>Departamentos del Área</h3>
+          <div className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}>
+            <div className="chart-scroll-container">
+              {departamentosData.length > 0 ? (
+                windowWidth <= 768 ? (
+                  <PieChart width={windowWidth <= 480 ? 300 : 400} height={300}>
+                    <Pie
+                      data={departamentosData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, value }) => `${name}: ${value}`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {departamentosData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                ) : (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={departamentosData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, value }) => `${name}: ${value}`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {departamentosData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )
+              ) : (
+                <div className="no-results">
+                  <p>No hay departamentos para mostrar</p>
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
 
+      {/* Tabla resumen de ingresos - Formato completo como IngresosSist */}
+      <div className="recent-activity-card">
+        <h3>Resumen de Ingresos al Sistema</h3>
+        <div className="table-responsive">
+          <table className="activity-table">
+            <thead>
+              <tr>
+                <th>ID Ingreso</th>
+                <th>ID Usuario</th>
+                <th>Nombre</th>
+                <th>Apellido Paterno</th>
+                <th>Apellido Materno</th>
+                <th>Fecha y Hora</th>
+                <th>Tipo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ingresos.length > 0 ? (
+                ingresos.map((ingreso) => (
+                  <tr key={ingreso.idIngreso}>
+                    <td>{ingreso.idIngreso}</td>
+                    <td>{ingreso.idUsuario}</td>
+                    <td>{ingreso.nombre || "N/A"}</td>
+                    <td>{ingreso.apellidoPaterno || "N/A"}</td>
+                    <td>{ingreso.apellidoMaterno || "N/A"}</td>
+                    <td>{formatearFecha(ingreso.hora || ingreso.fechaHora)}</td>
+                    <td>{traducirTipo(ingreso.tipo)}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="no-results">
+                    No hay ingresos registrados
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       {/* Accesos rápidos */}
+      <h2 className="section-title">Accesos Rápidos</h2>
+      <div className="dashboard-grid">
+        {dashboardCards.map((card) => (
+          <div key={card.id} className="card" onClick={() => navigate(card.route)}>
+            <span className="icon">{card.icon}</span>
+            <h2>{card.title}</h2>
+            <p>{card.description}</p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -439,4 +399,3 @@ HomeView.propTypes = {
 }
 
 export default DashHome_Area
-
