@@ -82,7 +82,6 @@ function App() {
         <Route path="/logscasos" element={<LogsCasos />} />
         <Route path="/casos" element={<Caso />} />
       </Route>
-      <Route path="/casos" element={<Caso />} />
     </Routes>
   );
 }
