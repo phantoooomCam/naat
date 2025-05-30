@@ -78,11 +78,10 @@ function App() {
         <Route path="/home_analista" element={<Home_Analista />} />
 
         {/* Funciones Analista */}
-        {/* <Route path="/sabana" element={<Sabana />} /> */}
+        <Route path="/sabana" element={<Sabana />} />
         <Route path="/logscasos" element={<LogsCasos />} />
-        {/* <Route path="/casos" element={<Caso />} /> */}
+        <Route path="/casos" element={<Caso />} />
       </Route>
-      <Route path="/sabana" element={<Sabana />} />
       <Route path="/casos" element={<Caso />} />
     </Routes>
   );
