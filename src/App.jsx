@@ -83,7 +83,6 @@ function App() {
         {/* <Route path="/casos" element={<Caso />} /> */}
       </Route>
       <Route path="/sabana" element={<Sabana />} />
-
       <Route path="/casos" element={<Caso />} />
     </Routes>
   );
