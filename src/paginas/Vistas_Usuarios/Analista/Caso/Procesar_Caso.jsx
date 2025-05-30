@@ -508,7 +508,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       <div className="caso-header">
         <div className="header-content">
           <h2>Gestión de Casos</h2>
-          <p>Crea y administra casos de investigación</p>
         </div>
         <div className="search-container">
           <div className="search-input-wrapper">
