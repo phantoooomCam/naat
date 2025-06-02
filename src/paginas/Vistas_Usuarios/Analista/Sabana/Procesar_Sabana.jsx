@@ -186,81 +186,83 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   };
 
   const handleGuardarEnBD = async () => {
-    const companiaSeleccionada = companias.find(
-      (compania) => compania.nombre === telco
-    );
-    const idCompania = companiaSeleccionada ? companiaSeleccionada.id : null;
+  const companiaSeleccionada = companias.find(
+    (compania) => compania.nombre === telco
+  );
+  const idCompania = companiaSeleccionada ? companiaSeleccionada.id : null;
 
-    if (files.length === 0) {
-      setProcessingStatus("error");
-      setStatusMessage("No hay archivos para guardar");
-      setTimeout(() => setProcessingStatus(null), 3000);
-      return;
+  if (files.length === 0) {
+    setProcessingStatus("error");
+    setStatusMessage("No hay archivos para guardar");
+    setTimeout(() => setProcessingStatus(null), 3000);
+    return;
+  }
+
+  if (!casoSeleccionado) {
+    setProcessingStatus("error");
+    setStatusMessage("Debe seleccionar un caso");
+    setTimeout(() => setProcessingStatus(null), 3000);
+    return;
+  }
+
+  setIsProcessing(true);
+  setProcessingStatus(null);
+
+  try {
+    // Primero enviar el número telefónico
+    const numeroPayload = {
+      numero: phoneNumber,
+      codigoArea: codigoPais, 
+    };
+
+    const numeroResponse = await fetchWithAuth("/api/sabanas/numeros", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(numeroPayload),
+    });
+
+    if (!numeroResponse.ok) {
+      const errorData = await numeroResponse.json();
+      console.warn("⚠️ Error al guardar número:", errorData?.mensaje || "Desconocido");
     }
 
-    setIsProcessing(true);
-    setProcessingStatus(null);
-
+    // Subir archivos con idCaso
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
       if (files[i].rawFile) {
         formData.append("archivos", files[i].rawFile);
       }
     }
-    
-    try {
-      const numeroPayload = {
-        numero: phoneNumber,
-        codigoArea: codigoPais, 
-      };
 
-      const numeroResponse = await fetchWithAuth("/api/sabanas/numeros", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(numeroPayload),
-      });
+    // Agregamos el idCaso
+    formData.append("idCaso", casoSeleccionado.toString());
 
-      if (!numeroResponse.ok) {
-        const errorData = await numeroResponse.json();
-        console.warn(
-          "⚠️ Error al guardar número:",
-          errorData?.mensaje || "Desconocido"
-        );
-      } else {
-        // console.log("✅ Número telefónico guardado exitosamente.");
-      }
-    } catch (error) {
-      // console.error("❌ Error al enviar número telefónico:", error);
-    }
+    const response = await fetchWithAuth("/api/sabanas/archivos/subir", {
+      method: "POST",
+      body: formData,
+    });
 
-    try {
-      const response = await fetchWithAuth("/api/sabanas/archivos/subirftp", {
-        method: "POST",
-        body: formData,
-      });
+    const data = await response.json();
+    setIsProcessing(false);
 
-      const data = await response.json();
-      setIsProcessing(false);
-
-      if (response.ok) {
-        setProcessingStatus("success");
-        setStatusMessage("Archivos guardados correctamente");
-      } else {
-        setProcessingStatus("error");
-        setStatusMessage(data.message || "Error al guardar los archivos");
-      }
-
-      setTimeout(() => setProcessingStatus(null), 3000);
-    } catch (error) {
-      console.error(error);
-      setIsProcessing(false);
+    if (response.ok) {
+      setProcessingStatus("success");
+      setStatusMessage("Archivos guardados correctamente");
+    } else {
       setProcessingStatus("error");
-      setStatusMessage("Error de conexión al servidor");
-      setTimeout(() => setProcessingStatus(null), 3000);
+      setStatusMessage(data.message || "Error al guardar los archivos");
     }
-  };
+
+    setTimeout(() => setProcessingStatus(null), 3000);
+  } catch (error) {
+    console.error("❌ Error al guardar en BD:", error);
+    setIsProcessing(false);
+    setProcessingStatus("error");
+    setStatusMessage("Error de conexión al servidor");
+    setTimeout(() => setProcessingStatus(null), 3000);
+  }
+};
+
 
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + " B";

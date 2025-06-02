@@ -102,7 +102,6 @@ const DashSolicitud = () => {
       }
 
       const data = await response.json();
-      console.log("Organizaciones cargadas:", data);
       setOrganizaciones(data);
     } catch (error) {
       console.error("Error al cargar organizaciones:", error);
