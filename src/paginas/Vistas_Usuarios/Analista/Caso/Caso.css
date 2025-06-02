@@ -183,12 +183,7 @@ body {
 @media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
   .caso-container {
     padding: 1.5rem;
-    /* Remover: margin-left: 0; para mantener funcionalidad de colapso */
-  }
-
-  .caso-container.collapsed {
     margin-left: 0;
-    padding-right: 2rem; /* Más padding cuando está colapsado */
   }
 
   .dashboard-layout {
@@ -201,7 +196,7 @@ body {
 @media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
   .caso-container {
     padding: 1.5rem 3rem 1.5rem 1.5rem; /* Mucho más padding derecho */
-    /* Mantener margin-left: -10px; del CSS base para sidebar abierto */
+    margin-left: -10px;
   }
 
   .caso-container.collapsed {
@@ -840,23 +835,6 @@ body {
   }
 }
 
-/* Dash-home container styles - NECESARIO PARA FUNCIONALIDAD DE COLAPSO */
-.dash-home {
-  width: 100%;
-  height: 100%;
-  transition: margin-left var(--transition-normal);
-}
-
-.dash-home.collapsed {
-  margin-left: 0;
-}
-
-/* Asegurar que el container interno también responda */
-.dash-home .container {
-  width: 100%;
-  height: 100%;
-}
-
 /* RESPONSIVE MEJORADO PARA TODOS LOS DISPOSITIVOS */
 
 /* Móviles pequeños */
@@ -970,13 +948,8 @@ body {
 /* Tablets portrait */
 @media (min-width: 768px) and (max-width: 991px) {
   .caso-container {
-    /* Remover: margin-left: 0; para mantener funcionalidad de colapso */
-    padding: 1.25rem 2rem 1.25rem 1.25rem; /* Más padding derecho */
-  }
-
-  .caso-container.collapsed {
     margin-left: 0;
-    padding-right: 2rem;
+    padding: 1.25rem;
   }
 
   .action-buttons {
@@ -1027,59 +1000,4 @@ body {
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
-}
-
-/* SOBRESCRIBIR REGLAS DE HOMEALT.CSS QUE INTERFIEREN CON COLAPSO */
-/* Estas reglas tienen mayor especificidad para sobrescribir main-content de HomeAlt */
-
-.dashboard-container .main-content {
-  margin-left: 0 !important;
-  transition: margin-left 0.3s ease;
-}
-
-.dashboard-container .main-content.collapsed {
-  margin-left: 0 !important;
-}
-
-/* Asegurar que el contenido de casos no tenga margin-left fijo */
-.main-content .dash-home,
-.main-content .caso-container {
-  margin-left: -10px;
-  transition: margin-left 0.3s ease;
-}
-
-.main-content .dash-home.collapsed,
-.main-content .caso-container.collapsed {
-  margin-left: 0;
-}
-
-/* Para iPad específicamente - sobrescribir cualquier regla de HomeAlt */
-@media (min-width: 768px) and (max-width: 1024px) {
-  .dashboard-container .main-content {
-    margin-left: 0 !important;
-    padding: 0 !important;
-  }
-
-  .main-content .caso-container {
-    margin-left: -10px;
-  }
-
-  .main-content .caso-container.collapsed {
-    margin-left: 0;
-  }
-}
-
-/* Para desktop - asegurar que funcione correctamente */
-@media (min-width: 1025px) {
-  .dashboard-container .main-content {
-    margin-left: 0 !important;
-  }
-
-  .main-content .caso-container {
-    margin-left: -10px;
-  }
-
-  .main-content .caso-container.collapsed {
-    margin-left: 0;
-  }
 }
