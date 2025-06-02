@@ -122,34 +122,14 @@ body {
   box-shadow: 0 0 0 2px rgba(51, 96, 141, 0.2);
 }
 
-/* Dashboard layout - MEJORADO PARA TABLETS */
+/* Dashboard layout - MEJORADO CON SISTEMA RESPONSIVE DE SABANA */
 .dashboard-layout {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr 2fr;
   gap: 1.5rem;
-}
-
-/* Tablet y desktop */
-@media (min-width: 768px) {
-  .dashboard-layout {
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
-  }
-  
-  .left-column {
-    grid-column: 1;
-  }
-  
-  .right-column {
-    grid-column: 2;
-  }
-}
-
-/* Desktop grande */
-@media (min-width: 1200px) {
-  .dashboard-layout {
-    grid-template-columns: 1fr 2fr;
-  }
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .left-column,
@@ -157,37 +137,49 @@ body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-width: 0; /* Permite que los elementos se contraigan */
+  overflow: hidden;
 }
 
-/* Ajustar el responsive para móviles */
-@media (max-width: 767px) {
+/* Tablet y móvil - Todo en una columna */
+@media (max-width: 992px) {
   .dashboard-layout {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
   }
-  
+
   .left-column,
   .right-column {
     grid-column: 1;
-  }
-  
-  .caso-container {
-    padding: 1rem;
-    margin-left: 0;
-  }
-  
-  .caso-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .search-container {
     width: 100%;
-    max-width: 100%;
-    margin-top: 0.5rem;
   }
 }
 
-/* Card styles */
+/* Móviles medianos */
+@media (max-width: 768px) {
+  .dashboard-layout {
+    gap: 1rem;
+  }
+
+  .left-column,
+  .right-column {
+    gap: 1rem;
+  }
+}
+
+/* Móviles pequeños */
+@media (max-width: 480px) {
+  .dashboard-layout {
+    gap: 0.75rem;
+  }
+
+  .left-column,
+  .right-column {
+    gap: 0.75rem;
+  }
+}
+
+/* Card styles - MEJORADO PARA RESPONSIVE */
 .crear-card,
 .casos-card,
 .filtros-card,
@@ -199,6 +191,9 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0; /* Permite contracción */
 }
 
 .crear-card:hover,
@@ -206,6 +201,42 @@ body {
 .filtros-card:hover,
 .detalles-card:hover {
   box-shadow: var(--shadow-lg);
+}
+
+/* Asegurar que los cards no se desborden */
+.casos-card,
+.detalles-card {
+  min-height: 400px;
+  max-height: 600px;
+}
+
+.crear-card,
+.filtros-card {
+  height: fit-content;
+}
+
+/* Responsive para cards en móviles */
+@media (max-width: 768px) {
+  .crear-card,
+  .casos-card,
+  .filtros-card,
+  .detalles-card {
+    margin-bottom: 0;
+  }
+
+  .casos-card,
+  .detalles-card {
+    min-height: 300px;
+    max-height: 500px;
+  }
+}
+
+@media (max-width: 480px) {
+  .casos-card,
+  .detalles-card {
+    min-height: 250px;
+    max-height: 400px;
+  }
 }
 
 .card-header {
@@ -406,12 +437,30 @@ body {
   color: var(--text-primary);
 }
 
-/* Casos list */
+/* Casos list - MEJORADO RESPONSIVE */
 .casos-list {
   flex-grow: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   max-height: 400px;
   padding: 0.75rem;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Responsive para casos list */
+@media (max-width: 768px) {
+  .casos-list {
+    max-height: 300px;
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .casos-list {
+    max-height: 250px;
+    padding: 0.375rem;
+  }
 }
 
 .caso-item {
@@ -747,6 +796,8 @@ body {
 
   .search-container {
     order: -1;
+    width: 100%;
+    max-width: 100%;
   }
 
   .card-header {
@@ -756,14 +807,14 @@ body {
     align-items: flex-start;
   }
 
+  .card-header h3 {
+    font-size: 1rem;
+  }
+
   .crear-content,
   .filtros-content,
   .detalles-content {
     padding: 1rem;
-  }
-
-  .casos-list {
-    max-height: 250px;
   }
 
   .caso-item {
@@ -784,6 +835,7 @@ body {
   .action-buttons {
     flex-direction: column;
     gap: 0.5rem;
+    padding: 0.75rem 1rem 1rem;
   }
 
   .reactivate-button,
@@ -818,6 +870,8 @@ body {
 
   .search-container {
     order: -1;
+    width: 100%;
+    max-width: 100%;
   }
 
   .action-buttons {
@@ -832,22 +886,12 @@ body {
 }
 
 /* Tablets portrait */
-@media (min-width: 768px) and (max-width: 1023px) {
+@media (min-width: 768px) and (max-width: 991px) {
   .caso-container {
     margin-left: 0;
+    padding: 1.25rem;
   }
 
-  .dashboard-layout {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
-  .left-column,
-  .right-column {
-    gap: 1.5rem;
-  }
-
-  /* En tablets, mantener el layout en columnas pero ajustar espaciado */
   .action-buttons {
     flex-direction: row;
     flex-wrap: wrap;
@@ -861,7 +905,7 @@ body {
 }
 
 /* Desktop */
-@media (min-width: 1024px) {
+@media (min-width: 992px) {
   .caso-container {
     margin-left: -10px;
   }
@@ -871,73 +915,29 @@ body {
   }
 }
 
-/* Asegurar que los botones de selección funcionen correctamente */
-.caso-select {
-  appearance: auto;
-  padding: 0.625rem 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  font-size: 0.875rem;
+/* Asegurar que todos los inputs y selects sean responsive */
+.caso-input,
+.caso-textarea,
+.caso-select,
+.search-input {
   width: 100%;
-  background-color: white;
-  cursor: pointer;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
-/* Estilo específico para el botón Crear Caso como en la imagen */
-button.crear-button {
-  background-color: #94a3b8;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+/* Mejorar el comportamiento de overflow en todos los cards */
+.crear-card *,
+.casos-card *,
+.filtros-card *,
+.detalles-card * {
+  box-sizing: border-box;
 }
 
-button.crear-button:hover:not(:disabled) {
-  background-color: #64748b;
-}
-
-/* Animaciones y transiciones */
-.caso-item {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
-}
-
-.caso-item:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-}
-
-.caso-item.selected {
-  transform: translateY(-2px);
-  box-shadow: 0 0 0 2px var(--primary-color);
-}
-
-.crear-button,
-.reactivate-button,
-.activate-button {
-  transition: transform 0.1s ease, background-color 0.2s ease;
-}
-
-.crear-button:active:not(:disabled),
-.reactivate-button:active:not(:disabled),
-.activate-button:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-/* Mejoras de accesibilidad */
-button:focus,
-input:focus,
-select:focus,
-textarea:focus {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-}
-
-.caso-item:focus {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
+/* Asegurar que el texto largo no rompa el layout */
+.caso-name,
+.caso-descripcion,
+.detail-value {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
