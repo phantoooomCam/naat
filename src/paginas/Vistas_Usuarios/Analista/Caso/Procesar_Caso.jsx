@@ -193,6 +193,16 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     cargarAreasYFiltrar()
   }, [userLevel, userOrgId])
 
+  // Scroll hacia arriba cuando se abre la vista detallada
+  useEffect(() => {
+    if (showDetailedView) {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      })
+    }
+  }, [showDetailedView])
+
   const fetchDepartamentos = async (orgId) => {
     try {
       const url = orgId ? `/api/departamentos?orgId=${orgId}` : "/api/departamentos"
