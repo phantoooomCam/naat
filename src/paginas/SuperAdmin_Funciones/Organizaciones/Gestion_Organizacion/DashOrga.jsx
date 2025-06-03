@@ -19,7 +19,6 @@ const DashOrga = () => {
   const [successMessage, setSuccessMessage] = useState("")
 
   const API_URL = "/api/organizaciones"
-  const token = localStorage.getItem("token")
 
   // Observador del sidebar
   useEffect(() => {

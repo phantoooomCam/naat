@@ -34,7 +34,7 @@ const Header = () => {
     try {
       const response = await fetchWithAuth("/api/usuarios/logout", {
         method: "POST",
-        credentials: "include" // ✅ Envia la cookie jwt_token
+        credentials: "include" 
       });
   
       // El backend borra la cookie al recibir esta petición

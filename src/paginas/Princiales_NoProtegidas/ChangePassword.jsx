@@ -38,7 +38,6 @@ const PasswordChange = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   const location = useLocation()
-  const usuario = JSON.parse(localStorage.getItem("user"))
   const userId = location.state?.idUsuario || usuario?.id
   const cambioForzado = location.state?.cambioForzado
 
@@ -96,11 +95,6 @@ const PasswordChange = () => {
         throw new Error(data.mensaje || "Error al cerrar sesión.")
       }
 
-      // Eliminar el token y la información del usuario del almacenamiento local
-      localStorage.removeItem("token")
-      localStorage.removeItem("user")
-
-      // Redirigir al usuario a la página de inicio de sesión
       navigate("/")
     } catch (error) {
       console.error("Error al cerrar sesión:", error)

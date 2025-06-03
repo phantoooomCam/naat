@@ -23,7 +23,6 @@ const DashArea = () => {
   const [successMessage, setSuccessMessage] = useState("")
 
   const API_URL = "/api"
-  const token = localStorage.getItem("token")
 
   // Observador del sidebar
   useEffect(() => {

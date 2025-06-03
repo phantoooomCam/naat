@@ -10,7 +10,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 import fetchWithAuth from "../../utils/fetchWithAuth";
 
-
 export default function SignIn() {
   const [isRegister, setIsRegister] = useState(false);
   const [usuario, setUsuario] = useState("");
@@ -44,17 +43,14 @@ export default function SignIn() {
     };
 
     try {
-      const response = await fetchWithAuth(
-        "/api/usuarios/register",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        
-          body: JSON.stringify(userData),
-        }
-      );
+      const response = await fetchWithAuth("/api/usuarios/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify(userData),
+      });
 
       const data = await response.json();
 
@@ -83,25 +79,17 @@ export default function SignIn() {
     };
 
     try {
-      const response = await fetchWithAuth(
-        "/api/usuarios/login",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        
-          body: JSON.stringify(requestBody),
-        }
-      );
+      const response = await fetchWithAuth("/api/usuarios/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify(requestBody),
+      });
 
       const data = await response.json();
-      if (data.token) {
-        // Almacenar el token y la información del usuario en el localStorage
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.usuario));
-
-        // Redirigir al dashboard si todo está bien
+      if (response.ok) {
         navigate("/dashboard");
       } else {
         throw new Error("Error en el inicio de sesión");

@@ -35,7 +35,7 @@ const DashSolicitud = () => {
   const [successMessage, setSuccessMessage] = useState("")
 
   const usuario = JSON.parse(localStorage.getItem("user"))
-  const token = localStorage.getItem("token")
+  
 
   // Observador para el sidebar
   useEffect(() => {

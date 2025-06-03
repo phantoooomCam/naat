@@ -34,7 +34,6 @@ const IngresoSist = () => {
   const fetchIngresos = async () => {
     setLoading(true)
     setError(null)
-    const token = localStorage.getItem("token")
 
     try {
       const response = await fetchWithAuth("/api/ingresos", {
