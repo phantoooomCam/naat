@@ -25,7 +25,7 @@ const fetchWithAuth = async (url, options = {}) => {
 
     return response;
   } catch (error) {
-    console.error("🌐 Error en la solicitud:", error);
+    console.error(" Error en la solicitud:", error);
     toast.error("Ocurrió un error de red. Intenta de nuevo.");
     return null;
   }
