@@ -43,7 +43,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const area = usuario?.area || "tu área"
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200)
 
-  // Estados para datos reales
   const [usuarios, setUsuarios] = useState([])
   const [departamentos, setDepartamentos] = useState([])
   const [organizaciones, setOrganizaciones] = useState([])
@@ -52,7 +51,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Detectar cambios en el ancho de la ventana
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth)
@@ -62,26 +60,21 @@ const HomeView = ({ isSidebarCollapsed }) => {
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
-  // Fetch datos reales
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true)
       try {
-        // Obtener usuarios del área
         const usuariosResponse = await fetchWithAuth("/api/usuarios")
         let usuariosArea = []
         if (usuariosResponse.ok) {
           const usuariosData = await usuariosResponse.json()
-          // Filtrar usuarios del mismo área
           usuariosArea = usuariosData.filter((u) => u.idArea === usuario.idArea)
           setUsuarios(usuariosArea)
         }
 
-        // Obtener departamentos
         const deptosResponse = await fetchWithAuth("/api/departamentos")
         if (deptosResponse.ok) {
           const deptosData = await deptosResponse.json()
-          // Filtrar departamentos del área
           const deptosArea = Array.isArray(deptosData)
             ? deptosData.filter((d) => d.idArea === usuario.idArea)
             : Array.isArray(deptosData.departamentos)
@@ -90,26 +83,22 @@ const HomeView = ({ isSidebarCollapsed }) => {
           setDepartamentos(deptosArea)
         }
 
-        // Obtener organizaciones
         const orgResponse = await fetchWithAuth("/api/organizaciones")
         if (orgResponse.ok) {
           const orgData = await orgResponse.json()
           setOrganizaciones(orgData)
         }
 
-        // Obtener áreas
         const areasResponse = await fetchWithAuth("/api/areas")
         if (areasResponse.ok) {
           const areasData = await areasResponse.json()
           setAreas(areasData)
         }
 
-        // Obtener ingresos completos - USAR usuariosArea en lugar de usuarios
         if (usuariosArea.length > 0) {
           const ingresosResponse = await fetchWithAuth("/api/ingresos")
           if (ingresosResponse.ok) {
             const ingresosData = await ingresosResponse.json()
-            // Filtrar ingresos de usuarios del área y tomar los más recientes
             const usuariosIds = usuariosArea.map((u) => u.id)
             const ingresosArea = ingresosData
               .filter((ingreso) => usuariosIds.includes(ingreso.idUsuario))
@@ -129,7 +118,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
     fetchAllData()
   }, [usuario.idArea])
 
-  // Preparar datos para gráfica de usuarios por nivel
   const usuariosPorNivel = usuarios.reduce((acc, usuario) => {
     let nivelNombre = ""
     switch (usuario.nivel) {
@@ -162,14 +150,12 @@ const HomeView = ({ isSidebarCollapsed }) => {
     color: ["#33608d", "#2c7a7b", "#6b46c1", "#d69e2e", "#e53e3e"][index % 5],
   }))
 
-  // Preparar datos para gráfica de departamentos con nombres reales
   const departamentosData = departamentos.map((depto, index) => ({
     name: depto.nombreDepartamento || `Departamento ${depto.idDepartamento}`,
-    value: 1, // Valor fijo para que todos los departamentos tengan el mismo peso en la gráfica
+    value: 1, 
     color: ["#33608d", "#2c7a7b", "#6b46c1", "#d69e2e", "#e53e3e", "#8b5cf6"][index % 6],
   }))
 
-  // Accesos rápidos
   const dashboardCards = [
     {
       id: 1,
@@ -180,14 +166,12 @@ const HomeView = ({ isSidebarCollapsed }) => {
     },
   ]
 
-  // Formatear fecha como en IngresosSist
   const formatearFecha = (fechaISO) => {
     if (!fechaISO) return "Sin fecha"
     const fecha = new Date(fechaISO)
     return fecha.toLocaleString()
   }
 
-  // Traducir tipo como en IngresosSist
   const traducirTipo = (tipo) => {
     if (tipo === "Iniciar Sesión") return "Inicio Sesión"
     if (tipo === "Cerrar Sesión") return "Cerró Sesión"

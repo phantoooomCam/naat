@@ -42,13 +42,11 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const organizacion = usuario?.organizacion || "tu organización"
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200)
 
-  // Estados para datos reales
   const [usuarios, setUsuarios] = useState([])
   const [casos, setCasos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Detectar cambios en el ancho de la ventana
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth)
@@ -58,25 +56,20 @@ const HomeView = ({ isSidebarCollapsed }) => {
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
-  // Fetch datos reales
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true)
       try {
-        // Obtener usuarios del departamento
         const usuariosResponse = await fetchWithAuth("/api/usuarios")
         if (usuariosResponse.ok) {
           const usuariosData = await usuariosResponse.json()
-          // Filtrar usuarios del mismo departamento
           const usuariosDepartamento = usuariosData.filter((u) => u.idDepartamento === usuario.idDepartamento)
           setUsuarios(usuariosDepartamento)
         }
 
-        // Obtener casos del departamento
         const casosResponse = await fetchWithAuth("/api/casos")
         if (casosResponse.ok) {
           const casosData = await casosResponse.json()
-          // Filtrar casos del departamento
           const casosDepartamento = casosData.filter((c) => c.idDepartamento === usuario.idDepartamento)
           setCasos(casosDepartamento)
         }
@@ -91,14 +84,12 @@ const HomeView = ({ isSidebarCollapsed }) => {
     fetchAllData()
   }, [usuario.idDepartamento])
 
-  // Preparar datos para gráficos
   const casosEstadoData = [
     { name: "Activos", value: casos.filter((c) => c.estado === "activo").length, color: "#2c7a7b" },
     { name: "Archivados", value: casos.filter((c) => c.estado === "archivado").length, color: "#64748b" },
     { name: "Reactivados", value: casos.filter((c) => c.estado === "reactivado").length, color: "#6b46c1" },
   ].filter((item) => item.value > 0)
 
-  // Contar usuarios por nivel
   const usuariosPorNivel = usuarios.reduce((acc, usuario) => {
     const nivel = `Nivel ${usuario.nivel}`
     acc[nivel] = (acc[nivel] || 0) + 1
@@ -111,7 +102,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
     color: ["#33608d", "#2c7a7b", "#6b46c1", "#d69e2e", "#e53e3e"][index % 5],
   }))
 
-  // Accesos rápidos
   const dashboardCards = [
     {
       id: 1,

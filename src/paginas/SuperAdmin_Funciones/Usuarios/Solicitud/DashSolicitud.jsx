@@ -6,10 +6,8 @@ import fetchWithAuth from "../../../../utils/fetchWithAuth";
 
 
 const DashSolicitud = () => {
-  // Estados para el colapso de sidebar
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
-  // Estados para la gestión de usuarios
   const [users, setUsers] = useState([])
   const [filteredUsers, setFilteredUsers] = useState([])
   const [loading, setLoading] = useState(true)
@@ -37,7 +35,6 @@ const DashSolicitud = () => {
   const usuario = JSON.parse(localStorage.getItem("user"))
   
 
-  // Observador para el sidebar
   useEffect(() => {
     const observer = new MutationObserver(() => {
       const sidebar = document.querySelector(".sidebar")
@@ -50,7 +47,6 @@ const DashSolicitud = () => {
     return () => observer.disconnect()
   }, [])
 
-  // Fetch usuarios
   const fetchUsers = async () => {
     setLoading(true)
     setError(null)
@@ -71,7 +67,6 @@ const DashSolicitud = () => {
       const data = JSON.parse(text)
 
       if (Array.isArray(data)) {
-        // Filtrar usuarios con nivel 0, pero usando comparación flexible
         const levelZeroUsers = data.filter((user) => {
           return user.nivel === null || user.nivel === "null"
         })
@@ -117,7 +112,6 @@ const DashSolicitud = () => {
   }, []);
 
 
-  // Filtrado de usuarios
   useEffect(() => {
     const lowercasedSearchText = searchText.toLowerCase()
     const filtered = users.filter((user) =>
@@ -128,7 +122,6 @@ const DashSolicitud = () => {
     setFilteredUsers(filtered)
   }, [searchText, users])
 
-  // Handlers
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
@@ -138,7 +131,6 @@ const DashSolicitud = () => {
     if (!formData.id_usuario) return
 
     try {
-      // 👇 Prepara payload con objeto organización { id: ... }
       const payload = {
         ...formData,
         organizacion: formData.organizacion
@@ -146,14 +138,13 @@ const DashSolicitud = () => {
           : null,
       }
 
-      // Actualiza el usuario con nivel y organización
       const response = await fetchWithAuth(`/api/usuarios/${formData.id_usuario}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
 
-        body: JSON.stringify(payload), // 👈 Usa el payload aquí
+        body: JSON.stringify(payload), 
       })
 
       if (!response.ok) {
@@ -161,7 +152,6 @@ const DashSolicitud = () => {
         throw new Error(`Error al actualizar: ${response.status} - ${errorText}`)
       }
 
-      // Enviar email de activación
       const activarResponse = await fetchWithAuth("/api/usuarios/activar", {
         method: "POST",
         headers: {
@@ -169,7 +159,7 @@ const DashSolicitud = () => {
         },
         body: JSON.stringify({
           idUsuario: formData.id_usuario,
-          esReactivacion: false  // 👈 clave para evitar forzar cambio de contraseña
+          esReactivacion: false  
         }),
       })
 

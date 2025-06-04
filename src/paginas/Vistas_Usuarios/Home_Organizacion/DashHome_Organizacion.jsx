@@ -42,7 +42,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const organizacion = usuario?.organizacion || "tu organización"
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200)
 
-  // Estados para datos
   const [usuarios, setUsuarios] = useState([])
   const [ingresos, setIngresos] = useState([])
   const [totalUsuarios, setTotalUsuarios] = useState(0)
@@ -52,7 +51,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Detectar cambios en el ancho de la ventana
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth)
@@ -62,22 +60,19 @@ const HomeView = ({ isSidebarCollapsed }) => {
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
-  // Fetch datos reales
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true)
       try {
-        // Obtener usuarios de la organización
         const usuariosResponse = await fetchWithAuth("/api/usuarios")
         let usuariosOrg = []
         if (usuariosResponse.ok) {
           const usuariosData = await usuariosResponse.json()
-          // Filtrar usuarios de la misma organización
+
           usuariosOrg = usuariosData.filter((u) => u.idOrganizacion === usuario.idOrganizacion)
           setUsuarios(usuariosOrg)
           setTotalUsuarios(usuariosOrg.length)
 
-          // Agrupar por nivel para la gráfica de distribución
           const conteoPorNivel = {
             "Super Admin": 0,
             "Admin Org": 0,
@@ -108,7 +103,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
             }
           })
 
-          // Convertir a formato para PieChart
           const datosGrafico = Object.entries(conteoPorNivel)
             .filter(([_, value]) => value > 0)
             .map(([name, value]) => ({ name, value }))
@@ -116,7 +110,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
           setUserTypeData(datosGrafico)
         }
 
-        // Obtener áreas de la organización
         const areasResponse = await fetchWithAuth("/api/areas")
         if (areasResponse.ok) {
           const areasData = await areasResponse.json()
@@ -124,7 +117,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
           setTotalAreas(areasFiltradas.length)
         }
 
-        // Obtener departamentos de la organización
         const deptosResponse = await fetchWithAuth("/api/departamentos")
         if (deptosResponse.ok) {
           const deptosData = await deptosResponse.json()
@@ -136,7 +128,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
           setTotalDepartamentos(deptosFiltrados.length)
         }
 
-        // Obtener ingresos de usuarios de la organización
         if (usuariosOrg.length > 0) {
           const ingresosResponse = await fetchWithAuth("/api/ingresos")
           if (ingresosResponse.ok) {
@@ -160,7 +151,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
     fetchAllData()
   }, [usuario.idOrganizacion])
 
-  // Preparar datos para gráfica de usuarios por área
   const usuariosPorArea = usuarios.reduce((acc, usuario) => {
     const areaId = usuario.idArea || "Sin Área"
     acc[areaId] = (acc[areaId] || 0) + 1
@@ -174,21 +164,19 @@ const HomeView = ({ isSidebarCollapsed }) => {
   }))
 
   const COLORS = [
-    "#2c3e50", // azul oscuro elegante
-    "#1976d2", // azul brillante
-    "#3f7cac", // azul intermedio
-    "#90caf9", // azul claro
-    "#546e7a", // gris azulado
+    "#2c3e50", 
+    "#1976d2", 
+    "#3f7cac", 
+    "#90caf9", 
+    "#546e7a",
   ]
 
-  // Formatear fecha como en IngresosSist
   const formatearFecha = (fechaISO) => {
     if (!fechaISO) return "Sin fecha"
     const fecha = new Date(fechaISO)
     return fecha.toLocaleString()
   }
 
-  // Traducir tipo como en IngresosSist
   const traducirTipo = (tipo) => {
     if (tipo === "Iniciar Sesión") return "Inicio Sesión"
     if (tipo === "Cerrar Sesión") return "Cerró Sesión"

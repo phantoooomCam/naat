@@ -9,12 +9,8 @@ import "./Caso.css"
 function Caso() {
   const [activeView, setActiveView] = useState("procesamiento")
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  // Eliminar la línea que establece el modo oscuro por defecto:
-  // const [darkMode, setDarkMode] = useState(true) // Activar modo oscuro por defecto
 
   return (
-    // Eliminar la clase dark-mode del div principal:
-    // <div className={`dashboard-container ${darkMode ? "dark-mode" : ""}`}>
     <div className="dashboard-container">
       <Sidebar
         activeView={activeView}

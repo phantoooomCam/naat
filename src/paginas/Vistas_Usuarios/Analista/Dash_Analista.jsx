@@ -65,7 +65,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const organizacion = usuario?.organizacion || "tu organización"
   const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200)
 
-  // Estados para datos reales
   const [casos, setCasos] = useState([])
   const [sabanas, setSabanas] = useState([])
   const [logs, setLogs] = useState([])
@@ -73,7 +72,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  // Estados calculados
   const [estadisticasCasos, setEstadisticasCasos] = useState({
     total: 0,
     activos: 0,
@@ -81,7 +79,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
     reactivados: 0
   })
 
-  // Detectar cambios en el ancho de la ventana
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth)
@@ -91,18 +88,15 @@ const HomeView = ({ isSidebarCollapsed }) => {
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
-  // Fetch datos reales
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true)
       try {
-        // Obtener casos
         const casosResponse = await fetchWithAuth("/api/casos")
         if (casosResponse.ok) {
           const casosData = await casosResponse.json()
           setCasos(casosData)
           
-          // Calcular estadísticas de casos
           const stats = {
             total: casosData.length,
             activos: casosData.filter(c => c.estado === 'activo').length,
@@ -112,12 +106,10 @@ const HomeView = ({ isSidebarCollapsed }) => {
           setEstadisticasCasos(stats)
         }
 
-        // Obtener logs de actividad
         try {
           const logsResponse = await fetchWithAuth("/api/acciones")
           if (logsResponse.ok) {
             const logsData = await logsResponse.json()
-            // Filtrar logs del usuario actual y ordenar por fecha
             const userLogs = logsData
               .filter(log => log.idUsuario === usuario.id)
               .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
@@ -128,7 +120,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
           console.log("No se pudieron cargar los logs")
         }
 
-        // Obtener compañías para sabanas
         try {
           const companiasResponse = await fetchWithAuth("/api/sabanas/companias")
           if (companiasResponse.ok) {
@@ -150,14 +141,12 @@ const HomeView = ({ isSidebarCollapsed }) => {
     fetchAllData()
   }, [usuario.id])
 
-  // Preparar datos para gráficos
   const casosEstadoData = [
     { name: 'Activos', value: estadisticasCasos.activos, color: '#2c7a7b' },
     { name: 'Archivados', value: estadisticasCasos.archivados, color: '#64748b' },
     { name: 'Reactivados', value: estadisticasCasos.reactivados, color: '#6b46c1' }
   ].filter(item => item.value > 0)
 
-  // Datos de actividad por día (últimos 7 días)
   const getActividadSemanal = () => {
     const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
     const hoy = new Date()
@@ -182,7 +171,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
     return actividadPorDia
   }
 
-  // Accesos rápidos actualizados
   const dashboardCards = [
     { 
       id: 1, 
@@ -200,7 +188,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
     },
   ]
 
-  // Formatear fecha
   const formatearFecha = (fechaISO) => {
     if (!fechaISO) return "Sin fecha"
     const fecha = new Date(fechaISO)
@@ -213,7 +200,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
     })
   }
 
-  // Obtener casos recientes del usuario
   const casosRecientes = casos
     .filter(caso => caso.idUsuario === usuario.id)
     .sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion))
