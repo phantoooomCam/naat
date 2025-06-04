@@ -14,7 +14,6 @@ const ActividadesSist = () => {
   const [error, setError] = useState(null)
   const registrosPorPagina = 10
 
-  // Observador del sidebar
   useEffect(() => {
     const observer = new MutationObserver(() => {
       const sidebar = document.querySelector(".sidebar")
@@ -73,7 +72,6 @@ const ActividadesSist = () => {
     return fecha.toLocaleString()
   }
 
-  // Paginación
   const indexUltimo = paginaActual * registrosPorPagina
   const indexPrimero = indexUltimo - registrosPorPagina
   const datosPaginados = datosFiltrados.slice(indexPrimero, indexUltimo)

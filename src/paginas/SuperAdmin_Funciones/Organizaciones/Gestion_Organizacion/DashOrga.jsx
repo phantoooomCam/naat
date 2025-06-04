@@ -20,7 +20,6 @@ const DashOrga = () => {
 
   const API_URL = "/api/organizaciones"
 
-  // Observador del sidebar
   useEffect(() => {
     const observer = new MutationObserver(() => {
       const sidebar = document.querySelector(".sidebar")

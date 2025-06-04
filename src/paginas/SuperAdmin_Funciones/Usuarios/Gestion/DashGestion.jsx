@@ -6,11 +6,9 @@ import { faPencilAlt, faTrash } from "@fortawesome/free-solid-svg-icons";
 import fetchWithAuth from "../../../../utils/fetchWithAuth";
 
 const GestionDash = () => {
-  // Estados para el colapso de sidebar
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [formErrors, setFormErrors] = useState({});
 
-  // Estados para la gestión de usuarios
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,18 +33,15 @@ const GestionDash = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Estados para la paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const registrosPorPagina = 7;
 
-  // Estados para opciones filtradas
   const [filteredAreas, setFilteredAreas] = useState([]);
   const [filteredDepartamentos, setFilteredDepartamentos] = useState([]);
 
   const usuario = JSON.parse(localStorage.getItem("user"));
 
 
-  //Organizaciones
   const [organizaciones, setOrganizaciones] = useState([]);
   const [areas, setAreas] = useState([]);
   const [departamentos, setDepartamentos] = useState([]);
@@ -106,16 +101,14 @@ const GestionDash = () => {
 
       const data = await response.json();
 
-      // Manejo de diferentes posibles estructuras de respuesta
       const deptosArray = Array.isArray(data)
         ? data
         : Array.isArray(data.departamentos)
         ? data.departamentos
         : [];
 
-      // Si no hay departamentos y viene un mensaje
       if (!deptosArray.length && data.mensaje) {
-        setError(data.mensaje); // Asegúrate de tener `const [error, setError] = useState(null);`
+        setError(data.mensaje); 
       }
 
       setDepartamentos(deptosArray);
@@ -125,7 +118,6 @@ const GestionDash = () => {
     }
   };
 
-  // Observador para el sidebar
   useEffect(() => {
     const observer = new MutationObserver(() => {
       const sidebar = document.querySelector(".sidebar");
@@ -138,7 +130,6 @@ const GestionDash = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Fetch usuarios
   const fetchUsers = async () => {
     setLoading(true);
     setError(null);
@@ -179,7 +170,6 @@ const GestionDash = () => {
     fetchDepartamentos();
   }, []);
 
-  // Filtrado de usuarios
   useEffect(() => {
     const lowercasedSearchText = searchText.toLowerCase();
     const filtered = users.filter((user) =>
@@ -188,10 +178,9 @@ const GestionDash = () => {
         .includes(lowercasedSearchText)
     );
     setFilteredUsers(filtered);
-    setPaginaActual(1); // Reset a la primera página cuando se filtra
+    setPaginaActual(1); 
   }, [searchText, users]);
 
-  // Filtrar áreas basadas en la organización seleccionada
   useEffect(() => {
     if (formData.idOrganizacion) {
       const areasDeOrganizacion = areas.filter(
@@ -200,7 +189,6 @@ const GestionDash = () => {
       );
       setFilteredAreas(areasDeOrganizacion);
 
-      // Reset área seleccionada si la organización cambia
       setFormData((prev) => ({
         ...prev,
         idArea: 0,
@@ -211,7 +199,6 @@ const GestionDash = () => {
     }
   }, [formData.idOrganizacion, areas]);
 
-  // Filtrar departamentos basados en el área seleccionada
   useEffect(() => {
     if (formData.idArea) {
       const departamentosDeArea = departamentos.filter(
@@ -219,7 +206,6 @@ const GestionDash = () => {
       );
       setFilteredDepartamentos(departamentosDeArea);
 
-      // Reset departamento seleccionado si el área cambia
       setFormData((prev) => ({
         ...prev,
         idDepartamento: 0,
@@ -229,13 +215,11 @@ const GestionDash = () => {
     }
   }, [formData.idArea, departamentos]);
 
-  // Paginación
   const indexUltimo = paginaActual * registrosPorPagina;
   const indexPrimero = indexUltimo - registrosPorPagina;
   const usersPaginados = filteredUsers.slice(indexPrimero, indexUltimo);
   const totalPaginas = Math.ceil(filteredUsers.length / registrosPorPagina);
 
-  // Handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
     const numValue =
@@ -347,7 +331,6 @@ const GestionDash = () => {
       );
       setFilteredAreas(areasDeOrganizacion);
 
-      // Selecciona automáticamente el área correspondiente si ya existe
       if (!areasDeOrganizacion.some((a) => a.idArea == formData.idArea)) {
         setFormData((prev) => ({
           ...prev,
@@ -367,7 +350,6 @@ const GestionDash = () => {
       );
       setFilteredDepartamentos(departamentosDeArea);
 
-      // Selecciona automáticamente el departamento correspondiente si ya existe
       if (
         !departamentosDeArea.some(
           (d) => d.idDepartamento == formData.idDepartamento
@@ -456,7 +438,6 @@ const GestionDash = () => {
 
       fetchUsers();
 
-      // Limpiar el formulario
       setFormData({
         nombre: "",
         apellidoPaterno: "",
@@ -472,7 +453,6 @@ const GestionDash = () => {
         rol: "Lector",
       });
 
-      // Cerrar el formulario
       setIsCreating(false);
 
       setSuccessMessage("Usuario creado correctamente");
@@ -486,7 +466,6 @@ const GestionDash = () => {
     }
   };
 
-  // Función para abrir el formulario y limpiarlo
   const handleOpenCreateForm = () => {
     setFormData({
       nombre: "",
@@ -502,7 +481,7 @@ const GestionDash = () => {
       nivel: 5,
       rol: "Lector",
     });
-    setIsCreating(true); // Mostrar el formulario
+    setIsCreating(true); 
   };
 
   if (loading) {

@@ -68,7 +68,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         const data = await response.json();
         setCompanias(data);
       } catch (error) {
-        // console.error("Error fetching compañías:", error);
       }
     };
 
@@ -89,7 +88,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         }));
         setCasos(casosTrasnformados);
       } catch (error) {
-        // console.error("Error fetching casos:", error);
       }
     };
     fetchCasos();
@@ -131,7 +129,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const handleFileDelete = (fileId) => {
     setFiles((prevFiles) => {
       const updatedFiles = prevFiles.filter((file) => file.id !== fileId);
-      // Si el archivo seleccionado es el que se está eliminando, deseleccionarlo
       if (selectedFile && selectedFile.id === fileId) {
         setSelectedFile(null);
       }
@@ -176,7 +173,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     setIsProcessing(true);
     setProcessingStatus(null);
 
-    // Simulación de procesamiento
     setTimeout(() => {
       setIsProcessing(false);
       setProcessingStatus("success");
@@ -209,7 +205,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   setProcessingStatus(null);
 
   try {
-    // Primero enviar el número telefónico
     const numeroPayload = {
       numero: phoneNumber,
       codigoArea: codigoPais, 
@@ -226,7 +221,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       console.warn("⚠️ Error al guardar número:", errorData?.mensaje || "Desconocido");
     }
 
-    // Subir archivos con idCaso
     const formData = new FormData();
     for (let i = 0; i < files.length; i++) {
       if (files[i].rawFile) {
@@ -234,7 +228,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       }
     }
 
-    // Agregamos el idCaso
     formData.append("idCaso", casoSeleccionado.toString());
 
     const response = await fetchWithAuth("/api/sabanas/archivos/subir", {

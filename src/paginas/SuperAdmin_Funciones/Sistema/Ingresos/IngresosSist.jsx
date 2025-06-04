@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import "../../../SuperAdmin_Funciones/Usuarios/Gestion/Gestion.css" // Using the same CSS as DashGestion
+import "../../../SuperAdmin_Funciones/Usuarios/Gestion/Gestion.css" 
 import fetchWithAuth from "../../../../utils/fetchWithAuth";
 
 
@@ -14,7 +14,6 @@ const IngresoSist = () => {
   const [error, setError] = useState(null)
   const registrosPorPagina = 10
 
-  // Observador del sidebar
   useEffect(() => {
     const observer = new MutationObserver(() => {
       const sidebar = document.querySelector(".sidebar")
@@ -72,7 +71,6 @@ const IngresoSist = () => {
     return tipo
   }
 
-  // Paginación
   const indexUltimo = paginaActual * registrosPorPagina
   const indexPrimero = indexUltimo - registrosPorPagina
   const datosPaginados = datosFiltrados.slice(indexPrimero, indexUltimo)

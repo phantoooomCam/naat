@@ -26,7 +26,6 @@ const DashDepartamento = () => {
 
   const API_URL = "/api";
 
-  // Observador del sidebar
   useEffect(() => {
     const observer = new MutationObserver(() => {
       const sidebar = document.querySelector(".sidebar");
@@ -45,14 +44,12 @@ const DashDepartamento = () => {
       const deptosRes = await fetchWithAuth("/api/departamentos");
       const deptosData = await deptosRes.json();
 
-      // Determinar si la respuesta contiene un arreglo válido
       const deptosArray = Array.isArray(deptosData)
         ? deptosData
         : Array.isArray(deptosData.departamentos)
         ? deptosData.departamentos
         : [];
 
-      // Setear mensaje de error si la respuesta contiene un mensaje en vez de datos
       if (!deptosArray.length && deptosData.mensaje) {
         setError(deptosData.mensaje);
       }
@@ -100,7 +97,6 @@ const DashDepartamento = () => {
     }
   };
 
-  // Filtrar áreas basadas en la organización seleccionada
   useEffect(() => {
     if (formData.idOrganizacion) {
       const areasDeOrganizacion = areas.filter(
@@ -109,7 +105,6 @@ const DashDepartamento = () => {
       );
       setFilteredAreas(areasDeOrganizacion);
 
-      // Reset área seleccionada si la organización cambia
       if (!areasDeOrganizacion.some((a) => a.idArea == formData.idArea)) {
         setFormData((prev) => ({
           ...prev,

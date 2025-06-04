@@ -51,10 +51,10 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [titulo, setTitulo] = useState("")
   const [descripcion, setDescripcion] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
-  const [processingStatus, setProcessingStatus] = useState(null) // 'success', 'error', null
+  const [processingStatus, setProcessingStatus] = useState(null) 
   const [statusMessage, setStatusMessage] = useState("")
 
-  const [userLevel, setUserLevel] = useState(5) // Por defecto nivel 5
+  const [userLevel, setUserLevel] = useState(5) 
   const [organizaciones, setOrganizaciones] = useState([])
   const [departamentos, setDepartamentos] = useState([])
   const [areas, setAreas] = useState([])
@@ -66,14 +66,12 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [userOrgId, setUserOrgId] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
 
-  // Estado para filtros
   const [filters, setFilters] = useState({
     activo: false,
     archivado: false,
     reactivado: false,
   })
 
-  // Agregar un nuevo estado para controlar la vista detallada
   const [showDetailedView, setShowDetailedView] = useState(false)
 
   useEffect(() => {
@@ -97,7 +95,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     }
   }, [selectedArea])
 
-  // Cargar casos de ejemplo
   useEffect(() => {
     const fetchCasos = async () => {
       try {
@@ -112,7 +109,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           descripcion: caso.descripcion,
           estado: caso.estado || "Sin estado",
           fechaCreacion: caso.fechaCreacion || "Sin fecha",
-          asignado: caso.descripcion, // ← esto mostrará la descripción como "asignado"
+          asignado: caso.descripcion, 
         }))
 
         setCasos(casosTransformados)
@@ -126,7 +123,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     fetchCasos()
   }, [])
 
-  // Funciones para cargar datos de selects
   const fetchOrganizaciones = async () => {
     try {
       const response = await fetchWithAuth("/api/organizaciones")
@@ -143,14 +139,12 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     }
   }
 
-  // Ejecutar solo si el usuario es nivel 1
   useEffect(() => {
     if (userLevel === 1) {
       fetchOrganizaciones()
     }
   }, [userLevel])
 
-  // Obtener nivel del usuario
   useEffect(() => {
     try {
       const userData = JSON.parse(localStorage.getItem("user"))
@@ -159,7 +153,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         setUserLevel(nivel)
 
         if (nivel === 1) {
-          fetchOrganizaciones() //
+          fetchOrganizaciones() 
         }
       }
 
@@ -179,13 +173,12 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           const data = await res.json()
           setAreas(data)
 
-          // Filtro inmediato tras carga
           const filtradas = Array.isArray(data)
             ? data.filter((a) => String(a.idOrganizacion) === String(userOrgId))
             : []
           setFilteredAreas(filtradas)
 
-          setSelectedOrg(String(userOrgId)) // opcional, si necesitas mantenerlo para validaciones
+          setSelectedOrg(String(userOrgId)) 
         }
       }
     }
@@ -193,7 +186,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     cargarAreasYFiltrar()
   }, [userLevel, userOrgId])
 
-  // Scroll hacia arriba cuando se abre la vista detallada
   useEffect(() => {
     if (showDetailedView) {
       window.scrollTo({
@@ -203,38 +195,12 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     }
   }, [showDetailedView])
 
-  const fetchDepartamentos = async (orgId) => {
-    try {
-      const url = orgId ? `/api/departamentos?orgId=${orgId}` : "/api/departamentos"
-      const response = await fetchWithAuth(url)
-      if (response.ok) {
-        const data = await response.json()
-        setDepartamentos(data)
-        setSelectedDept("")
-        setSelectedArea("")
-      }
-    } catch (error) {
-      console.error("Error al cargar departamentos:", error)
-    }
-  }
 
-  const fetchAreas = async (deptId) => {
-    try {
-      const response = await fetchWithAuth(`/api/areas?deptId=${deptId}`)
-      if (response.ok) {
-        const data = await response.json()
-        setAreas(data)
-        setSelectedArea("")
-      }
-    } catch (error) {
-      console.error("Error al cargar áreas:", error)
-    }
-  }
 
-  // Manejadores de cambio para selects
+  
   const handleOrgChange = (e) => {
     const orgId = e.target.value
-    if (orgId === selectedOrg) return // 🛑 No hagas nada si no cambió
+    if (orgId === selectedOrg) return 
 
     setSelectedOrg(orgId)
     setSelectedArea("")
@@ -271,7 +237,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     }
   }
 
-  // Modificar la función handleCrearCaso para asegurar que los botones funcionen correctamente
   const handleCrearCaso = async () => {
     if (!titulo.trim()) {
       setProcessingStatus("error")
@@ -290,7 +255,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       const casoData = {
         nombre: titulo,
         descripcion,
-        idUsuario: idUsuario || 1,
       }
 
       if (userLevel === 1) {
@@ -343,7 +307,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     }
   }
 
-  // Modificar la función actualizarEstadoCaso para asegurar que funcione correctamente
   const actualizarEstadoCaso = async (casoId, nuevoEstado) => {
     try {
       setIsProcessing(true)
@@ -361,7 +324,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
       if (!response.ok) throw new Error("Error al actualizar estado")
 
-      // ✅ Actualiza estado localmente
       setCasos((prevCasos) => prevCasos.map((caso) => (caso.id === casoId ? { ...caso, estado: nuevoEstado } : caso)))
 
       if (selectedCaso?.id === casoId) {
@@ -398,7 +360,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       })
     })
 
-    // Si el caso seleccionado es el que se está modificando, actualizar también el seleccionado
     if (selectedCaso && selectedCaso.id === casoId) {
       setSelectedCaso((prev) => ({ ...prev, estado: nuevoEstado }))
     }
@@ -426,7 +387,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   useEffect(() => {
     const fetchAreas = async () => {
       if (selectedOrg && userLevel <= 3) {
-        // ← asegura que solo se ejecute para niveles válidos
         try {
           const res = await fetchWithAuth(`/api/areas?orgId=${selectedOrg}`)
           const data = await res.json()
@@ -446,9 +406,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     setFilteredAreas(filtradas)
   }, [areas, selectedOrg])
 
-  // Filtrar casos según los filtros seleccionados y término de búsqueda
   const filteredCasos = casos.filter((caso) => {
-    // Primero filtrar por término de búsqueda
     if (
       searchTerm &&
       !caso.titulo.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -457,7 +415,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       return false
     }
 
-    // Luego aplicar filtros de estado
     if (!filters.activo && !filters.archivado && !filters.reactivado) {
       return true
     }
@@ -468,7 +425,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     return false
   })
 
-  // Obtener clase para el estado
   const getEstadoClass = (estado) => {
     switch (estado) {
       case "Resuelto":

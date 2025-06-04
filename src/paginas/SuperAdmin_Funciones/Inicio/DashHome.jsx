@@ -65,7 +65,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const [userTypeData, setUserTypeData] = useState([])
   const [actividadReciente, setActividadReciente] = useState([])
 
-  // Detectar cambios en el ancho de la ventana
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth)
@@ -75,20 +74,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
-  const getRangoSemanaActual = () => {
-    const hoy = new Date()
-    const diaSemana = hoy.getDay() // 0=Dom, 1=Lun, ..., 6=Sáb
-
-    const inicioSemana = new Date(hoy)
-    inicioSemana.setDate(hoy.getDate() - diaSemana)
-    inicioSemana.setHours(0, 0, 0, 0)
-
-    const finSemana = new Date(inicioSemana)
-    finSemana.setDate(inicioSemana.getDate() + 6)
-    finSemana.setHours(23, 59, 59, 999)
-
-    return { inicioSemana, finSemana }
-  }
 
   const rotatingData = [
     { id: "organizaciones", icon: <FaBuilding />, value: totalOrganizaciones, label: "Organizaciones" },
@@ -112,14 +97,12 @@ const HomeView = ({ isSidebarCollapsed }) => {
         const data = await response.json()
         setTotalUsuarios(data.length)
 
-        // Usuarios pendientes (nivel null, undefined, 0, "null", "0")
         const pendientesUsuarios = data.filter((user) => {
           const nivel = user.nivel
           return nivel === null || nivel === undefined || nivel === "null" || nivel === "0" || nivel === 0
         })
         setPendientes(pendientesUsuarios.length)
 
-        // Agrupar por nivel
         const conteoPorNivel = {
           "Super Admin": 0,
           "Admin Org": 0,
@@ -150,7 +133,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
           }
         })
 
-        // Convertir a formato para PieChart
         const datosGrafico = Object.entries(conteoPorNivel)
           .filter(([_, value]) => value > 0)
           .map(([name, value]) => ({ name, value }))
@@ -210,9 +192,8 @@ const HomeView = ({ isSidebarCollapsed }) => {
 
         const dias = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
 
-        // === FILTRAR SEMANA ACTUAL PARA LA GRÁFICA ===
         const hoy = new Date()
-        const diaSemana = hoy.getDay() // 0=Dom, 1=Lun, ..., 6=Sáb
+        const diaSemana = hoy.getDay() 
 
         const inicioSemana = new Date(hoy)
         inicioSemana.setDate(hoy.getDate() - diaSemana)
@@ -227,7 +208,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
           return fecha >= inicioSemana && fecha <= finSemana
         })
 
-        // === GRÁFICA POR DÍA ===
         const resumen = {}
         dias.forEach((dia) => {
           resumen[dia] = {
@@ -264,7 +244,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
         const datosGrafica = dias.map((dia) => resumen[dia])
         setActividadPorDia(datosGrafica)
 
-        // === ACTIVIDAD RECIENTE (últimas 5) ===
         const recientes = [...data]
           .filter((a) => !!a.fecha)
           .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
@@ -284,20 +263,19 @@ const HomeView = ({ isSidebarCollapsed }) => {
   useEffect(() => {
     const interval = setInterval(() => {
       setRotatingStatIndex((prevIndex) => (prevIndex + 1) % rotatingData.length)
-    }, 5000) // cambia cada 5 segundos
+    }, 5000) 
 
     return () => clearInterval(interval)
   }, [])
 
   const COLORS = [
-    "#2c3e50", // azul oscuro elegante
-    "#1976d2", // azul brillante
-    "#3f7cac", // azul intermedio (reemplazo de lavanda)
-    "#90caf9", // azul claro
-    "#546e7a", // gris azulado
+    "#2c3e50", 
+    "#1976d2", 
+    "#3f7cac", 
+    "#90caf9", 
+    "#546e7a", 
   ]
 
-  // Determinar qué barras mostrar según el tamaño de pantalla
   const getVisibleBars = () => {
     if (windowWidth <= 480) {
       return (
@@ -335,18 +313,16 @@ const HomeView = ({ isSidebarCollapsed }) => {
     )
   }
 
-  // Calcular el ancho de la gráfica de barras basado en el tamaño de pantalla
   const getBarChartWidth = () => {
     if (windowWidth <= 480) {
-      return 400 // Ancho mínimo para móviles pequeños
+      return 400 
     }
     if (windowWidth <= 768) {
-      return 500 // Ancho para tablets
+      return 500 
     }
-    return "100%" // Ancho completo para escritorio
+    return "100%" 
   }
 
-  // Calcular el radio del gráfico de pastel basado en el tamaño de pantalla
   const getPieRadius = () => {
     if (windowWidth <= 480) {
       return 80
@@ -357,7 +333,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
     return 100
   }
 
-  // Determinar si mostrar etiquetas en el gráfico de pastel
   const shouldShowPieLabels = windowWidth > 480
 
   return (
@@ -414,14 +389,12 @@ const HomeView = ({ isSidebarCollapsed }) => {
         </div>
       </div>
 
-      {/* Gráficos y visualizaciones (del nuevo diseño) */}
       <div className="charts-container">
         <div className="chart-card">
           <h3>Actividad Semanal</h3>
           <div className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}>
             <div className="chart-scroll-container">
               {windowWidth <= 768 ? (
-                // Versión móvil con ancho fijo y scroll
                 <BarChart
                   width={windowWidth <= 480 ? 500 : 600}
                   height={300}
@@ -444,7 +417,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
                   {getVisibleBars()}
                 </BarChart>
               ) : (
-                // Versión escritorio con ResponsiveContainer
                 <ResponsiveContainer width="100%" height={350}>
                   <BarChart data={actividadPorDia} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -472,7 +444,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
           <div className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}>
             <div className="chart-scroll-container">
               {windowWidth <= 768 ? (
-                // Versión móvil con ancho fijo
                 <PieChart width={300} height={300}>
                   <Pie
                     data={userTypeData}
@@ -493,7 +464,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
                   <Tooltip formatter={(value, name) => [`${value} usuario(s)`, name]} />
                 </PieChart>
               ) : (
-                // Versión escritorio con ResponsiveContainer
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
