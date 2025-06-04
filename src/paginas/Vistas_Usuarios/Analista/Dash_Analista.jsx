@@ -117,7 +117,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
             setLogs(userLogs)
           }
         } catch (error) {
-          console.log("No se pudieron cargar los logs")
         }
 
         try {
@@ -127,7 +126,6 @@ const HomeView = ({ isSidebarCollapsed }) => {
             setCompanias(companiasData)
           }
         } catch (error) {
-          console.log("No se pudieron cargar las compañías")
         }
 
       } catch (error) {
