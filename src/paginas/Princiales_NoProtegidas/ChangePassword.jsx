@@ -43,7 +43,6 @@ const PasswordChange = () => {
 
   const navigate = useNavigate()
 
-  // Observador para el sidebar
   useEffect(() => {
     const observer = new MutationObserver(() => {
       const sidebar = document.querySelector(".sidebar")
@@ -56,7 +55,6 @@ const PasswordChange = () => {
     return () => observer.disconnect()
   }, [])
 
-  // Validar la contraseña mientras el usuario escribe
   useEffect(() => {
     const { newPassword } = formData
     setValidations({
@@ -151,7 +149,6 @@ const PasswordChange = () => {
       let response
 
       if (cambioForzado) {
-        // 🔐 Cambio de contraseña forzado (sin oldPassword)
         response = await fetchWithAuth("/api/usuarios/cambiar-contrasena-forzada", {
           method: "POST",
           headers: {
@@ -163,7 +160,6 @@ const PasswordChange = () => {
           })
         })
       } else {
-        // 🔄 Cambio normal con validación de contraseña actual
         const passwordData = {
           oldPassword: formData.currentPassword,
           newPassword: formData.newPassword,

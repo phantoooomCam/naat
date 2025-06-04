@@ -14,7 +14,6 @@ export default function ForgotPassword() {
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
 
-  // Validar formato de correo
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);

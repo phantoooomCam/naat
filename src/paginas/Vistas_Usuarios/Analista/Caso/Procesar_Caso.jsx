@@ -488,8 +488,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     }
   }
 
-  // Modificar el componente ProcesamientoView para incluir la vista detallada
-  // Buscar el return del componente ProcesamientoView y modificarlo para incluir una clase condicional
+ 
   return (
     <div
       className={`caso-container ${isSidebarCollapsed ? "collapsed" : ""} ${showDetailedView ? "detailed-view-mode" : ""}`}

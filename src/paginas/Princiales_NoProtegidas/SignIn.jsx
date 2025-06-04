@@ -21,7 +21,6 @@ export default function SignIn() {
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
 
-  // Use states del registro
   const navigate = useNavigate();
   const [nombre, setNombre] = useState("");
   const [apellidoPaterno, setApellidoPaterno] = useState("");
@@ -30,54 +29,44 @@ export default function SignIn() {
   const [correoRegistro, setCorreoRegistro] = useState("");
   const [claveRegistro, setClaveRegistro] = useState("");
 
-  // States de la contraseña
   const [showPassword, setShowPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
 
-  // Validations
   const [validations, setValidations] = useState({
     telefono: true,
     correo: true,
     clave: true,
   });
 
-  // Validate Phone Number (10 digits)
   const validatePhoneNumber = (phone) => {
     const phoneRegex = /^\d{10}$/;
     return phoneRegex.test(phone);
   };
 
-  // Validate Email Format
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // Validate Password Strength
   const validatePassword = (password) => {
-    // At least 8 characters, one uppercase, one lowercase, one special character
     const passwordRegex =
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     return passwordRegex.test(password);
   };
 
-  // Funcion para el registro
   const handleRegister = async (e) => {
     e.preventDefault();
 
-    // Validate all fields before submission
     const phoneValid = validatePhoneNumber(telefono);
     const emailValid = validateEmail(correoRegistro);
     const passwordValid = validatePassword(claveRegistro);
 
-    // Update validations state
     setValidations({
       telefono: phoneValid,
       correo: emailValid,
       clave: passwordValid,
     });
 
-    // Check if all validations pass
     if (!phoneValid || !emailValid || !passwordValid) {
       setError("Por favor, verifica los campos de registro.");
       return;
@@ -111,10 +100,8 @@ export default function SignIn() {
         throw new Error(data.mensaje || "Error en el registro");
       }
 
-      // Cambiar el estado antes de redirigir
       setIsRegister(false);
 
-      // Redirigir después de 2 segundos
       navigate("/mensaje");
     } catch (error) {
       console.error(error);
@@ -142,7 +129,6 @@ export default function SignIn() {
       const data = await response.json();
   
       if (!response.ok) {
-        // 🔐 Si es login bloqueado por cambio obligatorio
         if (data.requiereCambio) {
           navigate("/reset-password", {
             state: {
@@ -153,11 +139,9 @@ export default function SignIn() {
           return;
         }
   
-        // ⚠️ Otro error de login
         throw new Error(data.mensaje || "Credenciales inválidas");
       }
   
-      // ✅ Login normal exitoso
       if (data.usuario) {
         localStorage.setItem("user", JSON.stringify(data.usuario));
   

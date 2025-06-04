@@ -12,7 +12,6 @@ export default function MensajeRegistro() {
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
 
-  // Use states del registro
   const navigate = useNavigate();
   const [nombre, setNombre] = useState("");
   const [apellidoPaterno, setApellidoPaterno] = useState("");
@@ -21,7 +20,6 @@ export default function MensajeRegistro() {
   const [correoRegistro, setCorreoRegistro] = useState("");
   const [claveRegistro, setClaveRegistro] = useState("");
 
-  // Funcion para el registro
 
   useEffect(() => {
     document.body.classList.add("auth-body");
@@ -33,7 +31,6 @@ export default function MensajeRegistro() {
   return (
     <div className="auth-container-wrapper">
       <div className={`auth-container ${isRegister ? "auth-active" : ""}`}>
-        {/* Formulario de Registro */}
         <div className="auth-form-box auth-form-box-mensaje">
           <form>
             <h1>Registro exitoso!</h1>

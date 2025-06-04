@@ -13,7 +13,7 @@ export const menu={
         { id: '/dashboard', icon: <FiHome />, label: 'Inicio' },
         {
               id: "usuarios",
-              icon: <AiOutlineIdcard />, // Icono nuevo para Información Personal
+              icon: <AiOutlineIdcard />, 
               label: "Información Personal",
               subItems: [
                 { id: "/administrarcuenta", label: "Datos personales" },
@@ -22,7 +22,7 @@ export const menu={
             },
             {
               id: "sistema",
-              icon: <FaMoneyBillWave />, // Icono nuevo para Pagos
+              icon: <FaMoneyBillWave />, 
               label: "Pagos",
               subItems: [
                 { id: "/sistema/configuracion", label: "Créditos" },
@@ -31,7 +31,7 @@ export const menu={
             },
             {
               id: "ayuda",
-              icon: <BiSupport />, // Icono nuevo para Ayuda
+              icon: <BiSupport />, 
               label: "Ayuda",
             },
       ],
@@ -39,7 +39,7 @@ export const menu={
         { id: '/home_org', icon: <FiHome />, label: 'Inicio' },
         {
               id: "usuarios",
-              icon: <AiOutlineIdcard />, // Icono nuevo para Información Personal
+              icon: <AiOutlineIdcard />, 
               label: "Información Personal",
               subItems: [
                 { id: "/administrarcuenta", label: "Datos personales" },
@@ -48,7 +48,7 @@ export const menu={
             },
             {
               id: "sistema",
-              icon: <FaMoneyBillWave />, // Icono nuevo para Pagos
+              icon: <FaMoneyBillWave />,
               label: "Pagos",
               subItems: [
                 { id: "/sistema/configuracion", label: "Créditos" },
@@ -57,7 +57,7 @@ export const menu={
             },
             {
               id: "ayuda",
-              icon: <BiSupport />, // Icono nuevo para Ayuda
+              icon: <BiSupport />, 
               label: "Ayuda",
             },
       ],
@@ -65,7 +65,7 @@ export const menu={
         { id: '/home_area', icon: <FiHome />, label: 'Inicio' },
         {
               id: "usuarios",
-              icon: <AiOutlineIdcard />, // Icono nuevo para Información Personal
+              icon: <AiOutlineIdcard />, 
               label: "Información Personal",
               subItems: [
                 { id: "/administrarcuenta", label: "Datos personales" },
@@ -74,7 +74,7 @@ export const menu={
             },
             {
               id: "sistema",
-              icon: <FaMoneyBillWave />, // Icono nuevo para Pagos
+              icon: <FaMoneyBillWave />, 
               label: "Pagos",
               subItems: [
                 { id: "/sistema/configuracion", label: "Créditos" },
@@ -83,7 +83,7 @@ export const menu={
             },
             {
               id: "ayuda",
-              icon: <BiSupport />, // Icono nuevo para Ayuda
+              icon: <BiSupport />, 
               label: "Ayuda",
             },
       ],
@@ -91,7 +91,7 @@ export const menu={
         { id: '/home_depto', icon: <FiHome />, label: 'Inicio' },
         {
               id: "usuarios",
-              icon: <AiOutlineIdcard />, // Icono nuevo para Información Personal
+              icon: <AiOutlineIdcard />, 
               label: "Información Personal",
               subItems: [
                 { id: "/administrarcuenta", label: "Datos personales" },
@@ -100,7 +100,7 @@ export const menu={
             },
             {
               id: "sistema",
-              icon: <FaMoneyBillWave />, // Icono nuevo para Pagos
+              icon: <FaMoneyBillWave />, 
               label: "Pagos",
               subItems: [
                 { id: "/sistema/configuracion", label: "Créditos" },
@@ -109,7 +109,7 @@ export const menu={
             },
             {
               id: "ayuda",
-              icon: <BiSupport />, // Icono nuevo para Ayuda
+              icon: <BiSupport />,
               label: "Ayuda",
             },
       ],
@@ -117,7 +117,7 @@ export const menu={
         { id: '/home_analista', icon: <FiHome />, label: 'Inicio' },
         {
               id: "usuarios",
-              icon: <AiOutlineIdcard />, // Icono nuevo para Información Personal
+              icon: <AiOutlineIdcard />, 
               label: "Información Personal",
               subItems: [
                 { id: "/administrarcuenta", label: "Datos personales" },
@@ -126,7 +126,7 @@ export const menu={
             },
             {
               id: "sistema",
-              icon: <FaMoneyBillWave />, // Icono nuevo para Pagos
+              icon: <FaMoneyBillWave />, 
               label: "Pagos",
               subItems: [
                 { id: "/sistema/configuracion", label: "Créditos" },
@@ -135,7 +135,7 @@ export const menu={
             },
             {
               id: "ayuda",
-              icon: <BiSupport />, // Icono nuevo para Ayuda
+              icon: <BiSupport />,
               label: "Ayuda",
             },
       ]

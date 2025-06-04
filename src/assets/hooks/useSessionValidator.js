@@ -13,7 +13,7 @@ const useSessionValidator = () => {
         if ([401, 403, 404].includes(response.status)) {
           toast.error("⚠ Tu sesión ha expirado. Por favor inicia sesión de nuevo.");
           localStorage.clear();
-          window.location.href = "/"; // 🔁 Redirección inmediata
+          window.location.href = "/"; 
         }
       } catch (error) {
         console.error("Error validando sesión:", error);

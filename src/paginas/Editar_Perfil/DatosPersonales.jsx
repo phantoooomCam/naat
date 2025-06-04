@@ -8,10 +8,9 @@ import fetchWithAuth from "../../utils/fetchWithAuth";
 
 
 const PerfilUsuario = () => {
-  // Estado para controlar si sidebar está colapsado
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
-  // Estado para almacenar los datos del perfil
+
   const [perfilData, setPerfilData] = useState({
     nombre: "",
     apellidoPaterno: "",
@@ -20,20 +19,16 @@ const PerfilUsuario = () => {
     telefono: "",
   })
 
-  // Estado para mostrar/ocultar modo edición
   const [isEditing, setIsEditing] = useState(false)
 
-  // Estado para manejar la carga
+
   const [isLoading, setIsLoading] = useState(false)
 
-  // Estado para mensajes de éxito o error
   const [statusMessage, setStatusMessage] = useState({ type: "", message: "" })
 
-  // Simular carga de datos de usuario desde localStorage
   useEffect(() => {
     const usuario = JSON.parse(localStorage.getItem("user")) || {}
 
-    // Cargar datos del usuario al estado
     setPerfilData({
       nombre: usuario.nombre || "",
       apellidoPaterno: usuario.apellidoPaterno || "",
@@ -43,7 +38,6 @@ const PerfilUsuario = () => {
     })
   }, [])
 
-  // Observador para detectar cambios en el sidebar
   useEffect(() => {
     const observer = new MutationObserver(() => {
       const sidebar = document.querySelector(".sidebar")
@@ -56,7 +50,6 @@ const PerfilUsuario = () => {
     return () => observer.disconnect()
   }, [])
 
-  // Handler para actualizar los campos del formulario
   const handleChange = (e) => {
     const { name, value } = e.target
     setPerfilData({
@@ -65,24 +58,20 @@ const PerfilUsuario = () => {
     })
   }
 
-  // Validar el formato del correo electrónico
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return emailRegex.test(email)
   }
 
-  // Validar el formato del teléfono (10 dígitos)
   const validatePhone = (phone) => {
-    if (!phone) return true // Teléfono opcional
+    if (!phone) return true 
     const phoneRegex = /^\d{10}$/
     return phoneRegex.test(phone)
   }
 
-  // Handler para guardar los cambios
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    // Validar datos antes de enviar
     if (!validateEmail(perfilData.correo)) {
       setStatusMessage({
         type: "error",
@@ -131,8 +120,6 @@ const PerfilUsuario = () => {
       })
       setIsEditing(false)
 
-      // Mostrar notificación toast
-      //toast.success("Perfil actualizado correctamente")
 
       setTimeout(() => {
         setStatusMessage({ type: "", message: "" })
@@ -143,16 +130,11 @@ const PerfilUsuario = () => {
         message: error.message,
       })
 
-      // Mostrar notificación toast
-    //   toast.error(error.message)
-    // } finally {
-    //   setIsLoading(false)
+
     }
   }
 
-  // Handler para cancelar la edición
   const handleCancel = () => {
-    // Recargar datos originales
     const usuario = JSON.parse(localStorage.getItem("user")) || {}
     setPerfilData({
       nombre: usuario.nombre || "",

@@ -22,29 +22,24 @@ export default function CuentaBloqueada() {
     const [codeSent, setCodeSent] = useState(false)
     const cardRef = useRef(null)
     
-    // Estados del segundo componente
     const [mensaje, setMensaje] = useState("Procesando solicitud...")
     const [bloqueado, setBloqueado] = useState(false)
 
-    // Handle mouse movement for parallax effect - reduced sensitivity
     const handleMouseMove = (e) => {
         const { clientX, clientY } = e
         const windowWidth = window.innerWidth
         const windowHeight = window.innerHeight
 
-        // Calculate mouse position as percentage of window - reduced sensitivity
         const x = (clientX / windowWidth - 0.5) / 3
         const y = (clientY / windowHeight - 0.5) / 3
 
         setMousePosition({ x, y })
     }
 
-    // Animation sequence on load
     useEffect(() => {
         setIsLoaded(true)
     }, [])
 
-    // Verificación de token y reporte de cambio (del segundo componente)
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const token = params.get("token");
@@ -105,7 +100,6 @@ export default function CuentaBloqueada() {
 
         setIsSubmitting(true)
 
-        // Simulación de envío de código
         setTimeout(() => {
             setIsSubmitting(false)
             setCodeSent(true)
@@ -122,11 +116,8 @@ export default function CuentaBloqueada() {
 
         setIsSubmitting(true)
 
-        // Simulación de verificación
         setTimeout(() => {
             setIsSubmitting(false)
-            // Aquí podrías redirigir al usuario o mostrar un mensaje de éxito
-            // Por ahora, solo mostramos un error de ejemplo
             setErrorMessage("El código ingresado no es válido. Por favor, intenta nuevamente.")
         }, 1500)
     }

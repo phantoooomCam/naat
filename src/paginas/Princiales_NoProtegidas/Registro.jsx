@@ -16,7 +16,6 @@ export default function SignIn() {
   const [clave, setClave] = useState("");
   const [error, setError] = useState("");
 
-  // Use states del registro
   const navigate = useNavigate();
   const [nombre, setNombre] = useState("");
   const [apellidoPaterno, setApellidoPaterno] = useState("");
@@ -25,11 +24,9 @@ export default function SignIn() {
   const [correoRegistro, setCorreoRegistro] = useState("");
   const [claveRegistro, setClaveRegistro] = useState("");
 
-  // States del icono contraseña
   const [showPassword, setShowPassword] = useState(false);
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
 
-  // Funcion para el registro
   const handleRegister = async (e) => {
     e.preventDefault();
 
@@ -58,10 +55,8 @@ export default function SignIn() {
         throw new Error(data.mensaje || "Error en el registro");
       }
 
-      // Cambiar el estado antes de redirigir
       setIsRegister(false);
 
-      // Redirigir después de 2 segundos
       navigate("/mensaje");
     } catch (error) {
       console.error(error);

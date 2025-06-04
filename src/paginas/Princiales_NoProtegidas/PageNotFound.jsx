@@ -14,24 +14,20 @@ export default function PageNotFound() {
   const numbersRef = useRef(null)
   const cardRef = useRef(null)
 
-  // Handle mouse movement for parallax effect - reduced sensitivity
   const handleMouseMove = (e) => {
     const { clientX, clientY } = e
     const windowWidth = window.innerWidth
     const windowHeight = window.innerHeight
 
-    // Calculate mouse position as percentage of window - reduced sensitivity by dividing by 3
     const x = (clientX / windowWidth - 0.5) / 6
     const y = (clientY / windowHeight - 0.5) / 6
 
     setMousePosition({ x, y })
   }
 
-  // Animation sequence on load
   useEffect(() => {
     setIsLoaded(true)
 
-    // Create the glitch effect for the 404 numbers
     const glitchEffect = () => {
       if (!numbersRef.current) return
 
@@ -43,7 +39,6 @@ export default function PageNotFound() {
       }, 200)
     }
 
-    // Run the glitch effect periodically
     const glitchInterval = setInterval(() => {
       const shouldGlitch = Math.random() > 0.8
       if (shouldGlitch) glitchEffect()

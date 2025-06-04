@@ -20,12 +20,12 @@ const Header = () => {
     5: "Analista",
   }
 
-  // Asegurar que nivel sea un número antes de buscar en el mapeo
+
   const nivel = Number(usuario?.nivel) || 0
   const nivelNombre = niveles[nivel] || "Desconocido"
 
   const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true) // Estado para el sidebar
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true) 
   const [windowWidth, setWindowWidth] = useState(window.innerWidth)
   const profileRef = useRef(null)
   const navigate = useNavigate()
@@ -36,13 +36,8 @@ const Header = () => {
         method: "POST",
         credentials: "include" 
       });
-  
-      // El backend borra la cookie al recibir esta petición
-  
-      // ✅ Limpiar todo inmediatamente
       localStorage.clear();
-  
-      // ✅ Redirigir con recarga inmediata (sin esperar toast ni timeout)
+
       window.location.href = "/";
   
     } catch (error) {
@@ -52,7 +47,6 @@ const Header = () => {
   };
   
 
-  // Detectar si el sidebar está abierto o cerrado dinámicamente
   useEffect(() => {
     const observer = new MutationObserver(() => {
       const sidebar = document.querySelector(".sidebar")
@@ -66,7 +60,7 @@ const Header = () => {
     return () => observer.disconnect()
   }, [])
 
-  // Actualizar el ancho de la ventana
+
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth)
@@ -86,12 +80,12 @@ const Header = () => {
 
     if (isProfileOpen) {
       document.addEventListener("mousedown", handleClickOutside)
-      document.addEventListener("touchstart", handleClickOutside) // Cierra en dispositivos táctiles
+      document.addEventListener("touchstart", handleClickOutside) 
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
-      document.removeEventListener("touchstart", handleClickOutside) // Limpia el evento táctil
+      document.removeEventListener("touchstart", handleClickOutside) 
     }
   }, [isProfileOpen])
 

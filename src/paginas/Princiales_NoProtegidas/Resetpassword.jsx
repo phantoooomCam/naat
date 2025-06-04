@@ -53,7 +53,6 @@ export default function ResetPassword() {
       let response;
 
       if (cambioForzado && idUsuario) {
-        // 🔐 Cambio de contraseña forzado
         response = await fetchWithAuth("/api/usuarios/cambiar-contrasena-forzada", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -63,7 +62,6 @@ export default function ResetPassword() {
           }),
         });
       } else {
-        // 🔄 Reset de contraseña normal (con token)
         if (!token) {
           setError("Token no encontrado. Solicita un nuevo enlace de recuperación.");
           return;
