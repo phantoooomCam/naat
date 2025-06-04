@@ -460,7 +460,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         <div className="detailed-case-view">
           <div className="detailed-case-header">
             <h2>Detalles Completos del Caso</h2>
-            <button className="voler-button" onClick={() => setShowDetailedView(false)}>
+            <button className="volver-button" onClick={() => setShowDetailedView(false)}>
               Volver
             </button>
           </div>
