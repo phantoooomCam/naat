@@ -16,7 +16,24 @@ const Sidebar = () => {
   const initialRender = useRef(true)
 
 
-  const userLevel = JSON.parse(localStorage.getItem("user"))?.nivel || 1
+  const [userLevel, setUserLevel] = useState(null);
+  useEffect(() => {
+  const fetchUser = async () => {
+    try {
+      const response = await fetchWithAuth("/api/me");
+      if (!response || !response.ok) throw new Error("No autenticado");
+
+      const data = await response.json();
+      setUserLevel(parseInt(data.nivel, 10));
+    } catch (err) {
+      console.error("Error al obtener usuario:", err);
+      setUserLevel(null);
+    }
+  };
+
+  fetchUser();
+}, []);
+
   const menuItems = menu[userLevel] || []
 
  
