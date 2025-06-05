@@ -61,7 +61,6 @@ const Header = () => {
         method: "POST",
         credentials: "include",
       });
-      localStorage.clear();
 
       window.location.href = "/";
     } catch (error) {
