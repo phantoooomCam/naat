@@ -39,7 +39,6 @@ const GestionDash = () => {
   const [filteredAreas, setFilteredAreas] = useState([]);
   const [filteredDepartamentos, setFilteredDepartamentos] = useState([]);
 
-  const usuario = JSON.parse(localStorage.getItem("user"));
 
 
   const [organizaciones, setOrganizaciones] = useState([]);
