@@ -8,27 +8,44 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import "../../componentes/Sidebar.css";
 import NAAT from "../../../src/assets/completo_blanco.png";
-import {menu} from "../../componentes/sidebarConfig2";
+import { menu } from "../../componentes/sidebarConfig2";
 import fetchWithAuth from "../../utils/fetchWithAuth";
-
-
 
 const SideAdmin = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const initialRender = useRef(true);
+  const [usuario, setUsuario] = useState(null);
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetchWithAuth("/api/me");
+        if (!response.ok) throw new Error("Error al obtener el usuario");
+        const data = await response.json();
+        setUsuario(data);
+      } catch (err) {
+        console.error("Error al cargar usuario:", err);
+        setUsuario(null);
+      }
+    };
 
-  const userLevel = JSON.parse(localStorage.getItem('user'))
-  const menuItems = menu[userLevel.nivel] || [];
-  
+    fetchUser();
+  }, []);
+
+  const userLevel = usuario?.nivel;
+  const menuItems = menu[userLevel] || [];
+
   const [isOpen, setIsOpen] = useState(() => {
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    return JSON.parse(localStorage.getItem('sidebarState')) ?? window.innerWidth > 390;
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
+    return (
+      JSON.parse(localStorage.getItem("sidebarState")) ??
+      window.innerWidth > 390
+    );
   });
 
   const [expandedMenus, setExpandedMenus] = useState(() => {
     try {
-      const saved = localStorage.getItem('expandedMenus');
+      const saved = localStorage.getItem("expandedMenus");
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       console.error("Error cargando estado del menú:", e);
@@ -38,11 +55,11 @@ const SideAdmin = () => {
 
   useEffect(() => {
     return () => {
-      localStorage.removeItem('expandedMenus');
+      localStorage.removeItem("expandedMenus");
     };
   }, []);
 
-  const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+  const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
 
   useEffect(() => {
     const handleResize = () => {
@@ -71,22 +88,22 @@ const SideAdmin = () => {
       const isLeftEdgeSwipe = touchStartX < 50;
 
       if (swipeDistance > threshold && !isOpen && isLeftEdgeSwipe) {
-        setIsOpen(true); 
+        setIsOpen(true);
       } else if (swipeDistance < -threshold && isOpen) {
-        setIsOpen(false); 
+        setIsOpen(false);
       }
     };
 
-    window.addEventListener('resize', handleResize);
-    document.addEventListener('touchstart', handleTouchStart);
-    document.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener("resize", handleResize);
+    document.addEventListener("touchstart", handleTouchStart);
+    document.addEventListener("touchend", handleTouchEnd);
 
     handleResize();
 
     return () => {
-      window.removeEventListener('resize', handleResize);
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener("resize", handleResize);
+      document.removeEventListener("touchstart", handleTouchStart);
+      document.removeEventListener("touchend", handleTouchEnd);
     };
   }, [isOpen]);
 
@@ -97,8 +114,8 @@ const SideAdmin = () => {
   useEffect(() => {
     if (!initialRender.current) {
       try {
-        localStorage.setItem('expandedMenus', JSON.stringify(expandedMenus));
-        localStorage.setItem('sidebarState', JSON.stringify(isOpen));
+        localStorage.setItem("expandedMenus", JSON.stringify(expandedMenus));
+        localStorage.setItem("sidebarState", JSON.stringify(isOpen));
       } catch (e) {
         console.error("Error guardando estado del menú:", e);
       }
@@ -113,13 +130,13 @@ const SideAdmin = () => {
       event.stopPropagation();
     }
 
-    const clickedItem = menuItems.find(item => item.id === menuId);
+    const clickedItem = menuItems.find((item) => item.id === menuId);
 
     if (clickedItem?.subItems) {
       if (!isOpen) {
         setIsOpen(true);
-        setExpandedMenus([menuId]); 
-        localStorage.setItem('expandedMenus', JSON.stringify([menuId]));
+        setExpandedMenus([menuId]);
+        localStorage.setItem("expandedMenus", JSON.stringify([menuId]));
       } else {
         toggleSubMenu(menuId, event);
       }
@@ -134,7 +151,7 @@ const SideAdmin = () => {
       event.stopPropagation();
     }
 
-    setExpandedMenus(prevMenus =>
+    setExpandedMenus((prevMenus) =>
       prevMenus.includes(menuId) ? [] : [menuId]
     );
   };
@@ -147,7 +164,7 @@ const SideAdmin = () => {
 
     setExpandedMenus([]);
 
-    localStorage.setItem('expandedMenus', JSON.stringify([]));
+    localStorage.setItem("expandedMenus", JSON.stringify([]));
 
     navigate(path);
 
@@ -157,25 +174,26 @@ const SideAdmin = () => {
   };
 
   const isSubItemActive = (subItemId) => {
-    return location.pathname === subItemId || location.pathname.startsWith(subItemId);
+    return (
+      location.pathname === subItemId || location.pathname.startsWith(subItemId)
+    );
   };
 
   const isMenuActive = (item) => {
     if (!item.subItems) {
       return location.pathname === item.id;
     }
-    return item.subItems?.some(subItem => isSubItemActive(subItem.id));
+    return item.subItems?.some((subItem) => isSubItemActive(subItem.id));
   };
-  
-  const sidebarClass = `sidebar ${isOpen ? 'open' : 'closed'} ${isMobile() ? 'mobile' : ''}`;
+
+  const sidebarClass = `sidebar ${isOpen ? "open" : "closed"} ${
+    isMobile() ? "mobile" : ""
+  }`;
 
   return (
     <>
       {isOpen && isMobile() && (
-        <div
-          className="sidebar-overlay"
-          onClick={() => setIsOpen(false)}
-        />
+        <div className="sidebar-overlay" onClick={() => setIsOpen(false)} />
       )}
 
       <nav className={sidebarClass}>
@@ -183,13 +201,9 @@ const SideAdmin = () => {
           <div
             className="logo-wrapper"
             onClick={toggleSidebar}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: "pointer" }}
           >
-            <img
-              src={NAAT}
-              alt="NAAT Logo"
-              className="top-logo"
-            />
+            <img src={NAAT} alt="NAAT Logo" className="top-logo" />
             {isOpen && <h1 className="dashboard-title">Dashboard</h1>}
           </div>
         </div>
@@ -200,7 +214,7 @@ const SideAdmin = () => {
               {/* Manejar tanto elementos con subItems como sin ellos */}
               <div className="menu-wrapper">
                 <button
-                  className={`menu-item ${isMenuActive(item) ? 'active' : ''}`}
+                  className={`menu-item ${isMenuActive(item) ? "active" : ""}`}
                   onClick={(e) => handleMenuClick(item.id, e)}
                 >
                   <span className="icon">{item.icon}</span>
@@ -212,7 +226,9 @@ const SideAdmin = () => {
               {item.subItems && (
                 <div
                   className="sub-menu"
-                  style={{ display: expandedMenus.includes(item.id) ? 'block' : 'none' }}
+                  style={{
+                    display: expandedMenus.includes(item.id) ? "block" : "none",
+                  }}
                 >
                   {item.subItems.map((subItem) => (
                     <div
@@ -221,9 +237,13 @@ const SideAdmin = () => {
                       onClick={(e) => handleNavigation(subItem.id, e)}
                     >
                       <button
-                        className={`sub-menu-item ${isSubItemActive(subItem.id) ? 'active' : ''}`}
+                        className={`sub-menu-item ${
+                          isSubItemActive(subItem.id) ? "active" : ""
+                        }`}
                       >
-                        {isOpen && <span className="label">{subItem.label}</span>}
+                        {isOpen && (
+                          <span className="label">{subItem.label}</span>
+                        )}
                       </button>
                     </div>
                   ))}
