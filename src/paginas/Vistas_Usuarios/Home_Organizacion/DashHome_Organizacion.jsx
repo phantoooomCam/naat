@@ -36,6 +36,7 @@ const DashHome_Organizacion = ({ activeView }) => {
 }
 
 const HomeView = ({ isSidebarCollapsed }) => {
+  
   const usuario = JSON.parse(localStorage.getItem("user"))
   const nombre = usuario?.nombre || "Usuario"
   const navigate = useNavigate()
