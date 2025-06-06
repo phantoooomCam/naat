@@ -52,6 +52,8 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  
+
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth)
