@@ -32,7 +32,6 @@ const DashSolicitud = () => {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
 
-  const usuario = JSON.parse(localStorage.getItem("user"))
   
 
   useEffect(() => {
