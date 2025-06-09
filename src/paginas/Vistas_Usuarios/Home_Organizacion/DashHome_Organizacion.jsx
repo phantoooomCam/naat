@@ -1,190 +1,92 @@
-"use client"
+"use client";
 
-import PropTypes from "prop-types"
-import "../../SuperAdmin_Funciones/Inicio/DashHome.css"
-import { useNavigate } from "react-router-dom"
-import { useState, useEffect } from "react"
-import { FaUsers, FaChartLine, FaSignInAlt, FaBuilding, FaTasks, FaLayerGroup, FaClipboardList } from "react-icons/fa"
-import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
-import fetchWithAuth from "../../../utils/fetchWithAuth"
+import PropTypes from "prop-types";
+import "../../SuperAdmin_Funciones/Inicio/DashHome.css";
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import {
+  FaUsers,
+  FaChartLine,
+  FaSignInAlt,
+  FaBuilding,
+  FaTasks,
+  FaLayerGroup,
+  FaClipboardList,
+} from "react-icons/fa";
+import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import fetchWithAuth from "../../../utils/fetchWithAuth";
 
 const DashHome_Organizacion = ({ activeView }) => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      const sidebar = document.querySelector(".sidebar")
+      const sidebar = document.querySelector(".sidebar");
       if (sidebar) {
-        setIsSidebarCollapsed(sidebar.classList.contains("closed"))
+        setIsSidebarCollapsed(sidebar.classList.contains("closed"));
       }
-    })
+    });
 
-    observer.observe(document.body, { attributes: true, subtree: true })
+    observer.observe(document.body, { attributes: true, subtree: true });
 
-    return () => observer.disconnect()
-  }, [])
+    return () => observer.disconnect();
+  }, []);
 
   const views = {
     inicio: <HomeView isSidebarCollapsed={isSidebarCollapsed} />,
-  }
+  };
 
   return (
     <div className={`dash-home ${isSidebarCollapsed ? "collapsed" : ""}`}>
       <div className="container">{views[activeView]}</div>
     </div>
-  )
-}
+  );
+};
 
 const HomeView = ({ isSidebarCollapsed }) => {
-  
-  const usuario = JSON.parse(localStorage.getItem("user"))
-  const nombre = usuario?.nombre || "Usuario"
-  const navigate = useNavigate()
-  const organizacion = usuario?.organizacion || "tu organización"
-  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200)
-
-  const [usuarios, setUsuarios] = useState([])
-  const [ingresos, setIngresos] = useState([])
-  const [totalUsuarios, setTotalUsuarios] = useState(0)
-  const [totalAreas, setTotalAreas] = useState(0)
-  const [totalDepartamentos, setTotalDepartamentos] = useState(0)
-  const [userTypeData, setUserTypeData] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-
-  
-
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowWidth(window.innerWidth)
-    }
-
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
-
-  useEffect(() => {
-    const fetchAllData = async () => {
-      setLoading(true)
-      try {
-        const usuariosResponse = await fetchWithAuth("/api/usuarios")
-        let usuariosOrg = []
-        if (usuariosResponse.ok) {
-          const usuariosData = await usuariosResponse.json()
-
-          usuariosOrg = usuariosData.filter((u) => u.idOrganizacion === usuario.idOrganizacion)
-          setUsuarios(usuariosOrg)
-          setTotalUsuarios(usuariosOrg.length)
-
-          const conteoPorNivel = {
-            "Super Admin": 0,
-            "Admin Org": 0,
-            "Jefe de Área": 0,
-            "Jefe de Departamento": 0,
-            Analista: 0,
-          }
-
-          usuariosOrg.forEach((user) => {
-            switch (user.nivel) {
-              case 1:
-                conteoPorNivel["Super Admin"]++
-                break
-              case 2:
-                conteoPorNivel["Admin Org"]++
-                break
-              case 3:
-                conteoPorNivel["Jefe de Área"]++
-                break
-              case 4:
-                conteoPorNivel["Jefe de Departamento"]++
-                break
-              case 5:
-                conteoPorNivel["Analista"]++
-                break
-              default:
-                break
-            }
-          })
-
-          const datosGrafico = Object.entries(conteoPorNivel)
-            .filter(([_, value]) => value > 0)
-            .map(([name, value]) => ({ name, value }))
-
-          setUserTypeData(datosGrafico)
-        }
-
-        const areasResponse = await fetchWithAuth("/api/areas")
-        if (areasResponse.ok) {
-          const areasData = await areasResponse.json()
-          const areasFiltradas = areasData.filter((area) => area.idOrganizacion === usuario.idOrganizacion)
-          setTotalAreas(areasFiltradas.length)
-        }
-
-        const deptosResponse = await fetchWithAuth("/api/departamentos")
-        if (deptosResponse.ok) {
-          const deptosData = await deptosResponse.json()
-          const deptosFiltrados = Array.isArray(deptosData)
-            ? deptosData.filter((depto) => depto.idOrganizacion === usuario.idOrganizacion)
-            : Array.isArray(deptosData.departamentos)
-              ? deptosData.departamentos.filter((depto) => depto.idOrganizacion === usuario.idOrganizacion)
-              : []
-          setTotalDepartamentos(deptosFiltrados.length)
-        }
-
-        if (usuariosOrg.length > 0) {
-          const ingresosResponse = await fetchWithAuth("/api/ingresos")
-          if (ingresosResponse.ok) {
-            const ingresosData = await ingresosResponse.json()
-            const usuariosIds = usuariosOrg.map((u) => u.id)
-            const ingresosOrg = ingresosData
-              .filter((ingreso) => usuariosIds.includes(ingreso.idUsuario))
-              .sort((a, b) => new Date(b.hora || b.fechaHora) - new Date(a.hora || a.fechaHora))
-              .slice(0, 10)
-            setIngresos(ingresosOrg)
-          }
-        }
-      } catch (error) {
-        console.error("Error al cargar datos:", error)
-        setError("Error al cargar los datos del dashboard")
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchAllData()
-  }, [usuario.idOrganizacion])
-
+  const [usuario, setUsuario] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const nombre = usuario?.nombre || "Usuario";
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
+  const [usuarios, setUsuarios] = useState([]);
+  const [ingresos, setIngresos] = useState([]);
+  const [totalUsuarios, setTotalUsuarios] = useState(0);
+  const [totalAreas, setTotalAreas] = useState(0);
+  const [totalDepartamentos, setTotalDepartamentos] = useState(0);
+  const [userTypeData, setUserTypeData] = useState([]);
+  const [error, setError] = useState(null);
   const usuariosPorArea = usuarios.reduce((acc, usuario) => {
-    const areaId = usuario.idArea || "Sin Área"
-    acc[areaId] = (acc[areaId] || 0) + 1
-    return acc
-  }, {})
+    const areaId = usuario.idArea || "Sin Área";
+    acc[areaId] = (acc[areaId] || 0) + 1;
+    return acc;
+  }, {});
 
-  const usuariosAreaData = Object.entries(usuariosPorArea).map(([area, cantidad], index) => ({
-    name: area === "Sin Área" ? "Sin Área" : `Área ${area}`,
-    value: cantidad,
-    color: ["#33608d", "#2c7a7b", "#6b46c1", "#d69e2e", "#e53e3e", "#8b5cf6"][index % 6],
-  }))
+  const usuariosAreaData = Object.entries(usuariosPorArea).map(
+    ([area, cantidad], index) => ({
+      name: area === "Sin Área" ? "Sin Área" : `Área ${area}`,
+      value: cantidad,
+      color: ["#33608d", "#2c7a7b", "#6b46c1", "#d69e2e", "#e53e3e", "#8b5cf6"][
+        index % 6
+      ],
+    })
+  );
 
-  const COLORS = [
-    "#2c3e50", 
-    "#1976d2", 
-    "#3f7cac", 
-    "#90caf9", 
-    "#546e7a",
-  ]
+  const COLORS = ["#2c3e50", "#1976d2", "#3f7cac", "#90caf9", "#546e7a"];
 
   const formatearFecha = (fechaISO) => {
-    if (!fechaISO) return "Sin fecha"
-    const fecha = new Date(fechaISO)
-    return fecha.toLocaleString()
-  }
+    if (!fechaISO) return "Sin fecha";
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleString();
+  };
 
   const traducirTipo = (tipo) => {
-    if (tipo === "Iniciar Sesión") return "Inicio Sesión"
-    if (tipo === "Cerrar Sesión") return "Cerró Sesión"
-    return tipo || "N/A"
-  }
+    if (tipo === "Iniciar Sesión") return "Inicio Sesión";
+    if (tipo === "Cerrar Sesión") return "Cerró Sesión";
+    return tipo || "N/A";
+  };
 
   const dashboardCards = [
     {
@@ -201,7 +103,133 @@ const HomeView = ({ isSidebarCollapsed }) => {
       icon: <FaClipboardList />,
       description: "Gestionar casos de la organización",
     },
-  ]
+  ];
+
+  useEffect(() => {
+    const fetchUsuario = async () => {
+      try {
+        const response = await fetchWithAuth("/api/me");
+        if (!response || !response.ok)
+          throw new Error("Error al obtener usuario");
+        const data = await response.json();
+        setUsuario({
+          idUsuario: parseInt(data.idUsuario),
+          idOrganizacion: parseInt(data.idOrganizacion),
+          idArea: parseInt(data.idArea),
+          idDepartamento: parseInt(data.idDepartamento),
+          nivel: parseInt(data.nivel),
+          nombre: data.nombre,
+          apellidoPaterno: data.apellidoPaterno,
+        });
+      } catch (err) {
+        console.error("Error al cargar usuario:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsuario();
+  }, []);
+
+
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+  if (!usuario) return;  // Esperar a que usuario esté cargado
+
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      const usuariosResponse = await fetchWithAuth("/api/usuarios");
+      let usuariosOrg = [];
+
+      if (usuariosResponse.ok) {
+        const usuariosData = await usuariosResponse.json();
+
+        usuariosOrg = usuariosData.filter(
+          (u) => u.idOrganizacion === usuario.idOrganizacion
+        );
+        setUsuarios(usuariosOrg);
+        setTotalUsuarios(usuariosOrg.length);
+
+        const conteoPorNivel = {
+          "Super Admin": 0,
+          "Admin Org": 0,
+          "Jefe de Área": 0,
+          "Jefe de Departamento": 0,
+          Analista: 0,
+        };
+
+        usuariosOrg.forEach((user) => {
+          switch (user.nivel) {
+            case 1: conteoPorNivel["Super Admin"]++; break;
+            case 2: conteoPorNivel["Admin Org"]++; break;
+            case 3: conteoPorNivel["Jefe de Área"]++; break;
+            case 4: conteoPorNivel["Jefe de Departamento"]++; break;
+            case 5: conteoPorNivel["Analista"]++; break;
+            default: break;
+          }
+        });
+
+        const datosGrafico = Object.entries(conteoPorNivel)
+          .filter(([_, value]) => value > 0)
+          .map(([name, value]) => ({ name, value }));
+
+        setUserTypeData(datosGrafico);
+      }
+
+      const areasResponse = await fetchWithAuth("/api/areas");
+      if (areasResponse.ok) {
+        const areasData = await areasResponse.json();
+        const areasFiltradas = areasData.filter(
+          (area) => area.idOrganizacion === usuario.idOrganizacion
+        );
+        setTotalAreas(areasFiltradas.length);
+      }
+
+      const deptosResponse = await fetchWithAuth("/api/departamentos");
+      if (deptosResponse.ok) {
+        const deptosData = await deptosResponse.json();
+        const deptosFiltrados = Array.isArray(deptosData)
+          ? deptosData.filter((depto) => depto.idOrganizacion === usuario.idOrganizacion)
+          : Array.isArray(deptosData.departamentos)
+            ? deptosData.departamentos.filter((depto) => depto.idOrganizacion === usuario.idOrganizacion)
+            : [];
+        setTotalDepartamentos(deptosFiltrados.length);
+      }
+
+      if (usuariosOrg.length > 0) {
+        const ingresosResponse = await fetchWithAuth("/api/ingresos");
+        if (ingresosResponse.ok) {
+          const ingresosData = await ingresosResponse.json();
+          const usuariosIds = usuariosOrg.map((u) => u.id);
+          const ingresosOrg = ingresosData
+            .filter((ingreso) => usuariosIds.includes(ingreso.idUsuario))
+            .sort((a, b) => new Date(b.hora || b.fechaHora) - new Date(a.hora || a.fechaHora))
+            .slice(0, 10);
+          setIngresos(ingresosOrg);
+        }
+      }
+    } catch (error) {
+      console.error("Error al cargar datos:", error);
+      setError("Error al cargar los datos del dashboard");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchAllData();
+}, [usuario]);  // 👈 Ahora depende de usuario completo
+
+
+  
 
   if (loading) {
     return (
@@ -211,7 +239,7 @@ const HomeView = ({ isSidebarCollapsed }) => {
           <p>Cargando dashboard de la organización...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -220,19 +248,20 @@ const HomeView = ({ isSidebarCollapsed }) => {
         <div className="error-container">
           <h2>Error al cargar datos</h2>
           <p>{error}</p>
-          <button onClick={() => window.location.reload()} className="retry-button">
+          <button
+            onClick={() => window.location.reload()}
+            className="retry-button"
+          >
             Reintentar
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="home-view">
-      <h1>
-        Bienvenido {nombre} a {organizacion}
-      </h1>
+      <h1>Bienvenido {nombre} a tu Organizacion</h1>
 
       {/* Estadísticas resumidas */}
       <div className="stats-overview">
@@ -271,7 +300,9 @@ const HomeView = ({ isSidebarCollapsed }) => {
       <div className="charts-container">
         <div className="chart-card">
           <h3>Distribución de Usuarios por Nivel</h3>
-          <div className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}>
+          <div
+            className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}
+          >
             <div className="chart-scroll-container">
               {userTypeData.length > 0 ? (
                 windowWidth <= 768 ? (
@@ -285,14 +316,22 @@ const HomeView = ({ isSidebarCollapsed }) => {
                       dataKey="value"
                       labelLine={windowWidth > 480}
                       label={
-                        windowWidth > 480 ? ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%` : null
+                        windowWidth > 480
+                          ? ({ name, percent }) =>
+                              `${name}: ${(percent * 100).toFixed(0)}%`
+                          : null
                       }
                     >
                       {userTypeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value, name) => [`${value} usuario(s)`, name]} />
+                    <Tooltip
+                      formatter={(value, name) => [`${value} usuario(s)`, name]}
+                    />
                   </PieChart>
                 ) : (
                   <ResponsiveContainer width="100%" height={300}>
@@ -307,13 +346,23 @@ const HomeView = ({ isSidebarCollapsed }) => {
                         labelLine={true}
                         stroke="#ffffff"
                         strokeWidth={2}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        label={({ name, percent }) =>
+                          `${name}: ${(percent * 100).toFixed(0)}%`
+                        }
                       >
                         {userTypeData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
+                          />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value, name) => [`${value} usuario(s)`, name]} />
+                      <Tooltip
+                        formatter={(value, name) => [
+                          `${value} usuario(s)`,
+                          name,
+                        ]}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 )
@@ -328,7 +377,9 @@ const HomeView = ({ isSidebarCollapsed }) => {
 
         <div className="chart-card">
           <h3>Usuarios por Área</h3>
-          <div className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}>
+          <div
+            className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}
+          >
             <div className="chart-scroll-container">
               {usuariosAreaData.length > 0 ? (
                 windowWidth <= 768 ? (
@@ -425,7 +476,11 @@ const HomeView = ({ isSidebarCollapsed }) => {
       <h2 className="section-title">Accesos Rápidos</h2>
       <div className="dashboard-grid">
         {dashboardCards.map((card) => (
-          <div key={card.id} className="card" onClick={() => navigate(card.route)}>
+          <div
+            key={card.id}
+            className="card"
+            onClick={() => navigate(card.route)}
+          >
             <span className="icon">{card.icon}</span>
             <h2>{card.title}</h2>
             <p>{card.description}</p>
@@ -433,15 +488,15 @@ const HomeView = ({ isSidebarCollapsed }) => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
 DashHome_Organizacion.propTypes = {
   activeView: PropTypes.string.isRequired,
-}
+};
 
 HomeView.propTypes = {
   isSidebarCollapsed: PropTypes.bool,
-}
+};
 
-export default DashHome_Organizacion
+export default DashHome_Organizacion;
