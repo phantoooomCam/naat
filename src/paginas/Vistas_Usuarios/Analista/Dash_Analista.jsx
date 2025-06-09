@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import PropTypes from "prop-types"
-import "../../SuperAdmin_Funciones/Inicio/DashHome.css"
-import { useNavigate } from "react-router-dom"
-import { useState, useEffect } from "react"
-import { 
-  FaClipboardList, 
-  FaChartLine, 
-  FaExclamationTriangle, 
+import PropTypes from "prop-types";
+import "../../SuperAdmin_Funciones/Inicio/DashHome.css";
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import {
+  FaClipboardList,
+  FaChartLine,
+  FaExclamationTriangle,
   FaFileAlt,
   FaPlus,
   FaHistory,
   FaArchive,
   FaCheckCircle,
-  FaSpinner
-} from "react-icons/fa"
-import { LuBookHeadphones } from "react-icons/lu"
+  FaSpinner,
+} from "react-icons/fa";
+import { LuBookHeadphones } from "react-icons/lu";
 import {
   BarChart,
   Bar,
@@ -28,180 +28,222 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts"
-import fetchWithAuth from "../../../utils/fetchWithAuth"
+} from "recharts";
+import fetchWithAuth from "../../../utils/fetchWithAuth";
 
 const Dash_Analista = ({ activeView }) => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      const sidebar = document.querySelector(".sidebar")
+      const sidebar = document.querySelector(".sidebar");
       if (sidebar) {
-        setIsSidebarCollapsed(sidebar.classList.contains("closed"))
+        setIsSidebarCollapsed(sidebar.classList.contains("closed"));
       }
-    })
+    });
 
-    observer.observe(document.body, { attributes: true, subtree: true })
+    observer.observe(document.body, { attributes: true, subtree: true });
 
-    return () => observer.disconnect()
-  }, [])
+    return () => observer.disconnect();
+  }, []);
 
   const views = {
     inicio: <HomeView isSidebarCollapsed={isSidebarCollapsed} />,
-  }
+  };
 
   return (
     <div className={`dash-home ${isSidebarCollapsed ? "collapsed" : ""}`}>
       <div className="container">{views[activeView]}</div>
     </div>
-  )
-}
+  );
+};
 
 const HomeView = ({ isSidebarCollapsed }) => {
-  const usuario = JSON.parse(localStorage.getItem("user"))
-  const nombre = usuario?.nombre || "Usuario"
-  const navigate = useNavigate()
-  const organizacion = usuario?.organizacion || "tu organización"
-  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200)
+  const [usuario, setUsuario] = useState(null);
+  useEffect(() => {
+    const fetchUsuario = async () => {
+      try {
+        const response = await fetchWithAuth("/api/me");
+        if (!response || !response.ok)
+          throw new Error("Error al obtener usuario");
+        const data = await response.json();
+        setUsuario({
+          idUsuario: parseInt(data.idUsuario),
+          idOrganizacion: parseInt(data.idOrganizacion),
+          idArea: parseInt(data.idArea),
+          idDepartamento: parseInt(data.idDepartamento),
+          nivel: parseInt(data.nivel),
+          nombre: data.nombre,
+          apellidoPaterno: data.apellidoPaterno,
+        });
+      } catch (err) {
+        console.error("Error al cargar usuario:", err);
+      }
+    };
+    fetchUsuario();
+  }, []);
 
-  const [casos, setCasos] = useState([])
-  const [sabanas, setSabanas] = useState([])
-  const [logs, setLogs] = useState([])
-  const [companias, setCompanias] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const nombre = usuario?.nombre || "Usuario";
+  const navigate = useNavigate();
+  const organizacion = usuario?.organizacion || "tu organización";
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
+
+  const [casos, setCasos] = useState([]);
+  const [sabanas, setSabanas] = useState([]);
+  const [logs, setLogs] = useState([]);
+  const [companias, setCompanias] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [estadisticasCasos, setEstadisticasCasos] = useState({
     total: 0,
     activos: 0,
     archivados: 0,
-    reactivados: 0
-  })
+    reactivados: 0,
+  });
 
   useEffect(() => {
     const handleResize = () => {
-      setWindowWidth(window.innerWidth)
-    }
+      setWindowWidth(window.innerWidth);
+    };
 
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
+    if (!usuario) return; 
+
     const fetchAllData = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const casosResponse = await fetchWithAuth("/api/casos")
+        // Cargar casos
+        const casosResponse = await fetchWithAuth("/api/casos");
         if (casosResponse.ok) {
-          const casosData = await casosResponse.json()
-          setCasos(casosData)
-          
+          const casosData = await casosResponse.json();
+          setCasos(casosData);
+
           const stats = {
             total: casosData.length,
-            activos: casosData.filter(c => c.estado === 'activo').length,
-            archivados: casosData.filter(c => c.estado === 'archivado').length,
-            reactivados: casosData.filter(c => c.estado === 'reactivado').length
-          }
-          setEstadisticasCasos(stats)
+            activos: casosData.filter((c) => c.estado === "activo").length,
+            archivados: casosData.filter((c) => c.estado === "archivado")
+              .length,
+            reactivados: casosData.filter((c) => c.estado === "reactivado")
+              .length,
+          };
+          setEstadisticasCasos(stats);
         }
 
         try {
-          const logsResponse = await fetchWithAuth("/api/acciones")
+          const logsResponse = await fetchWithAuth("/api/acciones");
           if (logsResponse.ok) {
-            const logsData = await logsResponse.json()
+            const logsData = await logsResponse.json();
             const userLogs = logsData
-              .filter(log => log.idUsuario === usuario.id)
+              .filter((log) => log.idUsuario === usuario.idUsuario)
               .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
-              .slice(0, 5)
-            setLogs(userLogs)
+              .slice(0, 5);
+            setLogs(userLogs);
           }
         } catch (error) {
+          console.warn("Error al cargar logs", error);
         }
 
+        // Cargar compañías
         try {
-          const companiasResponse = await fetchWithAuth("/api/sabanas/companias")
+          const companiasResponse = await fetchWithAuth(
+            "/api/sabanas/companias"
+          );
           if (companiasResponse.ok) {
-            const companiasData = await companiasResponse.json()
-            setCompanias(companiasData)
+            const companiasData = await companiasResponse.json();
+            setCompanias(companiasData);
           }
         } catch (error) {
+          console.warn("Error al cargar compañías", error);
         }
-
       } catch (error) {
-        console.error("Error al cargar datos:", error)
-        setError("Error al cargar los datos del dashboard")
+        console.error("Error al cargar datos:", error);
+        setError("Error al cargar los datos del dashboard");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchAllData()
-  }, [usuario.id])
+    fetchAllData();
+  }, [usuario]); 
 
   const casosEstadoData = [
-    { name: 'Activos', value: estadisticasCasos.activos, color: '#2c7a7b' },
-    { name: 'Archivados', value: estadisticasCasos.archivados, color: '#64748b' },
-    { name: 'Reactivados', value: estadisticasCasos.reactivados, color: '#6b46c1' }
-  ].filter(item => item.value > 0)
+    { name: "Activos", value: estadisticasCasos.activos, color: "#2c7a7b" },
+    {
+      name: "Archivados",
+      value: estadisticasCasos.archivados,
+      color: "#64748b",
+    },
+    {
+      name: "Reactivados",
+      value: estadisticasCasos.reactivados,
+      color: "#6b46c1",
+    },
+  ].filter((item) => item.value > 0);
 
   const getActividadSemanal = () => {
-    const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
-    const hoy = new Date()
-    const actividadPorDia = []
+    const dias = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+    const hoy = new Date();
+    const actividadPorDia = [];
 
     for (let i = 6; i >= 0; i--) {
-      const fecha = new Date(hoy)
-      fecha.setDate(hoy.getDate() - i)
-      const diaNombre = dias[fecha.getDay()]
-      
-      const casosDelDia = casos.filter(caso => {
-        const fechaCaso = new Date(caso.fechaCreacion)
-        return fechaCaso.toDateString() === fecha.toDateString()
-      }).length
+      const fecha = new Date(hoy);
+      fecha.setDate(hoy.getDate() - i);
+      const diaNombre = dias[fecha.getDay()];
+
+      const casosDelDia = casos.filter((caso) => {
+        const fechaCaso = new Date(caso.fechaCreacion);
+        return fechaCaso.toDateString() === fecha.toDateString();
+      }).length;
 
       actividadPorDia.push({
         name: diaNombre,
-        casos: casosDelDia
-      })
+        casos: casosDelDia,
+      });
     }
 
-    return actividadPorDia
-  }
+    return actividadPorDia;
+  };
 
   const dashboardCards = [
-    { 
-      id: 1, 
-      title: "Crear Caso", 
-      route: "/casos", 
+    {
+      id: 1,
+      title: "Crear Caso",
+      route: "/casos",
       icon: <FaPlus />,
-      description: "Crear un nuevo caso de investigación"
+      description: "Crear un nuevo caso de investigación",
     },
-    { 
-      id: 2, 
-      title: "Procesar Sabana", 
-      route: "/sabana", 
+    {
+      id: 2,
+      title: "Procesar Sabana",
+      route: "/sabana",
       icon: <LuBookHeadphones />,
-      description: "Subir y procesar archivos de sabana"
+      description: "Subir y procesar archivos de sabana",
     },
-  ]
+  ];
 
   const formatearFecha = (fechaISO) => {
-    if (!fechaISO) return "Sin fecha"
-    const fecha = new Date(fechaISO)
+    if (!fechaISO) return "Sin fecha";
+    const fecha = new Date(fechaISO);
     return fecha.toLocaleString("es-MX", {
       year: "numeric",
       month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })
-  }
+    });
+  };
 
   const casosRecientes = casos
-    .filter(caso => caso.idUsuario === usuario.id)
+    .filter((caso) => caso.idUsuario === usuario.id)
     .sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion))
-    .slice(0, 5)
+    .slice(0, 5);
 
   if (loading) {
     return (
@@ -211,7 +253,7 @@ const HomeView = ({ isSidebarCollapsed }) => {
           <p>Cargando dashboard...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -220,12 +262,15 @@ const HomeView = ({ isSidebarCollapsed }) => {
         <div className="error-container">
           <h2>Error al cargar datos</h2>
           <p>{error}</p>
-          <button onClick={() => window.location.reload()} className="retry-button">
+          <button
+            onClick={() => window.location.reload()}
+            className="retry-button"
+          >
             Reintentar
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -281,7 +326,9 @@ const HomeView = ({ isSidebarCollapsed }) => {
       <div className="charts-container">
         <div className="chart-card">
           <h3>Casos Creados (Últimos 7 días)</h3>
-          <div className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}>
+          <div
+            className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}
+          >
             <div className="chart-scroll-container">
               {windowWidth <= 768 ? (
                 <BarChart
@@ -299,7 +346,10 @@ const HomeView = ({ isSidebarCollapsed }) => {
                 </BarChart>
               ) : (
                 <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={getActividadSemanal()} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
+                  <BarChart
+                    data={getActividadSemanal()}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis allowDecimals={false} />
@@ -315,7 +365,9 @@ const HomeView = ({ isSidebarCollapsed }) => {
 
         <div className="chart-card">
           <h3>Distribución de Casos por Estado</h3>
-          <div className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}>
+          <div
+            className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}
+          >
             <div className="chart-scroll-container">
               {casosEstadoData.length > 0 ? (
                 windowWidth <= 768 ? (
@@ -388,7 +440,7 @@ const HomeView = ({ isSidebarCollapsed }) => {
                     <td>{caso.nombre}</td>
                     <td>
                       <span className={`status-badge ${caso.estado}`}>
-                        {caso.estado || 'Sin estado'}
+                        {caso.estado || "Sin estado"}
                       </span>
                     </td>
                     <td>{formatearFecha(caso.fechaCreacion)}</td>
@@ -439,7 +491,11 @@ const HomeView = ({ isSidebarCollapsed }) => {
       <h2 className="section-title">Accesos Rápidos</h2>
       <div className="dashboard-grid">
         {dashboardCards.map((card) => (
-          <div key={card.id} className="card" onClick={() => navigate(card.route)}>
+          <div
+            key={card.id}
+            className="card"
+            onClick={() => navigate(card.route)}
+          >
             <span className="icon">{card.icon}</span>
             <h2>{card.title}</h2>
             <p>{card.description}</p>
@@ -447,15 +503,15 @@ const HomeView = ({ isSidebarCollapsed }) => {
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
 Dash_Analista.propTypes = {
   activeView: PropTypes.string.isRequired,
-}
+};
 
 HomeView.propTypes = {
   isSidebarCollapsed: PropTypes.bool,
-}
+};
 
-export default Dash_Analista
+export default Dash_Analista;
