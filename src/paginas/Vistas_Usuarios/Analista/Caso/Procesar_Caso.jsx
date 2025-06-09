@@ -158,6 +158,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           estado: caso.estado || "Sin estado",
           fechaCreacion: caso.fechaCreacion || "Sin fecha",
           asignado: caso.descripcion,
+          organizacion: caso.nombreOrganizacion || "No especificada",
+          area: caso.nombreArea || "No especificada",
+          departamento: caso.nombreDepartamento || "No especificado",
         }));
 
         setCasos(casosTransformados);
