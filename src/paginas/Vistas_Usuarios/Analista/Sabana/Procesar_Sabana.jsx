@@ -67,8 +67,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         }
         const data = await response.json();
         setCompanias(data);
-      } catch (error) {
-      }
+      } catch (error) {}
     };
 
     fetchCompanias();
@@ -87,8 +86,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           titulo: caso.nombre,
         }));
         setCasos(casosTrasnformados);
-      } catch (error) {
-      }
+      } catch (error) {}
     };
     fetchCasos();
   }, []);
@@ -182,80 +180,93 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   };
 
   const handleGuardarEnBD = async () => {
-  const companiaSeleccionada = companias.find(
-    (compania) => compania.nombre === telco
-  );
-  const idCompania = companiaSeleccionada ? companiaSeleccionada.id : null;
+    const companiaSeleccionada = companias.find(
+      (compania) => compania.nombre === telco
+    );
+    const idCompania = companiaSeleccionada ? companiaSeleccionada.id : null;
 
-  if (files.length === 0) {
-    setProcessingStatus("error");
-    setStatusMessage("No hay archivos para guardar");
-    setTimeout(() => setProcessingStatus(null), 3000);
-    return;
-  }
-
-  if (!casoSeleccionado) {
-    setProcessingStatus("error");
-    setStatusMessage("Debe seleccionar un caso");
-    setTimeout(() => setProcessingStatus(null), 3000);
-    return;
-  }
-
-  setIsProcessing(true);
-  setProcessingStatus(null);
-
-  try {
-    const numeroPayload = {
-      numero: phoneNumber,
-      codigoArea: codigoPais, 
-    };
-
-    const numeroResponse = await fetchWithAuth("/api/sabanas/numeros", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(numeroPayload),
-    });
-
-    if (!numeroResponse.ok) {
-      const errorData = await numeroResponse.json();
-      console.warn("⚠️ Error al guardar número:", errorData?.mensaje || "Desconocido");
-    }
-
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      if (files[i].rawFile) {
-        formData.append("archivos", files[i].rawFile);
-      }
-    }
-
-    formData.append("idCaso", casoSeleccionado.toString());
-
-    const response = await fetchWithAuth("/api/sabanas/archivos/subir", {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await response.json();
-    setIsProcessing(false);
-
-    if (response.ok) {
-      setProcessingStatus("success");
-      setStatusMessage("Archivos guardados correctamente");
-    } else {
+    if (files.length === 0) {
       setProcessingStatus("error");
-      setStatusMessage(data.message || "Error al guardar los archivos");
+      setStatusMessage("No hay archivos para guardar");
+      setTimeout(() => setProcessingStatus(null), 3000);
+      return;
     }
 
-    setTimeout(() => setProcessingStatus(null), 3000);
-  } catch (error) {
-    console.error("❌ Error al guardar en BD:", error);
-    setIsProcessing(false);
-    setProcessingStatus("error");
-    setStatusMessage("Error de conexión al servidor");
-    setTimeout(() => setProcessingStatus(null), 3000);
-  }
-};
+    if (!casoSeleccionado) {
+      setProcessingStatus("error");
+      setStatusMessage("Debe seleccionar un caso");
+      setTimeout(() => setProcessingStatus(null), 3000);
+      return;
+    }
 
+    if (!idCompania) {
+      setProcessingStatus("error");
+      setStatusMessage("Debe seleccionar una compañía válida");
+      setTimeout(() => setProcessingStatus(null), 3000);
+      return;
+    }
+
+    setIsProcessing(true);
+    setProcessingStatus(null);
+
+    try {
+      
+      const numeroPayload = {
+        numero: phoneNumber,
+        codigoArea: codigoPais,
+      };
+
+      const numeroResponse = await fetchWithAuth("/api/sabanas/numeros", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(numeroPayload),
+      });
+
+      if (!numeroResponse.ok) {
+        const errorData = await numeroResponse.json();
+        throw new Error(errorData?.mensaje || "Error al guardar el número");
+      }
+
+      const numeroData = await numeroResponse.json();
+      const idNumeroTelefonico = numeroData.id; 
+
+    
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        if (files[i].rawFile) {
+          formData.append("archivos", files[i].rawFile);
+        }
+      }
+
+      formData.append("idCaso", casoSeleccionado.toString());
+      formData.append("idNumeroTelefonico", idNumeroTelefonico.toString());
+      formData.append("idCompaniaTelefonica", idCompania.toString());
+
+      const response = await fetchWithAuth("/api/sabanas/archivos/subir", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      setIsProcessing(false);
+
+      if (response.ok) {
+        setProcessingStatus("success");
+        setStatusMessage("Archivos guardados correctamente");
+      } else {
+        setProcessingStatus("error");
+        setStatusMessage(data.message || "Error al guardar los archivos");
+      }
+
+      setTimeout(() => setProcessingStatus(null), 3000);
+    } catch (error) {
+      console.error("❌ Error al guardar en BD:", error);
+      setIsProcessing(false);
+      setProcessingStatus("error");
+      setStatusMessage(error.message || "Error de conexión al servidor");
+      setTimeout(() => setProcessingStatus(null), 3000);
+    }
+  };
 
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + " B";
@@ -430,7 +441,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                     </button>
                   </div>
                 </div>
-               ))} 
+              ))}
             </div>
           ) : (
             <div className="empty-files">
