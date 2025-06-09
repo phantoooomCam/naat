@@ -57,6 +57,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
+  const [archivosDelCaso, setArchivosDelCaso] = useState([]);
 
   const [userLevel, setUserLevel] = useState(5);
   const [organizaciones, setOrganizaciones] = useState([]);
@@ -94,6 +95,20 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
     fetchUsuario();
   }, []);
+  const cargarArchivosPorCaso = async (idCaso) => {
+    try {
+      const response = await fetchWithAuth(
+        `/api/sabanas/archivos/por-caso/${idCaso}`
+      );
+      if (!response.ok) throw new Error("Error al obtener archivos del caso");
+
+      const data = await response.json();
+      setArchivosDelCaso(data);
+    } catch (error) {
+      console.error("Error al cargar archivos:", error);
+      setArchivosDelCaso([]);
+    }
+  };
 
   const [filters, setFilters] = useState({
     activo: false,
@@ -385,7 +400,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   };
 
   useEffect(() => {
-    if (!usuario) return; 
+    if (!usuario) return;
 
     const nivel = Number(usuario.nivel);
     setUserLevel(nivel);
@@ -536,27 +551,20 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
               <h3>Información Adicional</h3>
               <div className="detailed-info-grid">
                 <div className="info-row">
-                  <span className="info-label">Asignado a:</span>
-                  <span className="info-value">{selectedCaso.asignado}</span>
-                </div>
-                <div className="info-row">
                   <span className="info-label">Organización:</span>
                   <span className="info-value">
-                    {/* Aquí se mostraría la organización cuando esté disponible */}
                     {selectedCaso.organizacion || "No especificada"}
                   </span>
                 </div>
                 <div className="info-row">
                   <span className="info-label">Área:</span>
                   <span className="info-value">
-                    {/* Aquí se mostraría el área cuando esté disponible */}
                     {selectedCaso.area || "No especificada"}
                   </span>
                 </div>
                 <div className="info-row">
                   <span className="info-label">Departamento:</span>
                   <span className="info-value">
-                    {/* Aquí se mostraría el departamento cuando esté disponible */}
                     {selectedCaso.departamento || "No especificado"}
                   </span>
                 </div>
@@ -583,6 +591,24 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                 </div>
                 {/* Aquí se mostrarían más elementos del historial cuando estén disponibles */}
               </div>
+            </div>
+            <div className="detailed-case-section">
+              <h3>Archivos Asociados</h3>
+              {archivosDelCaso.length > 0 ? (
+                <div className="archivos-grid">
+                  {archivosDelCaso.map((archivo) => (
+                    <div key={archivo.idArchivo} className="archivo-item">
+                      <div className="detailed-description">
+                        <p>
+                          <strong>Ruta:</strong> {archivo.ruta}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>No hay archivos asociados a este caso.</p>
+              )}
             </div>
           </div>
         </div>
@@ -1034,7 +1060,10 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
                         <button
                           className="view-details-button"
-                          onClick={() => setShowDetailedView(true)}
+                          onClick={() => {
+                            cargarArchivosPorCaso(selectedCaso.id);
+                            setShowDetailedView(true);
+                          }}
                         >
                           <FontAwesomeIcon icon={faFolderOpen} />
                           <span>Ver detalles completos</span>
