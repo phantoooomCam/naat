@@ -1,11 +1,18 @@
-"use client"
+"use client";
 
-import PropTypes from "prop-types"
-import "./DashHome.css"
-import { useNavigate } from "react-router-dom"
-import { AnimatePresence, motion } from "framer-motion"
-import { useState, useEffect } from "react"
-import { FaUsers, FaBuilding, FaTasks, FaLayerGroup, FaUserClock, FaExclamationTriangle } from "react-icons/fa"
+import PropTypes from "prop-types";
+import "./DashHome.css";
+import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import {
+  FaUsers,
+  FaBuilding,
+  FaTasks,
+  FaLayerGroup,
+  FaUserClock,
+  FaExclamationTriangle,
+} from "react-icons/fa";
 import {
   BarChart,
   Bar,
@@ -18,68 +25,101 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts"
+} from "recharts";
 import fetchWithAuth from "../../../utils/fetchWithAuth";
 
-
 const DashHome = ({ activeView }) => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      const sidebar = document.querySelector(".sidebar")
+      const sidebar = document.querySelector(".sidebar");
       if (sidebar) {
-        setIsSidebarCollapsed(sidebar.classList.contains("closed"))
+        setIsSidebarCollapsed(sidebar.classList.contains("closed"));
       }
-    })
+    });
 
-    observer.observe(document.body, { attributes: true, subtree: true })
+    observer.observe(document.body, { attributes: true, subtree: true });
 
-    return () => observer.disconnect()
-  }, [])
+    return () => observer.disconnect();
+  }, []);
 
   const views = {
     inicio: <HomeView isSidebarCollapsed={isSidebarCollapsed} />,
-  }
+  };
 
   return (
     <div className={`dash-home ${isSidebarCollapsed ? "collapsed" : ""}`}>
       <div className="container">{views[activeView]}</div>
     </div>
-  )
-}
+  );
+};
 
 const HomeView = ({ isSidebarCollapsed }) => {
-  const usuario = JSON.parse(localStorage.getItem("user"))
-  const nombre = usuario?.nombre || "Usuario"
-  const navigate = useNavigate()
-  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200)
+  const [usuario, setUsuario] = useState(null);
+  useEffect(() => {
+    const fetchUsuario = async () => {
+      try {
+        const response = await fetchWithAuth("/api/me");
+        if (!response || !response.ok)
+          throw new Error("Error al obtener usuario");
+        const data = await response.json();
+        setUsuario({
+          idUsuario: parseInt(data.idUsuario),
+          idOrganizacion: parseInt(data.idOrganizacion),
+          idArea: parseInt(data.idArea),
+          idDepartamento: parseInt(data.idDepartamento),
+          nivel: parseInt(data.nivel),
+          nombre: data.nombre,
+          apellidoPaterno: data.apellidoPaterno,
+        });
+      } catch (err) {
+        console.error("Error al cargar usuario:", err);
+      }
+    };
+    fetchUsuario();
+  }, []);
 
-  const [totalUsuarios, setTotalUsuarios] = useState(0)
-  const [rotatingStatIndex, setRotatingStatIndex] = useState(0)
-  const [totalOrganizaciones, setTotalOrganizaciones] = useState(0)
-  const [totalAreas, setTotalAreas] = useState(0)
-  const [totalDepartamentos, setTotalDepartamentos] = useState(0)
-  const [pendientes, setPendientes] = useState(0)
-  const [actividadPorDia, setActividadPorDia] = useState([])
-  const [userTypeData, setUserTypeData] = useState([])
-  const [actividadReciente, setActividadReciente] = useState([])
+  const nombre = usuario?.nombre || "Usuario";
+  const navigate = useNavigate();
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
+
+  const [totalUsuarios, setTotalUsuarios] = useState(0);
+  const [rotatingStatIndex, setRotatingStatIndex] = useState(0);
+  const [totalOrganizaciones, setTotalOrganizaciones] = useState(0);
+  const [totalAreas, setTotalAreas] = useState(0);
+  const [totalDepartamentos, setTotalDepartamentos] = useState(0);
+  const [pendientes, setPendientes] = useState(0);
+  const [actividadPorDia, setActividadPorDia] = useState([]);
+  const [userTypeData, setUserTypeData] = useState([]);
+  const [actividadReciente, setActividadReciente] = useState([]);
 
   useEffect(() => {
     const handleResize = () => {
-      setWindowWidth(window.innerWidth)
-    }
+      setWindowWidth(window.innerWidth);
+    };
 
-    window.addEventListener("resize", handleResize)
-    return () => window.removeEventListener("resize", handleResize)
-  }, [])
-
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const rotatingData = [
-    { id: "organizaciones", icon: <FaBuilding />, value: totalOrganizaciones, label: "Organizaciones" },
+    {
+      id: "organizaciones",
+      icon: <FaBuilding />,
+      value: totalOrganizaciones,
+      label: "Organizaciones",
+    },
     { id: "areas", icon: <FaLayerGroup />, value: totalAreas, label: "Áreas" },
-    { id: "departamentos", icon: <FaTasks />, value: totalDepartamentos, label: "Departamentos" },
-  ]
+    {
+      id: "departamentos",
+      icon: <FaTasks />,
+      value: totalDepartamentos,
+      label: "Departamentos",
+    },
+  ];
 
   useEffect(() => {
     const fetchUsuarios = async () => {
@@ -89,19 +129,25 @@ const HomeView = ({ isSidebarCollapsed }) => {
           headers: {
             "Content-Type": "application/json",
           },
-        
-        })
+        });
 
-        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`)
+        if (!response.ok)
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
 
-        const data = await response.json()
-        setTotalUsuarios(data.length)
+        const data = await response.json();
+        setTotalUsuarios(data.length);
 
         const pendientesUsuarios = data.filter((user) => {
-          const nivel = user.nivel
-          return nivel === null || nivel === undefined || nivel === "null" || nivel === "0" || nivel === 0
-        })
-        setPendientes(pendientesUsuarios.length)
+          const nivel = user.nivel;
+          return (
+            nivel === null ||
+            nivel === undefined ||
+            nivel === "null" ||
+            nivel === "0" ||
+            nivel === 0
+          );
+        });
+        setPendientes(pendientesUsuarios.length);
 
         const conteoPorNivel = {
           "Super Admin": 0,
@@ -109,42 +155,42 @@ const HomeView = ({ isSidebarCollapsed }) => {
           "Jefe de Área": 0,
           "Jefe de Departamento": 0,
           Analista: 0,
-        }
+        };
 
         data.forEach((user) => {
           switch (user.nivel) {
             case 1:
-              conteoPorNivel["Super Admin"]++
-              break
+              conteoPorNivel["Super Admin"]++;
+              break;
             case 2:
-              conteoPorNivel["Admin Org"]++
-              break
+              conteoPorNivel["Admin Org"]++;
+              break;
             case 3:
-              conteoPorNivel["Jefe de Área"]++
-              break
+              conteoPorNivel["Jefe de Área"]++;
+              break;
             case 4:
-              conteoPorNivel["Jefe de Departamento"]++
-              break
+              conteoPorNivel["Jefe de Departamento"]++;
+              break;
             case 5:
-              conteoPorNivel["Analista"]++
-              break
+              conteoPorNivel["Analista"]++;
+              break;
             default:
-              break
+              break;
           }
-        })
+        });
 
         const datosGrafico = Object.entries(conteoPorNivel)
           .filter(([_, value]) => value > 0)
-          .map(([name, value]) => ({ name, value }))
+          .map(([name, value]) => ({ name, value }));
 
-        setUserTypeData(datosGrafico)
+        setUserTypeData(datosGrafico);
       } catch (error) {
-        console.error("Error al obtener usuarios:", error)
+        console.error("Error al obtener usuarios:", error);
       }
-    }
+    };
 
-    fetchUsuarios()
-  }, [])
+    fetchUsuarios();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -152,28 +198,25 @@ const HomeView = ({ isSidebarCollapsed }) => {
         const [orgRes, areaRes, deptoRes] = await Promise.all([
           fetchWithAuth("/api/organizaciones", {
             headers: { "Content-Type": "application/json" },
-          
           }),
           fetchWithAuth("/api/areas", {
             headers: { "Content-Type": "application/json" },
-          
           }),
           fetchWithAuth("/api/departamentos", {
             headers: { "Content-Type": "application/json" },
-          
           }),
-        ])
+        ]);
 
-        setTotalOrganizaciones((await orgRes.json()).length)
-        setTotalAreas((await areaRes.json()).length)
-        setTotalDepartamentos((await deptoRes.json()).length)
+        setTotalOrganizaciones((await orgRes.json()).length);
+        setTotalAreas((await areaRes.json()).length);
+        setTotalDepartamentos((await deptoRes.json()).length);
       } catch (error) {
-        console.error("Error al obtener datos rotativos:", error)
+        console.error("Error al obtener datos rotativos:", error);
       }
-    }
+    };
 
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const fetchActividades = async () => {
@@ -183,32 +226,33 @@ const HomeView = ({ isSidebarCollapsed }) => {
           headers: {
             "Content-Type": "application/json",
           },
-        
-        })
+        });
 
-        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`)
+        if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
 
-        const data = await response.json()
+        const data = await response.json();
 
-        const dias = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+        const dias = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
-        const hoy = new Date()
-        const diaSemana = hoy.getDay() 
+        const hoy = new Date();
+        const diaSemana = hoy.getDay();
 
-        const inicioSemana = new Date(hoy)
-        inicioSemana.setDate(hoy.getDate() - diaSemana)
-        inicioSemana.setHours(0, 0, 0, 0)
+        const inicioSemana = new Date(hoy);
+        inicioSemana.setDate(hoy.getDate() - diaSemana);
+        inicioSemana.setHours(0, 0, 0, 0);
 
-        const finSemana = new Date(inicioSemana)
-        finSemana.setDate(inicioSemana.getDate() + 6)
-        finSemana.setHours(23, 59, 59, 999)
+        const finSemana = new Date(inicioSemana);
+        finSemana.setDate(inicioSemana.getDate() + 6);
+        finSemana.setHours(23, 59, 59, 999);
 
         const actividadesSemana = data.filter((actividad) => {
-          const fecha = new Date(actividad.fecha || actividad.fechaHora || actividad.createdAt)
-          return fecha >= inicioSemana && fecha <= finSemana
-        })
+          const fecha = new Date(
+            actividad.fecha || actividad.fechaHora || actividad.createdAt
+          );
+          return fecha >= inicioSemana && fecha <= finSemana;
+        });
 
-        const resumen = {}
+        const resumen = {};
         dias.forEach((dia) => {
           resumen[dia] = {
             name: dia,
@@ -220,61 +264,65 @@ const HomeView = ({ isSidebarCollapsed }) => {
             Activar: 0,
             "Restablecer Contraseña": 0,
             "Solicitar Recuperación": 0,
-          }
-        })
+          };
+        });
 
         actividadesSemana.forEach((actividad) => {
-          const accion = (actividad.accion || "").toLowerCase()
-          const fecha = new Date(actividad.fecha || actividad.fechaHora || actividad.createdAt)
-          const dia = dias[fecha.getDay()]
+          const accion = (actividad.accion || "").toLowerCase();
+          const fecha = new Date(
+            actividad.fecha || actividad.fechaHora || actividad.createdAt
+          );
+          const dia = dias[fecha.getDay()];
 
-          if (!resumen[dia]) return
+          if (!resumen[dia]) return;
 
-          if (accion.includes("crear")) resumen[dia].Crear += 1
-          else if (accion.includes("actualizar")) resumen[dia].Actualizar += 1
-          else if (accion.includes("eliminar")) resumen[dia].Eliminar += 1
-          else if (accion.includes("cambiar contraseña")) resumen[dia]["Cambiar Contraseña"] += 1
-          else if (accion.includes("sospechoso")) resumen[dia]["Reporte Sospechoso"] += 1
-          else if (accion.includes("activar")) resumen[dia].Activar += 1
-          else if (accion.includes("restablecer")) resumen[dia]["Restablecer Contraseña"] += 1
-          else if (accion.includes("recuperación") || accion.includes("recuperar"))
-            resumen[dia]["Solicitar Recuperación"] += 1
-        })
+          if (accion.includes("crear")) resumen[dia].Crear += 1;
+          else if (accion.includes("actualizar")) resumen[dia].Actualizar += 1;
+          else if (accion.includes("eliminar")) resumen[dia].Eliminar += 1;
+          else if (accion.includes("cambiar contraseña"))
+            resumen[dia]["Cambiar Contraseña"] += 1;
+          else if (accion.includes("sospechoso"))
+            resumen[dia]["Reporte Sospechoso"] += 1;
+          else if (accion.includes("activar")) resumen[dia].Activar += 1;
+          else if (accion.includes("restablecer"))
+            resumen[dia]["Restablecer Contraseña"] += 1;
+          else if (
+            accion.includes("recuperación") ||
+            accion.includes("recuperar")
+          )
+            resumen[dia]["Solicitar Recuperación"] += 1;
+        });
 
-        const datosGrafica = dias.map((dia) => resumen[dia])
-        setActividadPorDia(datosGrafica)
+        const datosGrafica = dias.map((dia) => resumen[dia]);
+        setActividadPorDia(datosGrafica);
 
         const recientes = [...data]
           .filter((a) => !!a.fecha)
           .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
-          .slice(0, 5)
+          .slice(0, 5);
 
-        setActividadReciente(recientes)
+        setActividadReciente(recientes);
       } catch (error) {
-        console.error("Error al obtener actividades:", error)
-        setActividadPorDia([])
-        setActividadReciente([])
+        console.error("Error al obtener actividades:", error);
+        setActividadPorDia([]);
+        setActividadReciente([]);
       }
-    }
+    };
 
-    fetchActividades()
-  }, [])
+    fetchActividades();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setRotatingStatIndex((prevIndex) => (prevIndex + 1) % rotatingData.length)
-    }, 5000) 
+      setRotatingStatIndex(
+        (prevIndex) => (prevIndex + 1) % rotatingData.length
+      );
+    }, 5000);
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => clearInterval(interval);
+  }, []);
 
-  const COLORS = [
-    "#2c3e50", 
-    "#1976d2", 
-    "#3f7cac", 
-    "#90caf9", 
-    "#546e7a", 
-  ]
+  const COLORS = ["#2c3e50", "#1976d2", "#3f7cac", "#90caf9", "#546e7a"];
 
   const getVisibleBars = () => {
     if (windowWidth <= 480) {
@@ -284,7 +332,7 @@ const HomeView = ({ isSidebarCollapsed }) => {
           <Bar dataKey="Actualizar" fill="#1f77b4" />
           <Bar dataKey="Eliminar" fill="#d62728" />
         </>
-      )
+      );
     }
 
     if (windowWidth <= 768) {
@@ -296,7 +344,7 @@ const HomeView = ({ isSidebarCollapsed }) => {
           <Bar dataKey="Cambiar Contraseña" fill="#ff7f0e" />
           <Bar dataKey="Reporte Sospechoso" fill="#9467bd" />
         </>
-      )
+      );
     }
 
     return (
@@ -310,30 +358,30 @@ const HomeView = ({ isSidebarCollapsed }) => {
         <Bar dataKey="Restablecer Contraseña" fill="#17becf" />
         <Bar dataKey="Solicitar Recuperación" fill="#bcbd22" />
       </>
-    )
-  }
+    );
+  };
 
   const getBarChartWidth = () => {
     if (windowWidth <= 480) {
-      return 400 
+      return 400;
     }
     if (windowWidth <= 768) {
-      return 500 
+      return 500;
     }
-    return "100%" 
-  }
+    return "100%";
+  };
 
   const getPieRadius = () => {
     if (windowWidth <= 480) {
-      return 80
+      return 80;
     }
     if (windowWidth <= 768) {
-      return 90
+      return 90;
     }
-    return 100
-  }
+    return 100;
+  };
 
-  const shouldShowPieLabels = windowWidth > 480
+  const shouldShowPieLabels = windowWidth > 480;
 
   return (
     <div className="home-view">
@@ -352,7 +400,9 @@ const HomeView = ({ isSidebarCollapsed }) => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon">{rotatingData[rotatingStatIndex].icon}</div>
+          <div className="stat-icon">
+            {rotatingData[rotatingStatIndex].icon}
+          </div>
           <AnimatePresence mode="wait">
             <motion.div
               key={rotatingData[rotatingStatIndex].id}
@@ -392,7 +442,9 @@ const HomeView = ({ isSidebarCollapsed }) => {
       <div className="charts-container">
         <div className="chart-card">
           <h3>Actividad Semanal</h3>
-          <div className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}>
+          <div
+            className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}
+          >
             <div className="chart-scroll-container">
               {windowWidth <= 768 ? (
                 <BarChart
@@ -418,12 +470,19 @@ const HomeView = ({ isSidebarCollapsed }) => {
                 </BarChart>
               ) : (
                 <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={actividadPorDia} margin={{ top: 20, right: 30, left: 20, bottom: 50 }}>
+                  <BarChart
+                    data={actividadPorDia}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 50 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
                     <YAxis allowDecimals={false} />
                     <Tooltip />
-                    <Legend layout="horizontal" verticalAlign="bottom" align="center" />
+                    <Legend
+                      layout="horizontal"
+                      verticalAlign="bottom"
+                      align="center"
+                    />
                     <Bar dataKey="Crear" fill="#33608d" />
                     <Bar dataKey="Actualizar" fill="#1f77b4" />
                     <Bar dataKey="Eliminar" fill="#d62728" />
@@ -441,7 +500,9 @@ const HomeView = ({ isSidebarCollapsed }) => {
 
         <div className="chart-card">
           <h3>Distribución de Usuarios</h3>
-          <div className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}>
+          <div
+            className={`chart-wrapper ${windowWidth <= 768 ? "mobile" : ""}`}
+          >
             <div className="chart-scroll-container">
               {windowWidth <= 768 ? (
                 <PieChart width={300} height={300}>
@@ -454,14 +515,22 @@ const HomeView = ({ isSidebarCollapsed }) => {
                     dataKey="value"
                     labelLine={shouldShowPieLabels}
                     label={
-                      shouldShowPieLabels ? ({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%` : null
+                      shouldShowPieLabels
+                        ? ({ name, percent }) =>
+                            `${name}: ${(percent * 100).toFixed(0)}%`
+                        : null
                     }
                   >
                     {userTypeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value, name) => [`${value} usuario(s)`, name]} />
+                  <Tooltip
+                    formatter={(value, name) => [`${value} usuario(s)`, name]}
+                  />
                 </PieChart>
               ) : (
                 <ResponsiveContainer width="100%" height={300}>
@@ -476,13 +545,20 @@ const HomeView = ({ isSidebarCollapsed }) => {
                       labelLine={true}
                       stroke="#ffffff"
                       strokeWidth={2}
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      label={({ name, percent }) =>
+                        `${name}: ${(percent * 100).toFixed(0)}%`
+                      }
                     >
                       {userTypeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value, name) => [`${value} usuario(s)`, name]} />
+                    <Tooltip
+                      formatter={(value, name) => [`${value} usuario(s)`, name]}
+                    />
                   </PieChart>
                 </ResponsiveContainer>
               )}
@@ -528,16 +604,15 @@ const HomeView = ({ isSidebarCollapsed }) => {
 
       {/* Accesos rápidos (combina las tarjetas del código original con el título del nuevo) */}
     </div>
-  )
-}
+  );
+};
 
 DashHome.propTypes = {
   activeView: PropTypes.string.isRequired,
-}
+};
 
 HomeView.propTypes = {
   isSidebarCollapsed: PropTypes.bool,
-}
+};
 
-export default DashHome
-
+export default DashHome;
