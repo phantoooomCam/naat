@@ -12,6 +12,7 @@ import {
   FaLayerGroup,
   FaUserClock,
   FaExclamationTriangle,
+  FaFolderOpen,
 } from "react-icons/fa";
 import {
   BarChart,
@@ -95,6 +96,23 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const [actividadPorDia, setActividadPorDia] = useState([]);
   const [userTypeData, setUserTypeData] = useState([]);
   const [actividadReciente, setActividadReciente] = useState([]);
+  const [totalCasosActivos, setTotalCasosActivos] = useState(0);
+
+  useEffect(() => {
+    const fetchCasosActivos = async () => {
+      try {
+        const response = await fetchWithAuth("/api/casos?estado=activo");
+        if (!response.ok) throw new Error("Error al obtener casos");
+        const data = await response.json();
+        setTotalCasosActivos(data.length);
+      } catch (error) {
+        setTotalCasosActivos(0);
+        console.error("Error al obtener casos activos:", error);
+      }
+    };
+    fetchCasosActivos();
+  }, []);
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -429,14 +447,15 @@ const HomeView = ({ isSidebarCollapsed }) => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon warning">
-            <FaExclamationTriangle />
+          <div className="stat-icon">
+            <FaFolderOpen />
           </div>
           <div className="stat-content">
-            <h3>3</h3>
-            <p>Alertas del Sistema</p>
+            <h3>{totalCasosActivos}</h3>
+            <p>Casos Activos</p>
           </div>
         </div>
+
       </div>
 
       <div className="charts-container">
@@ -517,7 +536,7 @@ const HomeView = ({ isSidebarCollapsed }) => {
                     label={
                       shouldShowPieLabels
                         ? ({ name, percent }) =>
-                            `${name}: ${(percent * 100).toFixed(0)}%`
+                          `${name}: ${(percent * 100).toFixed(0)}%`
                         : null
                     }
                   >
