@@ -11,8 +11,9 @@ import {
   FaTasks,
   FaLayerGroup,
   FaUserClock,
-  FaExclamationTriangle,
   FaFolderOpen,
+  FaRedo,
+  FaArchive,
 } from "react-icons/fa";
 import {
   BarChart,
@@ -96,21 +97,56 @@ const HomeView = ({ isSidebarCollapsed }) => {
   const [actividadPorDia, setActividadPorDia] = useState([]);
   const [userTypeData, setUserTypeData] = useState([]);
   const [actividadReciente, setActividadReciente] = useState([]);
-  const [totalCasosActivos, setTotalCasosActivos] = useState(0);
+
+
+  const [casosStats, setCasosStats] = useState({
+    activos: 0,
+    archivados: 0,
+    reactivados: 0
+  });
+  const [casosStatIndex, setCasosStatIndex] = useState(0);
+
+  const casosRotatingData = [
+    {
+      id: "casos-activos",
+      icon: <FaFolderOpen />,
+      value: casosStats.activos,
+      label: "Casos Activos"
+    },
+    {
+      id: "casos-reactivados",
+      icon: <FaRedo />,
+      value: casosStats.reactivados,
+      label: "Casos Reactivados"
+    },
+    {
+      id: "casos-archivados",
+      icon: <FaArchive />,
+      value: casosStats.archivados,
+      label: "Casos Archivados"
+    }
+  ];
+
+
 
   useEffect(() => {
-    const fetchCasosActivos = async () => {
+    const fetchCasosStats = async () => {
       try {
-        const response = await fetchWithAuth("/api/casos?estado=activo");
-        if (!response.ok) throw new Error("Error al obtener casos");
-        const data = await response.json();
-        setTotalCasosActivos(data.length);
+        const estados = ["activo", "archivado", "reactivado"];
+        const stats = {};
+        for (const estado of estados) {
+          const response = await fetchWithAuth(`/api/casos?estado=${estado}`);
+          if (!response.ok) throw new Error("Error al obtener casos");
+          const data = await response.json();
+          stats[estado + "s"] = data.length; // Ej: "activos", "archivados", "reactivados"
+        }
+        setCasosStats(stats);
       } catch (error) {
-        setTotalCasosActivos(0);
-        console.error("Error al obtener casos activos:", error);
+        setCasosStats({ activos: 0, archivados: 0, reactivados: 0 });
+        console.error("Error al obtener stats de casos:", error);
       }
     };
-    fetchCasosActivos();
+    fetchCasosStats();
   }, []);
 
 
@@ -338,7 +374,17 @@ const HomeView = ({ isSidebarCollapsed }) => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [rotatingData.length]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCasosStatIndex(
+        (prevIndex) => (prevIndex + 1) % casosRotatingData.length
+      );
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [casosRotatingData.length]);
 
   const COLORS = ["#2c3e50", "#1976d2", "#3f7cac", "#90caf9", "#546e7a"];
 
@@ -448,13 +494,23 @@ const HomeView = ({ isSidebarCollapsed }) => {
 
         <div className="stat-card">
           <div className="stat-icon">
-            <FaFolderOpen />
+            {casosRotatingData[casosStatIndex].icon}
           </div>
-          <div className="stat-content">
-            <h3>{totalCasosActivos}</h3>
-            <p>Casos Activos</p>
-          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={casosRotatingData[casosStatIndex].id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 10 }}
+              transition={{ duration: 0.3 }}
+              className="stat-content"
+            >
+              <h3>{casosRotatingData[casosStatIndex].value}</h3>
+              <p>{casosRotatingData[casosStatIndex].label}</p>
+            </motion.div>
+          </AnimatePresence>
         </div>
+
 
       </div>
 
