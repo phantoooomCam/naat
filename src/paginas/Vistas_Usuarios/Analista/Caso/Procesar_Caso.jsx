@@ -486,7 +486,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         showDetailedView ? "detailed-view-mode" : ""
       }`}
     >
-      {/* Status message */}
       {processingStatus && (
         <div className={`status-message ${processingStatus}`}>
           <span>{statusMessage}</span>
@@ -592,7 +591,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                     <span className="timeline-title">Caso creado</span>
                   </div>
                 </div>
-                {/* Aquí se mostrarían más elementos del historial cuando estén disponibles */}
               </div>
             </div>
             <div className="detailed-case-section">
@@ -617,7 +615,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         </div>
       ) : (
         <>
-          {/* Encabezado fuera del dashboard-layout */}
           <div className="caso-header">
             <div className="header-content">
               <h2>Gestión de Casos</h2>
@@ -636,10 +633,8 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
             </div>
           </div>
 
-          {/* Dashboard layout comienza después del encabezado */}
           <div className="dashboard-layout">
             <div className="left-column">
-              {/* Contenido existente de la columna izquierda */}
               <div className="crear-card">
                 <div className="card-header">
                   <h3>
@@ -672,7 +667,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                     />
                   </div>
 
-                  {/* Selects condicionales según nivel de usuario */}
                   {userLevel === 1 && (
                     <>
                       <div className="form-group">
@@ -877,7 +871,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
             </div>
 
             <div className="right-column">
-              {/* Contenido existente de la columna derecha */}
               <div className="casos-card">
                 <div className="card-header">
                   <h3>
@@ -1001,8 +994,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                 </div>
               </div>
 
-              {/* Modificar la sección de detalles del caso para incluir el botón "Ver detalles completos" */}
-              {/* Buscar la sección con className="detalles-card" y modificar el contenido dentro de selectedCaso */}
               <div className="detalles-card">
                 <div className="card-header">
                   <h3>
