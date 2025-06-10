@@ -541,7 +541,6 @@ const DashDepartamento = () => {
                     className="add-button"
                     disabled={loading}
                   >
-                    <span className="button-icon">+</span>
                     <span className="button-text">Agregar Departamento</span>
                   </button>
                 </div>

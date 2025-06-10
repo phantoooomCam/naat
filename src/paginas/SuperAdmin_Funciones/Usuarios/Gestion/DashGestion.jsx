@@ -751,7 +751,7 @@ const GestionDash = () => {
                     onClick={handleOpenCreateForm}
                     className="add-button"
                   >
-                    <span className="button-icon">+</span>
+                    {/* <span className="button-icon">+</span> */}
                     <span className="button-text">Agregar Usuario</span>
                   </button>
                 </div>
