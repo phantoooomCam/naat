@@ -787,7 +787,6 @@ body {
 }
 
 .button-icon::after {
-  content: "→";
   display: inline-block;
   transition: transform 0.3s ease;
 }

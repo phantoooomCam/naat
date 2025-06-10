@@ -395,7 +395,6 @@ const DashArea = () => {
                     )}
                   </div>
                   <button type="button" onClick={handleOpenCreateForm} className="add-button" disabled={loading}>
-                    <span className="button-icon">+</span>
                     <span className="button-text">Agregar Área</span>
                   </button>
                 </div>

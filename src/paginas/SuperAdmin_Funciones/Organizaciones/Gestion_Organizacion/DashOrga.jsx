@@ -316,7 +316,6 @@ const DashOrga = () => {
                     )}
                   </div>
                   <button type="button" onClick={handleOpenCreateForm} className="add-button" disabled={loading}>
-                    <span className="button-icon">+</span>
                     <span className="button-text">Agregar Organización</span>
                   </button>
                 </div>
