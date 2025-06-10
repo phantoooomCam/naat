@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
-import fetchWithAuth from "../utils/fetchWithAuth";  // Usamos tu propio helper centralizado
+import fetchWithAuth from "../utils/fetchWithAuth";
+import LoadingThreeDotsJumping from "../componentes/LoadingThreeDotsJumping"; // Asegúrate de que la ruta sea correcta
 
 const ProtectedRoute = () => {
   const [usuario, setUsuario] = useState(null);
@@ -16,7 +17,6 @@ const ProtectedRoute = () => {
 
         const data = await response.json();
 
-        // Normalizamos los datos
         setUsuario({
           idUsuario: parseInt(data.idUsuario, 10),
           nivel: parseInt(data.nivel, 10),
@@ -33,10 +33,9 @@ const ProtectedRoute = () => {
   }, []);
 
   if (loading) {
-    return <div>Cargando...</div>;  // Puedes poner aquí un spinner bonito si lo deseas
+    return <LoadingThreeDotsJumping />;
   }
 
-  // Si no hay usuario, redirigimos al login
   if (!usuario) {
     return <Navigate to="/" />;
   }
