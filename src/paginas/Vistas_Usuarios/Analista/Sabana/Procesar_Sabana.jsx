@@ -210,7 +210,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     setProcessingStatus(null);
 
     try {
-      
       const numeroPayload = {
         numero: phoneNumber,
         codigoArea: codigoPais,
@@ -228,9 +227,8 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       }
 
       const numeroData = await numeroResponse.json();
-      const idNumeroTelefonico = numeroData.id; 
+      const idNumeroTelefonico = numeroData.id;
 
-    
       const formData = new FormData();
       for (let i = 0; i < files.length; i++) {
         if (files[i].rawFile) {
@@ -278,7 +276,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     <div
       className={`sabana-container ${isSidebarCollapsed ? "collapsed" : ""}`}
     >
-      {/* Status message */}
       {processingStatus && (
         <div className={`status-message ${processingStatus}`}>
           <div className="status-icon">
