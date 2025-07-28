@@ -42,6 +42,11 @@ import Sabana from "./paginas/Vistas_Usuarios/Analista/Sabana/Sabana";
 import Caso from "./paginas/Vistas_Usuarios/Analista/Caso/Caso";
 import LogsCasos from "./paginas/Vistas_Usuarios/Analista/Caso/LogsCasos";
 
+
+///Procesamiento de Sabanas
+import InfoSabana from "./paginas/Analisis_Sabanas/Informacion_Sabana/informacion_sabana";
+
+
 function App() {
   return (
     <Routes>
@@ -81,6 +86,11 @@ function App() {
         <Route path="/sabana" element={<Sabana />} />
         <Route path="/logscasos" element={<LogsCasos />} />
         <Route path="/casos" element={<Caso />} />
+
+        {/* Procesamiento de Sabanas */}
+        <Route path="/procesamiento_sabana" element={<InfoSabana/>}/>
+
+
       </Route>
     </Routes>
   );

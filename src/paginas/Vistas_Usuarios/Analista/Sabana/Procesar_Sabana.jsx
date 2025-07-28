@@ -12,6 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import "./Sabana.css";
 import fetchWithAuth from "../../../../utils/fetchWithAuth";
+import { useNavigate } from "react-router-dom";
 
 const Procesar_Sabana = ({ activeView }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -57,6 +58,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [casoSeleccionado, setCasoSeleccionado] = useState("");
   const [companias, setCompanias] = useState([]);
   const [codigoPais, setCodigoPais] = useState("+52");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCompanias = async () => {
@@ -165,6 +167,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       setProcessingStatus("error");
       setStatusMessage("No hay archivos para procesar");
       setTimeout(() => setProcessingStatus(null), 3000);
+      navigate("/procesamiento_sabana"); // redirige aunque no haya archivos
       return;
     }
 
@@ -175,7 +178,10 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       setIsProcessing(false);
       setProcessingStatus("success");
       setStatusMessage("Archivos procesados correctamente");
+
       setTimeout(() => setProcessingStatus(null), 3000);
+
+      navigate("/procesamiento_sabana");
     }, 2000);
   };
 
@@ -442,23 +448,19 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
             </div>
           ) : (
             <div className="empty-files">
-              <p>No hay archivos subidos</p>
+              {/* <p>No hay archivos subidos</p>
               <button
                 onClick={() => inputRef.current.click()}
                 className="upload-button-small"
                 disabled={isProcessing}
               >
                 Subir archivos
-              </button>
+              </button> */}
             </div>
           )}
 
           <div className="processing-buttons">
-            <button
-              className="process-button"
-              onClick={handleProcessFiles}
-              disabled={isProcessing || files.length === 0}
-            >
+            <button className="process-button" onClick={handleProcessFiles}>
               {isProcessing ? (
                 <>
                   <FontAwesomeIcon icon={faSpinner} spin />
