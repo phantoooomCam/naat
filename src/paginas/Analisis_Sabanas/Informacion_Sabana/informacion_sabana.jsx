@@ -6,6 +6,7 @@ import {Link,useNavigate} from "react-router-dom";
 import Header from "../../../componentes/Header";
 import Sidebar from "../../../componentes/Sidebar";
 import "../../../paginas/SuperAdmin_Funciones/Usuarios/Gestion/Gestion.css"
+import Informacion3_Sabana from "./informacion3_sabana";
 
 function InfoSabana(){
     const[activeView,setActiveView] = useState("inicio");
@@ -19,8 +20,9 @@ function InfoSabana(){
                 isOpen={sidebarOpen}
                 toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
             />
-            <main>
+            <main className={`main-content ${sidebarOpen ? "" : "collapsed"}`}>
                 <Header/>
+                <Informacion3_Sabana activeView={activeView}/>
             </main>
         </div>
     );

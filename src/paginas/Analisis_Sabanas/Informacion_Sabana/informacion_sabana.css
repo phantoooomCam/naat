@@ -1,0 +1,333 @@
+/* Manteniendo los colores y dimensiones originales de Sabana.css */
+
+.sabana-info-wrapper {
+  width: 100%;
+  height: 100%;
+  padding: 20px;
+  background-color: #e8e8e8;
+  transition: margin-left 0.3s ease-in-out;
+  margin-top: 70px;
+  margin-left: -10px;
+}
+
+.sabana-info-wrapper.collapsed {
+  margin-left: 0px;
+}
+
+.sabana-main-container {
+  width: 100%;
+  height: 100%;
+  transition: margin-left 0.3s ease-in-out;
+}
+
+.sabana-main-container.collapsed {
+  margin-left: 0px;
+}
+
+.sabana-title-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 5px;
+}
+
+.title-content h2 {
+  color: #222a35;
+  margin-bottom: 5px;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+/* Grid layout - mismas dimensiones que el original */
+.sabana-grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  height: calc(100vh - 150px);
+}
+
+.section-left,
+.section-right {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Headers de sección - SIN color azul, manteniendo el original */
+.section-header {
+  background: white;
+  padding: 15px 20px;
+  border-radius: 12px 12px 0 0;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #222a35;
+}
+
+/* Card de filtros - colores originales */
+.filtros-wrapper-card {
+  background: white;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+  flex: 1;
+}
+
+.filtros-wrapper-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.filtros-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: white;
+}
+
+.filtros-header h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222a35;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filtros-body {
+  padding: 20px;
+}
+
+/* Checkboxes - estilo original */
+.checkbox-section {
+  margin-bottom: 20px;
+}
+
+.filter-checkbox-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.filter-checkbox-label input[type="checkbox"] {
+  margin-right: 10px;
+  width: 16px;
+  height: 16px;
+  accent-color:#33608d;
+}
+
+/* Inputs de fecha y hora - estilo original */
+.datetime-section {
+  margin-bottom: 20px;
+}
+
+.date-row,
+.time-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.input-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.input-field label {
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.date-field,
+.time-field {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  background-color: white;
+}
+
+.date-field:focus,
+.time-field:focus {
+  outline: none;
+  border-color: #33608d;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Botones - colores originales */
+.buttons-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.info-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #33608d;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.info-action-btn:hover {
+  background: #33608d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+}
+
+.info-action-btn.active {
+  background: #33608d;
+  box-shadow: 0 2px 4px #33608d;
+}
+
+.info-action-btn svg {
+  font-size: 1rem;
+}
+
+/* Área de contenido - Section 2 */
+.content-display-area {
+  background: white;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.content-display-area:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.placeholder-text {
+  text-align: center;
+  color: #6b7280;
+}
+
+.placeholder-text p {
+  margin: 8px 0;
+  font-size: 1rem;
+}
+
+.placeholder-text p:first-child {
+  font-weight: 600;
+  color: #374151;
+  font-size: 1.1rem;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .sabana-grid-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    height: auto;
+  }
+
+  .section-left {
+    order: 1;
+  }
+
+  .section-right {
+    order: 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .sabana-info-wrapper {
+    padding: 15px;
+  }
+
+  .title-content h2 {
+    font-size: 1.5rem;
+  }
+
+  .date-row,
+  .time-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .filtros-body,
+  .content-display-area {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sabana-info-wrapper {
+    padding: 10px;
+  }
+
+  .title-content h2 {
+    font-size: 1.3rem;
+  }
+
+  .section-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .filtros-header h4 {
+    font-size: 1rem;
+  }
+
+  .info-action-btn {
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filtros-wrapper-card,
+.content-display-area {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Estados de focus */
+.date-field:focus,
+.time-field:focus,
+.filter-checkbox-label input[type="checkbox"]:focus {
+  outline: 2px solid rgba(99, 102, 241, 0.5);
+  outline-offset: 2px;
+}
+
+.info-action-btn:focus {
+  outline: 2px solid rgba(99, 102, 241, 0.5);
+  outline-offset: 2px;
+}
