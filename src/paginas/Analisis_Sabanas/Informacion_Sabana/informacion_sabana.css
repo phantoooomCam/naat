@@ -8,7 +8,7 @@
   transition: margin-left 0.3s ease-in-out;
   margin-top: 70px;
   /* Adjusted margin-left for when the sidebar is open (not collapsed) */
-  margin-left: 150px; /* Corresponds to SIDEBAR_WIDTH (16rem) + 10px padding */
+  margin-left: 110px; /* Corresponds to SIDEBAR_WIDTH (16rem) + 10px padding */
 }
 
 .sabana-info-wrapper.collapsed {
@@ -60,7 +60,7 @@
 .section-header {
   background: white;
   padding: 15px 20px;
-  border-radius: 12px 12px 0 0;
+  border-radius: 12px;
   border-bottom: 1px solid #e2e8f0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
@@ -75,7 +75,7 @@
 /* Card de filtros - colores originales */
 .filtros-wrapper-card {
   background: white;
-  border-radius: 0 0 12px 12px;
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   transition: box-shadow 0.3s ease;
@@ -213,7 +213,7 @@
 /* Área de contenido - Section 2 */
 .content-display-area {
   background: white;
-  border-radius: 0 0 12px 12px;
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   transition: box-shadow 0.3s ease;

@@ -73,7 +73,7 @@ const GestionSabanaView = () => {
       <div className="sabana-grid-layout">
         <div className="section-left">
           <div className="section-header">
-            <h3>Section 1</h3>
+            <h3>Filtro de Sabana</h3>
           </div>
 
           <div className="filtros-wrapper-card">
@@ -202,7 +202,7 @@ const GestionSabanaView = () => {
 
         <div className="section-right">
           <div className="section-header">
-            <h3>Section 2</h3>
+            <h3>Detalles de Sabana</h3>
           </div>
           <div className="content-display-area">
             <div className="placeholder-text">
