@@ -23,17 +23,19 @@ const Informacion3_Sabana = ({ activeView }) => {
   }, [])
 
   const views = {
-    gestion: <GestionSabanaView isSidebarCollapsed={isSidebarCollapsed} />,
+    gestion: <GestionSabanaView />, // Removed isSidebarCollapsed prop here, as it's handled by the outer wrapper
   }
 
   return (
+    // Apply sidebar collapse class to the main wrapper
     <div className={`sabana-info-wrapper ${isSidebarCollapsed ? "collapsed" : ""}`}>
       <div className="container">{views[activeView] || views.gestion}</div>
     </div>
   )
 }
 
-const GestionSabanaView = ({ isSidebarCollapsed }) => {
+const GestionSabanaView = () => {
+  // Removed isSidebarCollapsed prop from here
   const [filters, setFilters] = useState({
     ubicacion: false,
     contactos: false,
@@ -60,7 +62,8 @@ const GestionSabanaView = ({ isSidebarCollapsed }) => {
   }
 
   return (
-    <div className={`sabana-main-container ${isSidebarCollapsed ? "collapsed" : ""}`}>
+    // Removed the collapsed class from sabana-main-container as it's handled by sabana-info-wrapper
+    <div className="sabana-main-container">
       <div className="sabana-title-section">
         <div className="title-content">
           <h2>Gestión de Sabana</h2>
@@ -218,7 +221,7 @@ Informacion3_Sabana.propTypes = {
 }
 
 GestionSabanaView.propTypes = {
-  isSidebarCollapsed: PropTypes.bool,
+  // isSidebarCollapsed: PropTypes.bool, // Removed propType as prop is no longer passed
 }
 
 export default Informacion3_Sabana
