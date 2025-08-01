@@ -448,14 +448,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
             </div>
           ) : (
             <div className="empty-files">
-              {/* <p>No hay archivos subidos</p>
-              <button
-                onClick={() => inputRef.current.click()}
-                className="upload-button-small"
-                disabled={isProcessing}
-              >
-                Subir archivos
-              </button> */}
+
             </div>
           )}
 
