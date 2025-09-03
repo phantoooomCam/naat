@@ -58,6 +58,42 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [casoSeleccionado, setCasoSeleccionado] = useState("");
   const [companias, setCompanias] = useState([]);
   const [codigoPais, setCodigoPais] = useState("+52");
+
+  const [messages, setMessages] = useState([]); // Estado para almacenar los mensajes recibidos
+  const [isConnected, setIsConnected] = useState(false); // Estado para saber si estamos conectados
+  const [socket, setSocket] = useState(null); // El WebSocket
+
+  useEffect(() => {
+    // Crear una conexión WebSocket cuando el componente se monte
+    const ws = new WebSocket("ws://192.168.100.89:44444"); // Cambia a la URL de tu servidor WebSocket
+
+    // Establecer el estado de la conexión
+    ws.onopen = () => {
+      console.log("Conexión WebSocket establecida");
+      setIsConnected(true);
+    };
+
+    // Manejar mensajes recibidos
+    ws.onmessage = (event) => {
+      console.log("Mensaje recibido:", event.data);
+      setMessages((prevMessages) => [...prevMessages, event.data]);
+    };
+
+    // Manejar errores
+    ws.onerror = (error) => {
+      console.error("Error en WebSocket:", error);
+    };
+
+    // Cerrar la conexión cuando el componente se desmonte
+    return () => {
+      ws.close();
+      setIsConnected(false);
+      console.log("Conexión WebSocket cerrada");
+    };
+  }, []);
+
+  //Proceso de sabanas
+  const [idSabana, setIdSabana] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -252,11 +288,15 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       });
 
       const data = await response.json();
+      console.log(data);
       setIsProcessing(false);
 
       if (response.ok) {
         setProcessingStatus("success");
         setStatusMessage("Archivos guardados correctamente");
+
+        const idSabana = data.ids_sabanas[0];
+        setIdSabana(idSabana);
       } else {
         setProcessingStatus("error");
         setStatusMessage(data.message || "Error al guardar los archivos");
@@ -297,6 +337,20 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
       <div className="sabana-header">
         <h2>Procesamiento de Sabanas</h2>
+        <div>
+          <h2>
+            Estado de WebSocket: {isConnected ? "Conectado" : "Desconectado"}
+          </h2>
+
+          <div>
+            <h3>Mensajes Recibidos:</h3>
+            <ul>
+              {messages.map((message, index) => (
+                <li key={index}>{message}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
         <p>Sube y procesa archivos de sabana para análisis</p>
       </div>
 
@@ -447,9 +501,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
               ))}
             </div>
           ) : (
-            <div className="empty-files">
-
-            </div>
+            <div className="empty-files"></div>
           )}
 
           <div className="processing-buttons">
@@ -486,9 +538,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
             </button>
           </div>
         </div>
-
-        
-
       </div>
     </div>
   );
