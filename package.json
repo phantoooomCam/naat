@@ -24,6 +24,7 @@
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
+    "react-progressbar": "^15.4.1",
     "react-router-dom": "^6.30.0",
     "recharts": "^2.15.1",
     "socket.io-client": "^4.8.1",

@@ -62,35 +62,98 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [messages, setMessages] = useState([]); // Estado para almacenar los mensajes recibidos
   const [isConnected, setIsConnected] = useState(false); // Estado para saber si estamos conectados
   const [socket, setSocket] = useState(null); // El WebSocket
+  const [progress, setProgress] = useState(0);
+  const [fileProgress, setFileProgress] = useState({});
+  const [fileStatus, setFileStatus] = useState({});
+  const [filters, setFilters] = useState({}); // Estado para almacenar los filtros
+  const [currentProcessingIndex, setCurrentProcessingIndex] = useState(0); // Agregar índice del archivo actual siendo procesado
+  // Mapeos para relacionar lo que dice el backend (id_sabana) con tus files locales
+  const [fileIdByServerId, setFileIdByServerId] = useState({}); // { [id_sabana]: file.id }
+  const [serverIdByFileId, setServerIdByFileId] = useState({}); // { [file.id]: id_sabana }
+
+  const stateToProgress = {
+    en_cola: 33,
+    procesando: 66,
+    procesado: 100,
+  };
+
+  const getStatusText = (status) => {
+    const statusMap = {
+      en_cola: "En cola",
+      procesando: "Procesando",
+      procesado: "Procesado",
+    };
+    return statusMap[status] || "Pendiente";
+  };
 
   useEffect(() => {
-    // Crear una conexión WebSocket cuando el componente se monte
-    const ws = new WebSocket("ws://192.168.100.89:44444"); // Cambia a la URL de tu servidor WebSocket
+    const ws = new WebSocket("ws://192.168.100.89:44444");
 
-    // Establecer el estado de la conexión
     ws.onopen = () => {
       console.log("Conexión WebSocket establecida");
       setIsConnected(true);
     };
 
-    // Manejar mensajes recibidos
     ws.onmessage = (event) => {
       console.log("Mensaje recibido:", event.data);
-      setMessages((prevMessages) => [...prevMessages, event.data]);
+
+      const message = event.data;
+      setMessages((prevMessages) => [...prevMessages, message]);
+
+      // Extrae el estado y el ID del archivo del mensaje
+      const stateMatch = message.match(/estado:\s*(\w+)/);
+      const fileMatch = message.match(/archivo\s+(\d+)/);
+      if (!stateMatch || !fileMatch) return; // Si no hay estado válido, no hacer nada
+
+      const state = stateMatch[1].toLowerCase(); // Normalizar a minúsculas
+      const serverId = fileMatch[1]; // id_sabana
+
+      if (!stateToProgress.hasOwnProperty(state)) {
+        console.log(`Estado no reconocido: ${state}`);
+        return;
+      }
+
+      const progressValue = stateToProgress[state];
+
+      // Encontrar el fileId relacionado con el serverId
+      const fileId = fileIdByServerId[serverId];
+      if (!fileId) {
+        console.log(`No se encontró fileId para id_sabana: ${serverId}`);
+        return;
+      }
+
+      if (state === "procesando") {
+        const currentProgress = fileProgress[fileId] || 0;
+        const updatedProgress = Math.min(currentProgress + 10, 66); // Aumentamos de 0 a 66, según el estado
+
+        // Solo actualiza el progreso si ha cambiado
+        if (updatedProgress !== currentProgress) {
+          setFileProgress((prev) => ({ ...prev, [fileId]: updatedProgress }));
+          setFileStatus((prev) => ({ ...prev, [fileId]: state }));
+        }
+      } else {
+        // Para "procesado" y "en_cola", se asigna el valor correspondiente directamente
+        setFileProgress((prev) => ({ ...prev, [fileId]: progressValue }));
+        setFileStatus((prev) => ({ ...prev, [fileId]: state }));
+      }
     };
 
-    // Manejar errores
     ws.onerror = (error) => {
       console.error("Error en WebSocket:", error);
     };
 
-    // Cerrar la conexión cuando el componente se desmonte
-    return () => {
-      ws.close();
+    ws.onclose = () => {
       setIsConnected(false);
       console.log("Conexión WebSocket cerrada");
     };
-  }, []);
+
+    setSocket(ws);
+
+    return () => {
+      ws.close();
+      setIsConnected(false);
+    };
+  }, [fileIdByServerId]); // Dependiendo del mapeo de fileIdByServerId
 
   //Proceso de sabanas
   const [idSabana, setIdSabana] = useState(null);
@@ -138,7 +201,19 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       uploadDate: new Date().toLocaleDateString(),
       rawFile: file,
     }));
+
     setFiles((prevFiles) => [...prevFiles, ...processedFiles]);
+
+    // Inicializar el progreso y estado de los nuevos archivos
+    const newProgress = {};
+    const newStatus = {};
+    processedFiles.forEach((file) => {
+      newProgress[file.id] = 0;
+      newStatus[file.id] = "pendiente";
+    });
+
+    setFileProgress((prev) => ({ ...prev, ...newProgress }));
+    setFileStatus((prev) => ({ ...prev, ...newStatus }));
   };
 
   const handleDrag = (e) => {
@@ -170,22 +245,27 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       }
       return updatedFiles;
     });
-  };
 
-  const [filters, setFilters] = useState({
-    ubicacion: false,
-    contactos: false,
-    fechaInicio: "",
-    fechaFin: "",
-    horaInicio: "",
-    horaFin: "",
-    ciudades: false,
-    puntosInteres: false,
-  });
+    // Limpiar el progreso del archivo eliminado
+    setFileProgress((prev) => {
+      const updated = { ...prev };
+      delete updated[fileId];
+      return updated;
+    });
+
+    setFileStatus((prev) => {
+      const updated = { ...prev };
+      delete updated[fileId];
+      return updated;
+    });
+  };
 
   const handleClearAllFiles = () => {
     setFiles([]);
     setSelectedFile(null);
+    setFileProgress({});
+    setFileStatus({});
+    setCurrentProcessingIndex(0); // Reiniciar el índice
   };
 
   const handleFilterChange = (filterName, value) => {
@@ -251,6 +331,16 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     setIsProcessing(true);
     setProcessingStatus(null);
 
+    const initialProgress = {};
+    const initialStatus = {};
+    files.forEach((file, index) => {
+      initialProgress[file.id] = 0;
+      initialStatus[file.id] = index === 0 ? "en_cola" : "pendiente"; // Solo el primer archivo empieza en cola
+    });
+    setFileProgress(initialProgress);
+    setFileStatus(initialStatus);
+    setCurrentProcessingIndex(0); // Reiniciar el índice
+
     try {
       const numeroPayload = {
         numero: phoneNumber,
@@ -297,6 +387,20 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
         const idSabana = data.ids_sabanas[0];
         setIdSabana(idSabana);
+
+        // ✅ Sólo notifica éxito y guarda los ids_sabanas para mapearlos a cada file
+        setProcessingStatus("success");
+        setStatusMessage("Archivos guardados correctamente");
+
+        // Mapea ids_sabanas -> file.id para actualizar por WebSocket
+        if (Array.isArray(data.ids_sabanas)) {
+          const idToFile = {};
+          files.forEach((file, idx) => {
+            const serverId = data.ids_sabanas[idx];
+            if (serverId != null) idToFile[serverId] = file.id;
+          });
+          setFileIdByServerId(idToFile); // <-- estado nuevo (ver punto 2)
+        }
       } else {
         setProcessingStatus("error");
         setStatusMessage(data.message || "Error al guardar los archivos");
@@ -351,6 +455,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
             </ul>
           </div>
         </div>
+
         <p>Sube y procesa archivos de sabana para análisis</p>
       </div>
 
@@ -468,34 +573,57 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
               {filteredFiles.map((file) => (
                 <div
                   key={file.id}
-                  className={`file-item ${
+                  className={`file-item-enhanced ${
                     selectedFile && selectedFile.id === file.id
                       ? "selected"
                       : ""
                   }`}
                   onClick={() => setSelectedFile(file)}
                 >
-                  <div className="file-info">
-                    <FontAwesomeIcon icon={faFile} className="file-icon" />
-                    <div className="file-details">
-                      <span className="file-name">{file.name}</span>
-                      <span className="file-meta">
-                        {formatFileSize(file.size)} • {file.uploadDate}
-                      </span>
+                  <div className="file-main-info">
+                    <div className="file-info">
+                      <FontAwesomeIcon icon={faFile} className="file-icon" />
+                      <div className="file-details">
+                        <span className="file-name">{file.name}</span>
+                        <span className="file-meta">
+                          {formatFileSize(file.size)} • {file.uploadDate}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="file-actions">
+                      <button
+                        className="delete-file-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFileDelete(file.id);
+                        }}
+                        disabled={isProcessing}
+                        aria-label={`Eliminar archivo ${file.name}`}
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
                     </div>
                   </div>
-                  <div className="file-actions">
-                    <button
-                      className="delete-file-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFileDelete(file.id);
-                      }}
-                      disabled={isProcessing}
-                      aria-label={`Eliminar archivo ${file.name}`}
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </button>
+
+                  <div className="file-progress-container">
+                    <div className="custom-progress-bar">
+                      <div
+                        className="custom-progress-fill"
+                        style={{
+                          width: `${fileProgress[file.id] || 0}%`,
+                        }}
+                      ></div>
+                    </div>
+                    <div className="progress-text">
+                      <span>{fileProgress[file.id] || 0}%</span>
+                      <span
+                        className={`progress-status ${
+                          fileStatus[file.id] || "pendiente"
+                        }`}
+                      >
+                        {getStatusText(fileStatus[file.id])}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}

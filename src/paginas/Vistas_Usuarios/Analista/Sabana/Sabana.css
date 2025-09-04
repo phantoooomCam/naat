@@ -198,6 +198,7 @@
 .file-item.selected {
   background-color: rgba(51, 96, 141, 0.1);
   border-color: #33608d;
+  box-shadow: 0 0 0 2px rgba(51, 96, 141, 0.2);
 }
 
 .file-info {
@@ -672,26 +673,109 @@
   border-radius: 4px;
 }
 
+/* Agregando estilos mejorados para la barra de progreso */
+.file-progress-container {
+  margin-top: 8px;
+  width: 100%;
+}
 
-@media (max-width: 992px) {
-  .upload-area-grid,
-  .main-content-area-sabana {
-    grid-template-columns: 1fr;
-    gap: 15px;
+.custom-progress-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.custom-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #33608d 0%, #4a90e2 50%, #33608d 100%);
+  border-radius: 10px;
+  transition: width 0.3s ease-in-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.custom-progress-fill::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
   }
-  
-  .files-card {
-    grid-column: 1;
-    grid-row: 1;
+  100% {
+    left: 100%;
   }
-  
-  .filters-card {
-    grid-column: 1;
-    grid-row: 2;
-  }
-  
-  .work-area-card {
-    grid-column: 1;
-    grid-row: 3;
-  }
+}
+
+.progress-text {
+  font-size: 0.75rem;
+  color: #4a5568;
+  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progress-status {
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.7rem;
+}
+
+.progress-status.en_cola {
+  background-color: #fef5e7;
+  color: #d69e2e;
+}
+
+.progress-status.procesando {
+  background-color: #e6fffa;
+  color: #319795;
+}
+
+.progress-status.procesado {
+  background-color: #f0fff4;
+  color: #38a169;
+}
+
+.file-item-enhanced {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 12px;
+  border: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.file-item-enhanced:hover {
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.file-item-enhanced.selected {
+  background: linear-gradient(135deg, rgba(51, 96, 141, 0.1) 0%, rgba(51, 96, 141, 0.05) 100%);
+  border-color: #33608d;
+  box-shadow: 0 0 0 2px rgba(51, 96, 141, 0.2);
+}
+
+.file-main-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
 }
