@@ -59,17 +59,22 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [companias, setCompanias] = useState([]);
   const [codigoPais, setCodigoPais] = useState("+52");
 
-  const [messages, setMessages] = useState([]); // Estado para almacenar los mensajes recibidos
-  const [isConnected, setIsConnected] = useState(false); // Estado para saber si estamos conectados
-  const [socket, setSocket] = useState(null); // El WebSocket
+  const [idSabana, setIdSabana] = useState(null);
+  const navigate = useNavigate();
+
+  const [messages, setMessages] = useState([]);
+  const [isConnected, setIsConnected] = useState(false);
+  const [socket, setSocket] = useState(null);
   const [progress, setProgress] = useState(0);
   const [fileProgress, setFileProgress] = useState({});
   const [fileStatus, setFileStatus] = useState({});
-  const [filters, setFilters] = useState({}); // Estado para almacenar los filtros
-  const [currentProcessingIndex, setCurrentProcessingIndex] = useState(0); // Agregar índice del archivo actual siendo procesado
-  // Mapeos para relacionar lo que dice el backend (id_sabana) con tus files locales
-  const [fileIdByServerId, setFileIdByServerId] = useState({}); // { [id_sabana]: file.id }
-  const [serverIdByFileId, setServerIdByFileId] = useState({}); // { [file.id]: id_sabana }
+  const [filters, setFilters] = useState({});
+  const [currentProcessingIndex, setCurrentProcessingIndex] = useState(0);
+  const [pendingMessages, setPendingMessages] = useState([]); // 🔧 NUEVO: Mensajes pendientes
+
+  // 🔧 CAMBIO 1: Usar refs para mantener los valores actualizados
+  const fileIdByServerIdRef = useRef({});
+  const [fileIdByServerId, setFileIdByServerId] = useState({});
 
   const stateToProgress = {
     en_cola: 33,
@@ -85,7 +90,79 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     };
     return statusMap[status] || "Pendiente";
   };
+  // 🔧 FUNCIÓN PARA PROCESAR UN MENSAJE
+  const processMessage = (message) => {
+    const stateMatch = message.match(/estado:\s*(\w+)/);
+    const fileMatch = message.match(/archivo\s+(\d+)/);
 
+    if (!stateMatch || !fileMatch) {
+      console.log("Mensaje no válido:", message);
+      return false; // No se pudo procesar
+    }
+
+    const state = stateMatch[1].toLowerCase();
+    const serverId = fileMatch[1];
+
+    console.log(`Procesando: Estado: ${state}, Servidor ID: ${serverId}`);
+
+    if (!stateToProgress.hasOwnProperty(state)) {
+      console.log(`Estado no reconocido: ${state}`);
+      return false;
+    }
+
+    const fileId = fileIdByServerIdRef.current[serverId];
+    if (!fileId) {
+      console.log(`No se encontró fileId para id_sabana: ${serverId}`);
+      console.log("Mapeo actual:", fileIdByServerIdRef.current);
+      return false; // No se pudo procesar, pero el mensaje es válido
+    }
+
+    const progressValue = stateToProgress[state];
+
+    console.log(
+      `✅ Actualizando archivo ${fileId} a ${progressValue}% (${state})`
+    );
+
+    setFileProgress((prev) => {
+      const updated = { ...prev, [fileId]: progressValue };
+      console.log("Progreso actualizado:", updated);
+      return updated;
+    });
+
+    setFileStatus((prev) => {
+      const updated = { ...prev, [fileId]: state };
+      console.log("Estado actualizado:", updated);
+      return updated;
+    });
+
+    return true; // Procesado exitosamente
+  };
+  // 🔧 FUNCIÓN PARA PROCESAR MENSAJES PENDIENTES
+  const processPendingMessages = () => {
+    console.log(`🔄 Procesando ${pendingMessages.length} mensajes pendientes`);
+
+    setPendingMessages((currentPending) => {
+      const stillPending = [];
+
+      currentPending.forEach((message) => {
+        const processed = processMessage(message);
+        if (!processed) {
+          // Si no se pudo procesar, mantenerlo en pending
+          stillPending.push(message);
+        }
+      });
+
+      console.log(`📝 Quedan ${stillPending.length} mensajes pendientes`);
+      return stillPending;
+    });
+  };
+
+  // 🔧 CAMBIO 2: Actualizar ref cuando cambie el estado
+  useEffect(() => {
+    fileIdByServerIdRef.current = fileIdByServerId;
+  }, [fileIdByServerId]);
+
+  // 🔧 CAMBIO 3: WebSocket mejorado
   useEffect(() => {
     const ws = new WebSocket("ws://192.168.100.89:44444");
 
@@ -95,46 +172,19 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     };
 
     ws.onmessage = (event) => {
-      console.log("Mensaje recibido:", event.data);
-
       const message = event.data;
+      console.log("📨 Mensaje recibido:", message);
+
+      // Siempre agregar a la lista de mensajes para mostrar
       setMessages((prevMessages) => [...prevMessages, message]);
 
-      // Extrae el estado y el ID del archivo del mensaje
-      const stateMatch = message.match(/estado:\s*(\w+)/);
-      const fileMatch = message.match(/archivo\s+(\d+)/);
-      if (!stateMatch || !fileMatch) return; // Si no hay estado válido, no hacer nada
+      // Intentar procesar el mensaje inmediatamente
+      const processed = processMessage(message);
 
-      const state = stateMatch[1].toLowerCase(); // Normalizar a minúsculas
-      const serverId = fileMatch[1]; // id_sabana
-
-      if (!stateToProgress.hasOwnProperty(state)) {
-        console.log(`Estado no reconocido: ${state}`);
-        return;
-      }
-
-      const progressValue = stateToProgress[state];
-
-      // Encontrar el fileId relacionado con el serverId
-      const fileId = fileIdByServerId[serverId];
-      if (!fileId) {
-        console.log(`No se encontró fileId para id_sabana: ${serverId}`);
-        return;
-      }
-
-      if (state === "procesando") {
-        const currentProgress = fileProgress[fileId] || 0;
-        const updatedProgress = Math.min(currentProgress + 10, 66); // Aumentamos de 0 a 66, según el estado
-
-        // Solo actualiza el progreso si ha cambiado
-        if (updatedProgress !== currentProgress) {
-          setFileProgress((prev) => ({ ...prev, [fileId]: updatedProgress }));
-          setFileStatus((prev) => ({ ...prev, [fileId]: state }));
-        }
-      } else {
-        // Para "procesado" y "en_cola", se asigna el valor correspondiente directamente
-        setFileProgress((prev) => ({ ...prev, [fileId]: progressValue }));
-        setFileStatus((prev) => ({ ...prev, [fileId]: state }));
+      if (!processed) {
+        // Si no se pudo procesar, agregarlo a pendientes
+        console.log("⏳ Agregando mensaje a pendientes:", message);
+        setPendingMessages((prev) => [...prev, message]);
       }
     };
 
@@ -153,11 +203,22 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       ws.close();
       setIsConnected(false);
     };
-  }, [fileIdByServerId]); // Dependiendo del mapeo de fileIdByServerId
-
+  }, []);
   //Proceso de sabanas
-  const [idSabana, setIdSabana] = useState(null);
-  const navigate = useNavigate();
+
+  // 🔧 PROCESAR MENSAJES PENDIENTES CUANDO CAMBIE EL MAPEO
+  useEffect(() => {
+    fileIdByServerIdRef.current = fileIdByServerId;
+
+    // Si hay mapeo y mensajes pendientes, procesarlos
+    if (
+      Object.keys(fileIdByServerId).length > 0 &&
+      pendingMessages.length > 0
+    ) {
+      console.log("🚀 Nuevo mapeo disponible, procesando mensajes pendientes");
+      processPendingMessages();
+    }
+  }, [fileIdByServerId, pendingMessages.length]);
 
   useEffect(() => {
     const fetchCompanias = async () => {
@@ -331,15 +392,16 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     setIsProcessing(true);
     setProcessingStatus(null);
 
+    // 🔧 CAMBIO 7: Inicializar todos los archivos en "pendiente"
     const initialProgress = {};
     const initialStatus = {};
-    files.forEach((file, index) => {
+    files.forEach((file) => {
       initialProgress[file.id] = 0;
-      initialStatus[file.id] = index === 0 ? "en_cola" : "pendiente"; // Solo el primer archivo empieza en cola
+      initialStatus[file.id] = "pendiente";
     });
     setFileProgress(initialProgress);
     setFileStatus(initialStatus);
-    setCurrentProcessingIndex(0); // Reiniciar el índice
+    setCurrentProcessingIndex(0);
 
     try {
       const numeroPayload = {
@@ -378,29 +440,34 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       });
 
       const data = await response.json();
-      console.log(data);
+      console.log("Respuesta del servidor:", data);
+
       setIsProcessing(false);
 
       if (response.ok) {
-        setProcessingStatus("success");
-        setStatusMessage("Archivos guardados correctamente");
-
         const idSabana = data.ids_sabanas[0];
         setIdSabana(idSabana);
 
-        // ✅ Sólo notifica éxito y guarda los ids_sabanas para mapearlos a cada file
-        setProcessingStatus("success");
-        setStatusMessage("Archivos guardados correctamente");
-
-        // Mapea ids_sabanas -> file.id para actualizar por WebSocket
+        // 🔧 CAMBIO 8: Mapeo mejorado con logging
         if (Array.isArray(data.ids_sabanas)) {
-          const idToFile = {};
+          const newMapping = {};
           files.forEach((file, idx) => {
             const serverId = data.ids_sabanas[idx];
-            if (serverId != null) idToFile[serverId] = file.id;
+            if (serverId != null) {
+              newMapping[serverId] = file.id;
+              console.log(
+                `Mapeando servidor ${serverId} -> archivo ${file.id} (${file.name})`
+              );
+            }
           });
-          setFileIdByServerId(idToFile); // <-- estado nuevo (ver punto 2)
+
+          console.log("Nuevo mapeo completo:", newMapping);
+          setFileIdByServerId(newMapping);
+          fileIdByServerIdRef.current = newMapping; // 🔧 Actualizar ref inmediatamente
         }
+
+        setProcessingStatus("success");
+        setStatusMessage("Archivos guardados correctamente");
       } else {
         setProcessingStatus("error");
         setStatusMessage(data.message || "Error al guardar los archivos");
@@ -415,7 +482,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       setTimeout(() => setProcessingStatus(null), 3000);
     }
   };
-
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + " B";
     else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + " KB";
