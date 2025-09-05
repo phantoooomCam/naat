@@ -321,22 +321,22 @@
 /* Added specific column widths to control spacing */
 .registros-table th:nth-child(1),
 .registros-table td:nth-child(1) {
-  width: 18%;
+  width: 16%;
 }
 
 .registros-table th:nth-child(2),
 .registros-table td:nth-child(2) {
-  width: 18%;
+  width: 16%;
 }
 
 .registros-table th:nth-child(3),
 .registros-table td:nth-child(3) {
-  width: 10%;
+  width: 17%;
 }
 
 .registros-table th:nth-child(4),
 .registros-table td:nth-child(4) {
-  width: 35%;
+  width: 18%;
 }
 
 .registros-table th:nth-child(5),
