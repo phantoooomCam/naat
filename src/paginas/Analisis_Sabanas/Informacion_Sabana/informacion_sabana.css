@@ -218,10 +218,8 @@
   overflow: hidden;
   transition: box-shadow 0.3s ease;
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  /* Removed center alignment and padding for table layout */
+  padding: 0;
 }
 
 .content-display-area:hover {
@@ -231,6 +229,8 @@
 .placeholder-text {
   text-align: center;
   color: #6b7280;
+  /* Added padding back for placeholder */
+  padding: 20px;
 }
 
 .placeholder-text p {
@@ -242,6 +242,179 @@
   font-weight: 600;
   color: #374151;
   font-size: 1.1rem;
+}
+
+/* Added styles for table and pagination */
+.registros-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.registros-header {
+  padding: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.registros-header h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222a35;
+}
+
+/* Added styles for IMEI info display */
+.imei-info {
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: #e0f2fe;
+  border: 1px solid #0891b2;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #0c4a6e;
+  display: inline-block;
+}
+
+.pagination-info {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.table-container {
+  flex: 1;
+  overflow: auto;
+  padding: 0;
+}
+
+.registros-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  /* Reduced table layout to fixed for better column control */
+  table-layout: fixed;
+}
+
+.registros-table th {
+  background: #f1f5f9;
+  /* Reduced padding from 12px 8px to 8px 6px */
+  padding: 8px 6px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.registros-table td {
+  /* Reduced padding from 10px 8px to 8px 6px */
+  padding: 8px 6px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #374151;
+  vertical-align: top;
+  /* Added word-wrap for long content */
+  word-wrap: break-word;
+}
+
+/* Added specific column widths to control spacing */
+.registros-table th:nth-child(1),
+.registros-table td:nth-child(1) {
+  width: 18%;
+}
+
+.registros-table th:nth-child(2),
+.registros-table td:nth-child(2) {
+  width: 18%;
+}
+
+.registros-table th:nth-child(3),
+.registros-table td:nth-child(3) {
+  width: 10%;
+}
+
+.registros-table th:nth-child(4),
+.registros-table td:nth-child(4) {
+  width: 35%;
+}
+
+.registros-table th:nth-child(5),
+.registros-table td:nth-child(5) {
+  width: 19%;
+}
+
+.registros-table tr:hover {
+  background: #f8fafc;
+}
+
+.registros-table th:first-child,
+.registros-table td:first-child {
+  /* Reduced left padding from 20px to 12px */
+  padding-left: 12px;
+}
+
+.registros-table th:last-child,
+.registros-table td:last-child {
+  /* Reduced right padding from 20px to 12px */
+  padding-right: 12px;
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Reduced gap from 8px to 4px for more compact pagination */
+  gap: 4px;
+  padding: 20px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.pagination-numbers {
+  display: flex;
+  /* Reduced gap from 4px to 2px */
+  gap: 2px;
+}
+
+.pagination-btn {
+  /* Reduced padding from 8px 12px to 6px 10px */
+  padding: 6px 10px;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  /* Added min-width to ensure consistent button sizes */
+  min-width: 36px;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.pagination-btn.active {
+  background: #33608d;
+  color: white;
+  border-color: #33608d;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-message {
+  padding: 20px;
+  text-align: center;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  margin: 20px;
 }
 
 /* Responsive design */
@@ -335,4 +508,113 @@
 .info-action-btn:focus {
   outline: 2px solid rgba(99, 102, 241, 0.5);
   outline-offset: 2px;
+}
+
+/* Added badge styles for different record types */
+.type-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  min-width: 80px;
+}
+
+.type-datos {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.type-mensajeria {
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.type-mensaje2vias-ent {
+  background-color: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.type-mensaje2vias-sal {
+  background-color: #fed7d7;
+  color: #c53030;
+  border: 1px solid #fc8181;
+}
+
+.type-voz-entrante {
+  background-color: #fce7f3;
+  color: #be185d;
+  border: 1px solid #f9a8d4;
+}
+
+.type-voz-saliente {
+  background-color: #e0f2fe;
+  color: #0891b2;
+  border: 1px solid #67e8f9;
+}
+
+.type-voz-transfer {
+  background-color: #e0e7ff;
+  color: #3730a3;
+  border: 1px solid #a5b4fc;
+}
+
+.type-voz-transito {
+  background-color: #f3e8ff;
+  color: #6b21a8;
+  border: 1px solid #c4b5fd;
+}
+
+.type-wifi {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #6ee7b7;
+}
+
+.type-reenvio-sal {
+  background-color: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.type-reenvio-ent {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.type-ninguno {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+/* Added styles for search filter */
+.search-filter {
+  margin-bottom: 16px;
+  padding: 0 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  background-color: white;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #33608d;
+  box-shadow: 0 0 0 3px rgba(51, 96, 141, 0.1);
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
 }

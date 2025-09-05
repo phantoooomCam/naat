@@ -72,6 +72,23 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [currentProcessingIndex, setCurrentProcessingIndex] = useState(0);
   const [pendingMessages, setPendingMessages] = useState([]); // 🔧 NUEVO: Mensajes pendientes
 
+  // ---- Estado derivado para 1 solo archivo ----
+  const hasSingleFile = files.length === 1;
+  const onlyFileId = hasSingleFile ? files[0].id : null;
+  const onlyFileStatus = hasSingleFile ? fileStatus[onlyFileId] : null;
+  const onlyFileProgress = hasSingleFile ? fileProgress[onlyFileId] || 0 : 0;
+
+  // ¿ya está procesado? (por estado o por 100%)
+  const isProcessed =
+    onlyFileStatus === "procesado" || onlyFileProgress === 100;
+
+  // REGLAS:
+  // Guardar en BD: hay archivo y NO está procesado
+  const canGuardar = hasSingleFile && !isProcessed && !isProcessing;
+
+  // Procesar Archivos: hay archivo y SÍ está procesado
+  const canProcesar = hasSingleFile && isProcessed && !isProcessing;
+
   // 🔧 CAMBIO 1: Usar refs para mantener los valores actualizados
   const fileIdByServerIdRef = useRef({});
   const [fileIdByServerId, setFileIdByServerId] = useState({});
@@ -96,42 +113,30 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     const fileMatch = message.match(/archivo\s+(\d+)/);
 
     if (!stateMatch || !fileMatch) {
-      console.log("Mensaje no válido:", message);
       return false; // No se pudo procesar
     }
 
     const state = stateMatch[1].toLowerCase();
     const serverId = fileMatch[1];
 
-    console.log(`Procesando: Estado: ${state}, Servidor ID: ${serverId}`);
-
     if (!stateToProgress.hasOwnProperty(state)) {
-      console.log(`Estado no reconocido: ${state}`);
       return false;
     }
 
     const fileId = fileIdByServerIdRef.current[serverId];
     if (!fileId) {
-      console.log(`No se encontró fileId para id_sabana: ${serverId}`);
-      console.log("Mapeo actual:", fileIdByServerIdRef.current);
       return false; // No se pudo procesar, pero el mensaje es válido
     }
 
     const progressValue = stateToProgress[state];
 
-    console.log(
-      `✅ Actualizando archivo ${fileId} a ${progressValue}% (${state})`
-    );
-
     setFileProgress((prev) => {
       const updated = { ...prev, [fileId]: progressValue };
-      console.log("Progreso actualizado:", updated);
       return updated;
     });
 
     setFileStatus((prev) => {
       const updated = { ...prev, [fileId]: state };
-      console.log("Estado actualizado:", updated);
       return updated;
     });
 
@@ -139,8 +144,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   };
   // 🔧 FUNCIÓN PARA PROCESAR MENSAJES PENDIENTES
   const processPendingMessages = () => {
-    console.log(`🔄 Procesando ${pendingMessages.length} mensajes pendientes`);
-
     setPendingMessages((currentPending) => {
       const stillPending = [];
 
@@ -152,7 +155,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         }
       });
 
-      console.log(`📝 Quedan ${stillPending.length} mensajes pendientes`);
       return stillPending;
     });
   };
@@ -167,13 +169,11 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     const ws = new WebSocket("ws://192.168.100.89:44444");
 
     ws.onopen = () => {
-      console.log("Conexión WebSocket establecida");
       setIsConnected(true);
     };
 
     ws.onmessage = (event) => {
       const message = event.data;
-      console.log("📨 Mensaje recibido:", message);
 
       // Siempre agregar a la lista de mensajes para mostrar
       setMessages((prevMessages) => [...prevMessages, message]);
@@ -182,8 +182,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       const processed = processMessage(message);
 
       if (!processed) {
-        // Si no se pudo procesar, agregarlo a pendientes
-        console.log("⏳ Agregando mensaje a pendientes:", message);
         setPendingMessages((prev) => [...prev, message]);
       }
     };
@@ -194,7 +192,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
     ws.onclose = () => {
       setIsConnected(false);
-      console.log("Conexión WebSocket cerrada");
     };
 
     setSocket(ws);
@@ -215,7 +212,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       Object.keys(fileIdByServerId).length > 0 &&
       pendingMessages.length > 0
     ) {
-      console.log("🚀 Nuevo mapeo disponible, procesando mensajes pendientes");
       processPendingMessages();
     }
   }, [fileIdByServerId, pendingMessages.length]);
@@ -254,27 +250,29 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   }, []);
 
   const processFiles = (newFiles) => {
-    const processedFiles = newFiles.map((file) => ({
+    // bloquear si ya existe 1 archivo
+    if (files.length >= 1) {
+      setProcessingStatus("error");
+      setStatusMessage("Solo puedes adjuntar 1 archivo.");
+      setTimeout(() => setProcessingStatus(null), 2500);
+      return;
+    }
+
+    const [file0] = Array.from(newFiles);
+    if (!file0) return;
+
+    const processedFile = {
       id: Date.now() + Math.random(),
-      name: file.name,
-      type: file.type,
-      size: file.size,
+      name: file0.name,
+      type: file0.type,
+      size: file0.size,
       uploadDate: new Date().toLocaleDateString(),
-      rawFile: file,
-    }));
+      rawFile: file0,
+    };
 
-    setFiles((prevFiles) => [...prevFiles, ...processedFiles]);
-
-    // Inicializar el progreso y estado de los nuevos archivos
-    const newProgress = {};
-    const newStatus = {};
-    processedFiles.forEach((file) => {
-      newProgress[file.id] = 0;
-      newStatus[file.id] = "pendiente";
-    });
-
-    setFileProgress((prev) => ({ ...prev, ...newProgress }));
-    setFileStatus((prev) => ({ ...prev, ...newStatus }));
+    setFiles([processedFile]);
+    setFileProgress({ [processedFile.id]: 0 });
+    setFileStatus({ [processedFile.id]: "pendiente" });
   };
 
   const handleDrag = (e) => {
@@ -288,13 +286,13 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     e.stopPropagation();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      processFiles(Array.from(e.dataTransfer.files));
+      processFiles([e.dataTransfer.files[0]]);
     }
   };
 
   const handleFileInput = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      processFiles(Array.from(e.target.files));
+      processFiles([e.target.files[0]]);
     }
   };
 
@@ -344,22 +342,17 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       setProcessingStatus("error");
       setStatusMessage("No hay archivos para procesar");
       setTimeout(() => setProcessingStatus(null), 3000);
-      navigate("/procesamiento_sabana"); // redirige aunque no haya archivos
       return;
     }
 
-    setIsProcessing(true);
-    setProcessingStatus(null);
-
-    setTimeout(() => {
-      setIsProcessing(false);
-      setProcessingStatus("success");
-      setStatusMessage("Archivos procesados correctamente");
-
+    if (!idSabana) {
+      setProcessingStatus("error");
+      setStatusMessage("Primero guarda en BD para obtener el id_sabana.");
       setTimeout(() => setProcessingStatus(null), 3000);
+      return;
+    }
 
-      navigate("/procesamiento_sabana");
-    }, 2000);
+    navigate("/procesamiento_sabana", { state: { idSabana } });
   };
 
   const handleGuardarEnBD = async () => {
@@ -440,7 +433,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       });
 
       const data = await response.json();
-      console.log("Respuesta del servidor:", data);
 
       setIsProcessing(false);
 
@@ -455,13 +447,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
             const serverId = data.ids_sabanas[idx];
             if (serverId != null) {
               newMapping[serverId] = file.id;
-              console.log(
-                `Mapeando servidor ${serverId} -> archivo ${file.id} (${file.name})`
-              );
             }
           });
 
-          console.log("Nuevo mapeo completo:", newMapping);
           setFileIdByServerId(newMapping);
           fileIdByServerIdRef.current = newMapping; // 🔧 Actualizar ref inmediatamente
         }
@@ -507,7 +495,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
       <div className="sabana-header">
         <h2>Procesamiento de Sabanas</h2>
-        <div>
+        {/* <div>
           <h2>
             Estado de WebSocket: {isConnected ? "Conectado" : "Desconectado"}
           </h2>
@@ -520,7 +508,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
               ))}
             </ul>
           </div>
-        </div>
+        </div> */}
 
         <p>Sube y procesa archivos de sabana para análisis</p>
       </div>
@@ -536,10 +524,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           <input
             ref={inputRef}
             type="file"
-            multiple
             onChange={handleFileInput}
             style={{ display: "none" }}
-            aria-label="Seleccionar archivos"
+            aria-label="Seleccionar archivo"
           />
           <div className="upload-content">
             <FontAwesomeIcon icon={faUpload} className="upload-icon" />
@@ -547,9 +534,9 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
             <button
               onClick={() => inputRef.current.click()}
               className="upload-button"
-              disabled={isProcessing}
+              disabled={isProcessing || files.length >= 1}
             >
-              Selecciona Archivos
+              Selecciona Archivo
             </button>
           </div>
         </div>
@@ -672,23 +659,27 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                   </div>
 
                   <div className="file-progress-container">
-                    <div className="custom-progress-bar">
-                      <div
-                        className="custom-progress-fill"
-                        style={{
-                          width: `${fileProgress[file.id] || 0}%`,
-                        }}
-                      ></div>
-                    </div>
-                    <div className="progress-text">
-                      <span>{fileProgress[file.id] || 0}%</span>
-                      <span
-                        className={`progress-status ${
-                          fileStatus[file.id] || "pendiente"
-                        }`}
-                      >
-                        {getStatusText(fileStatus[file.id])}
-                      </span>
+                    <div className="circular-progress-container">
+                      {fileStatus[file.id] === "procesado" ? (
+                        <div className="completion-indicator">
+                          <FontAwesomeIcon
+                            icon={faCheck}
+                            className="completion-icon"
+                          />
+                          <span className="completion-text">Completado</span>
+                        </div>
+                      ) : fileStatus[file.id] === "procesando" ||
+                        fileStatus[file.id] === "en_cola" ? (
+                        <div className="spinner-container">
+                          <div className="spinner"></div>
+                          <span className="spinner-text">Procesando...</span>
+                        </div>
+                      ) : (
+                        <div className="pending-indicator">
+                          <div className="pending-circle"></div>
+                          <span className="pending-text">Pendiente</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -699,20 +690,25 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           )}
 
           <div className="processing-buttons">
-            <button className="process-button" onClick={handleProcessFiles}>
+            <button
+              className="process-button"
+              onClick={handleProcessFiles}
+              disabled={!canProcesar}
+            >
               {isProcessing ? (
                 <>
                   <FontAwesomeIcon icon={faSpinner} spin />
-                  <span>Procesando...</span>
+                  <span>Analizando...</span>
                 </>
               ) : (
-                <span>Procesar Archivos</span>
+                <span>Analizar Archivos</span>
               )}
             </button>
+
             <button
               className="save-button"
               onClick={handleGuardarEnBD}
-              disabled={isProcessing || files.length === 0}
+              disabled={!canGuardar}
             >
               {isProcessing ? (
                 <>
@@ -723,6 +719,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                 <span>Guardar en Base de Datos</span>
               )}
             </button>
+
             <button
               className="clear-button"
               onClick={handleClearAllFiles}

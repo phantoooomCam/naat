@@ -5,6 +5,7 @@ import PropTypes from "prop-types"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faFilter, faInfoCircle, faProjectDiagram, faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons"
 import "./informacion_sabana.css"
+import { useLocation } from "react-router-dom"
 
 const Informacion3_Sabana = ({ activeView }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
@@ -49,6 +50,72 @@ const GestionSabanaView = () => {
 
   const [activeButton, setActiveButton] = useState(null)
 
+  //Ubicacion del id_sabanas
+  const location = useLocation()
+  const idSabana = location.state?.idSabana || null
+  const [registros, setRegistros] = useState([])
+  const [error, setError] = useState("")
+
+  const [searchFilter, setSearchFilter] = useState("")
+
+  const [currentPage, setCurrentPage] = useState(1)
+  const [recordsPerPage] = useState(10)
+
+  const getTypeText = (typeId) => {
+    const typeMap = {
+      0: "Datos",
+      1: "MensajeriaMultimedia",
+      2: "Mensaje2ViasEnt",
+      3: "Mensaje2ViasSal",
+      4: "VozEntrante",
+      5: "VozSaliente",
+      6: "VozTransfer",
+      7: "VozTransito",
+      8: "Ninguno",
+      9: "Wifi",
+      10: "ReenvioSal",
+      11: "ReenvioEnt",
+    }
+    return typeMap[typeId] || `Tipo ${typeId}`
+  }
+
+  const getTypeBadgeClass = (typeId) => {
+    const classMap = {
+      0: "type-datos",
+      1: "type-mensajeria",
+      2: "type-mensaje2vias-ent",
+      3: "type-mensaje2vias-sal",
+      4: "type-voz-entrante",
+      5: "type-voz-saliente",
+      6: "type-voz-transfer",
+      7: "type-voz-transito",
+      8: "type-ninguno",
+      9: "type-wifi",
+      10: "type-reenvio-sal",
+      11: "type-reenvio-ent",
+    }
+    return `type-badge ${classMap[typeId] || "type-ninguno"}`
+  }
+
+  const filteredRegistros = registros.filter((registro) => {
+    const searchTerm = searchFilter.toLowerCase()
+    const typeText = getTypeText(registro.id_tipo_registro).toLowerCase()
+    return (
+      registro.numero_a.toString().includes(searchTerm) ||
+      registro.numero_b.toString().includes(searchTerm) ||
+      typeText.includes(searchTerm)
+    )
+  })
+
+  const indexOfLastRecord = currentPage * recordsPerPage
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage
+  const currentRecords = filteredRegistros.slice(indexOfFirstRecord, indexOfLastRecord)
+  const totalPages = Math.ceil(filteredRegistros.length / recordsPerPage)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchFilter])
+
   const handleFilterChange = (filterName, value) => {
     setFilters((prev) => ({
       ...prev,
@@ -56,9 +123,94 @@ const GestionSabanaView = () => {
     }))
   }
 
+  useEffect(() => {
+    if (!idSabana) return
+
+    const controller = new AbortController()
+
+    const fetchData = async () => {
+      try {
+        const res = await fetch(`http://192.168.100.92:8000/jobs/registros/${idSabana}`, {
+          signal: controller.signal,
+        })
+
+        if (!res.ok) {
+          throw new Error(`Error ${res.status}`)
+        }
+        const data = await res.json()
+        setRegistros(Array.isArray(data) ? data : [])
+      } catch (error) {
+        if (error.name !== "AbortError") setError(error.message)
+      }
+    }
+    fetchData()
+    return () => controller.abort()
+  }, [idSabana])
+
   const handleButtonClick = (buttonType) => {
     setActiveButton(buttonType)
     console.log(`Botón clickeado: ${buttonType}`)
+  }
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber)
+  }
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1)
+    }
+  }
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1)
+    }
+  }
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString)
+    return date.toLocaleString("es-ES", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    })
+  }
+
+  const formatDuration = (seconds) => {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`
+  }
+
+  const getVisiblePages = () => {
+    const maxVisible = 3
+    const pages = []
+
+    if (totalPages <= maxVisible) {
+      // Show all pages if total is less than or equal to maxVisible
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i)
+      }
+    } else {
+      // Show current page and surrounding pages
+      let start = Math.max(1, currentPage - 1)
+      const end = Math.min(totalPages, start + maxVisible - 1)
+
+      // Adjust start if we're near the end
+      if (end - start < maxVisible - 1) {
+        start = Math.max(1, end - maxVisible + 1)
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i)
+      }
+    }
+
+    return pages
   }
 
   return (
@@ -205,10 +357,96 @@ const GestionSabanaView = () => {
             <h3>Detalles de Sabana</h3>
           </div>
           <div className="content-display-area">
-            <div className="placeholder-text">
-              <p>Contenido de la sección 2</p>
-              <p>Aquí se mostrará la información según la selección</p>
-            </div>
+            {error && (
+              <div className="error-message">
+                <p>Error: {error}</p>
+              </div>
+            )}
+
+            {registros.length === 0 && !error ? (
+              <div className="placeholder-text">
+                <p>No hay registros disponibles</p>
+                <p>ID Sabana: {idSabana || "No especificado"}</p>
+              </div>
+            ) : (
+              <div className="registros-container">
+                <div className="registros-header">
+                  <h4>Registros Telefónicos ({filteredRegistros.length} total)</h4>
+                  {registros.length > 0 && (
+                    <div className="imei-info">
+                      <strong>IMEI:</strong> {registros[0].imei}
+                    </div>
+                  )}
+                  <div className="pagination-info">
+                    Página {currentPage} de {totalPages} - Mostrando {currentRecords.length} de{" "}
+                    {filteredRegistros.length} registros
+                  </div>
+                </div>
+
+                <div className="search-filter">
+                  <input
+                    type="text"
+                    placeholder="Buscar por número o tipo..."
+                    value={searchFilter}
+                    onChange={(e) => setSearchFilter(e.target.value)}
+                    className="search-input"
+                  />
+                </div>
+
+                <div className="table-container">
+                  <table className="registros-table">
+                    <thead>
+                      <tr>
+                        <th>Número A</th>
+                        <th>Número B</th>
+                        <th>Tipo</th>
+                        <th>Fecha/Hora</th>
+                        <th>Duración</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentRecords.map((registro) => (
+                        <tr key={registro.id_registro_telefonico}>
+                          <td>{registro.numero_a}</td>
+                          <td>{registro.numero_b}</td>
+                          <td>
+                            <span className={getTypeBadgeClass(registro.id_tipo_registro)}>
+                              {getTypeText(registro.id_tipo_registro)}
+                            </span>
+                          </td>
+                          <td>{formatDate(registro.fecha_hora)}</td>
+                          <td>{formatDuration(registro.duracion)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="pagination-controls">
+                    <button onClick={handlePrevPage} disabled={currentPage === 1} className="pagination-btn">
+                      Anterior
+                    </button>
+
+                    <div className="pagination-numbers">
+                      {getVisiblePages().map((pageNumber) => (
+                        <button
+                          key={pageNumber}
+                          onClick={() => handlePageChange(pageNumber)}
+                          className={`pagination-btn ${currentPage === pageNumber ? "active" : ""}`}
+                        >
+                          {pageNumber}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button onClick={handleNextPage} disabled={currentPage === totalPages} className="pagination-btn">
+                      Siguiente
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
