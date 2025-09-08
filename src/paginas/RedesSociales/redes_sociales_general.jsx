@@ -5,6 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 import Header from "../../componentes/Header";
 import Sidebar from "../../componentes/Sidebar";
 import "../../paginas/SuperAdmin_Funciones/Usuarios/Gestion/Gestion.css";
+import VinculosRedes from "./redes_sociales";
+
 
 function RedesSociales() {
   const [activeView, setActiveView] = useState("inicio");
@@ -20,7 +22,7 @@ function RedesSociales() {
       />
       <main className={`main-content ${sidebarOpen ? "" : "collapsed"}`}>
         <Header />
-        {/* Aqui puedes meter tu componente de Redes Sociales */}
+        <VinculosRedes activeView={activeView}/>
       </main>
     </div>
   );
