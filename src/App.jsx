@@ -46,6 +46,9 @@ import LogsCasos from "./paginas/Vistas_Usuarios/Analista/Caso/LogsCasos";
 ///Procesamiento de Sabanas
 import InfoSabana from "./paginas/Analisis_Sabanas/Informacion_Sabana/informacion_sabana";
 
+//Redes Sociales
+import RedesSociales from "./paginas/RedesSociales/redes_sociales_general";
+
 
 function App() {
   return (
@@ -89,6 +92,7 @@ function App() {
 
         {/* Procesamiento de Sabanas */}
         <Route path="/procesamiento_sabana" element={<InfoSabana/>}/>
+        <Route path="/redes_sociales" element={<RedesSociales/>}/>
 
 
       </Route>
