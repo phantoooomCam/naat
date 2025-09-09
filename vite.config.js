@@ -13,6 +13,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+          '/storage': {
+      target: 'http://192.168.100.207:8000',
+      changeOrigin: true,
+      secure: false,
+      },
       // Net-link migrated module backend endpoints (CORS avoidance via dev proxy)
       "/related": {
         target: "http://192.168.100.207:8000",

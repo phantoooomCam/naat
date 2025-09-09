@@ -50,8 +50,12 @@ const applyRectangularLayout = (cy, rootId, _containerRef, opts = {}) => {
 };
 
 // Construir elementos desde JSON original (para primera carga via scraping)
-const buildGraphData = (data) => {
-  if (!data || !data["Perfil objetivo"]) return [];
+function buildGraphData(data) {
+  console.log('[buildGraphData] input:', data);
+  if (!data || !data["Perfil objetivo"]) {
+    console.warn('[buildGraphData] No Perfil objetivo en data');
+    return [];
+  }
   const nodesMap = new Map();
   const edges = [];
   const edgeSet = new Set();
@@ -80,7 +84,7 @@ const buildGraphData = (data) => {
       }});
     }
     let edgeKey, sourceNode, targetNode;
-    const relacion = rel["tipo de relacion"]; // mantener clave exacta
+    const relacion = rel["tipo de relacion"];
     if (relacion === "seguidor") {
       sourceNode = id; targetNode = objetivo.username; edgeKey = `${sourceNode}->${targetNode}->seguidor`;
     } else if (relacion === "seguido") {
@@ -93,7 +97,9 @@ const buildGraphData = (data) => {
       edgeSet.add(edgeKey);
     }
   });
-  return [...nodesMap.values(), ...edges];
+  const result = [...nodesMap.values(), ...edges];
+  console.log('[buildGraphData] output:', result);
+  return result;
 };
 
 const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
@@ -146,6 +152,26 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     attachPluginsAndMenus(cy);
     return cy;
   };
+
+    // Rebuild graph when new raw data (from Buscar / Actualizar) arrives
+    useEffect(() => {
+      if (!elements) return; // nothing to do
+      const isRaw = !!(elements["Perfil objetivo"] && elements["Perfiles relacionados"]);
+      // Don't interfere with graph-session loading (handled inside getGraphSession)
+      if (!isRaw) return;
+      const cy = ensureCy();
+      if (!cy) return;
+      console.log('[WindowNet] Rebuilding graph from raw data');
+      const built = buildGraphData(elements);
+      cy.startBatch();
+      cy.elements().remove();
+      cy.add(built);
+      cy.endBatch();
+      cy.nodes().grabify();
+      const root = elements?.["Perfil objetivo"]?.username;
+      applyRectangularLayout(cy, root, containerRef, { cellW:510, cellH:510, gapX:10, gapY:10, topPad:80, leftPad:140, rootOffsetX:140 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [elements]);
 
   // Acciones expuestas
   const createNode = () => { const cy = ensureCy(); if(!cy) return; const name = prompt('Username del nuevo nodo:'); if(!name) return; const photo = prompt('URL de la foto (o ruta del backend):',''); const center = { x: cy.width()/2, y: cy.height()/2 }; const nodeJson = { group:'nodes', data:{ id:name, username:name, label:name, full_name:name, photo_url: photo||'', tipo:'perfil', updated_at: new Date().toISOString() }, position:center }; if(ur.current){ ur.current.do('add', nodeJson);} else { cy.add(nodeJson);} };
