@@ -45,8 +45,8 @@
 /* Grid layout - changed to 20/80 split */
 .sabana-grid-layout {
   display: grid;
-  grid-template-columns: 0.1fr 1fr; /* Changed from 1fr 1fr to 20/80 split */
-  gap: 20px;
+  grid-template-columns: 0.5fr 1fr; /* Changed from 1fr 1fr to 20/80 split */
+  gap: 2vh;
   height: calc(100vh - 150px);
 }
 
@@ -79,7 +79,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   transition: box-shadow 0.3s ease;
-  flex: 1;
+  width: 100%;
 }
 
 .filtros-wrapper-card:hover {
@@ -193,6 +193,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
+  margin:px;
 }
 
 .info-action-btn:hover {
