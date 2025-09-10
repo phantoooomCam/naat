@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./redes_sociales.css";
@@ -35,7 +35,14 @@ const VinculosRedes = ({ activeView }) => {
 };
 
 //Funcion General
+import WindowNet from './WindowNet.jsx';
+import RedVinculosPanel from './RedVinculosPanel.jsx';
+
 const Redes = () => {
+  const netRef = useRef(null);
+  const [graphData, setGraphData] = useState(null);
+  const handleGraphData = (data) => { setGraphData(data); };
+
   return (
     <div className="redes-main-container">
       <div className="redes-title-section">
@@ -47,19 +54,13 @@ const Redes = () => {
       <div className="redes-grid-layout">
         <div className="section-left">
           <div className="inputs-wrapper-card">
-            <div className="redes-header">
-              <h4>
-                Red de Vinculos
-              </h4>
-            </div>
-
+            <RedVinculosPanel netRef={netRef} onGraphData={handleGraphData} />
           </div>
         </div>
 
         <div className="section-right">
           <div className="content-display-area">
-
-
+            <WindowNet ref={netRef} elements={graphData} />
           </div>
         </div>
 
