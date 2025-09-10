@@ -35,9 +35,10 @@
 }
 
 .redes-grid-layout {
+  width: 115%;
   display: grid;
-  grid-template-columns: 0.1fr 1fr; /* Changed from 1fr 1fr to 20/80 split */
-  gap: 20px;
+  grid-template-columns: 0.5fr 1.5fr; /* Changed from 1fr 1fr to 20/80 split */
+  gap: 2vh;
   height: calc(100vh - 150px);
 }
 
@@ -45,6 +46,12 @@
 .section-right {
   display: flex;
   flex-direction: column;
+}
+.section-left{
+  width: 100%;
+}
+.section-right{
+  width: 100%;
 }
 
 .inputs-wrapper-card {
@@ -92,12 +99,48 @@
 }
 
 /* --- Net-link integration styles --- */
-.redvinc-panel { display:flex; flex-direction:column; height:100%; }
-.rv-navbar { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:#0e1d21; color:#fff; border-bottom:1px solid #1c3035; }
-.rv-left, .rv-right { display:flex; align-items:center; gap:4px; }
-.rv-item { background:transparent; color:#fff; border:1px solid transparent; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:13px; }
-.rv-item:hover { background:#173037; }
-.rv-section { position:relative; }
+.redvinc-panel { 
+  display:flex; 
+  flex-direction:column; 
+  height:100%; 
+}
+.rv-navbar { 
+  display:flex;
+  justify-content: center;
+  align-items:center;
+  flex-direction: column;
+  padding:8px 12px; 
+  color:#000; 
+  border-bottom:1px solid #1c3035; 
+}
+.rv-left, .rv-right { 
+  width: 100%;
+  display:flex; 
+  align-items:center;
+  justify-content: center; 
+  flex-direction: column;
+  gap:4px; 
+}
+.rv-item { 
+  width: 90%;
+  background:transparent; 
+  color:#000; 
+  border:1px solid transparent; 
+  border-radius:6px; 
+  cursor:pointer; 
+  font-size: 1.5vh; 
+}
+.rv-item:hover {
+  background:#33608d;
+  color: #fff; 
+}
+.rv-section { 
+  position:relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
 .rv-dropdown { position:absolute; top:110%; left:0; min-width:210px; background:#122E34; border:1px solid #274851; border-radius:8px; padding:8px; display:flex; flex-direction:column; gap:6px; z-index:20; }
 .rv-dropdown button { background:transparent; color:#fff; border:none; text-align:left; padding:6px 8px; border-radius:4px; cursor:pointer; font-size:13px; }
 .rv-dropdown button:hover { background:#1b3a42; }
@@ -106,18 +149,69 @@
 .rv-form-inline select, .rv-form-inline input { background:#0e1d21; color:#fff; border:1px solid #274851; border-radius:4px; padding:4px 8px; font-size:12px; }
 .rv-form-inline button { background:#274851; color:#fff; border:1px solid transparent; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:12px; }
 
-.rv-seek-wrapper { flex:1; overflow-y:auto; padding:12px 16px; }
+.rv-seek-wrapper {  
+  padding:2vh; 
+}
 .rv-logo { width:140px; margin:4px auto 16px; }
 .rv-logo img { width:100%; height:auto; display:block; }
-.rv-title { text-align:center; color:#222a35; font-size:1.1rem; margin:0 0 12px; }
-.rv-form { display:flex; flex-direction:column; gap:14px; }
+.rv-title { 
+  text-align:center; 
+  color:#222a35; 
+  font-size:1.5rem; 
+  margin:0 0 12px;
+}
+.rv-form { 
+  display:flex; 
+  flex-direction:column; 
+  gap:14px;
+  margin: 3vh 0;
+}
 .rv-field { display:flex; flex-direction:column; gap:4px; }
-.rv-field label { font-size:0.78rem; font-weight:600; color:#2b3b46; }
+.rv-field label { 
+  font-size: 1rem; 
+  font-weight:600; 
+  color:#2b3b46; 
+}
 .rv-field input, .rv-field select { border:1px solid #d0d7de; border-radius:6px; padding:8px 10px; font-size:0.8rem; background:#f8fafc; }
 .rv-field input:focus, .rv-field select:focus { outline:none; border-color:#274851; background:#fff; }
-.rv-buttons { display:flex; gap:10px; justify-content:center; }
-.rv-buttons button { flex:1; padding:8px 10px; border:none; border-radius:6px; background:#677E8A; color:#fff; cursor:pointer; font-size:0.8rem; transition:0.2s; }
+.rv-buttons { 
+  display:flex; 
+  flex-direction: column;
+  align-items: center;
+  gap:10px; 
+  justify-content:center; 
+}
+.rv-titulo-grafo{
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  font-size: 2vh;
+  padding: 1vh 0;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+}
+.rv-buttons button { 
+  width: 70%;
+  padding:8px 10px; 
+  border:none; 
+  border-radius:6px; 
+  background:#a0aec0; 
+  color:#fff; 
+  cursor:pointer; 
+  font-size:0.8rem; 
+  transition:0.2s; 
+}
 .rv-buttons button:hover { transform:scale(1.04); }
 .rv-status { margin-top:8px; font-size:0.7rem; text-align:center; color:#444; }
 
 .netlink-graph-container { width:100%; height:100%; }
+
+.spinner {
+  color: #fff;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
