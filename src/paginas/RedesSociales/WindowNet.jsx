@@ -19,6 +19,28 @@ cytoscape.use(undoRedo);
 
 // const SERVER_BASE = "http://192.168.100.207:8000"; // replaced by relative proxied paths
 
+// Helpers: simple file picker for local files
+function pickLocalFile({ accept } = {}) {
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    if (accept) input.accept = accept;
+    input.onchange = () => resolve(input.files?.[0] || null);
+    input.click();
+  });
+}
+
+// Upload image to backend and return a public URL
+async function uploadImageToBackend(file) {
+  const form = new FormData();
+  form.append("file", file);
+  const resp = await fetch(`/files/upload-image`, { method: "POST", body: form });
+  if (!resp.ok) throw new Error(`Upload failed: ${resp.status}`);
+  const json = await resp.json();
+  if (!json?.url) throw new Error("Upload response missing url");
+  return json.url; // e.g., "/storage/images/<uuid>.jpg"
+}
+
 // Layout rectangular adaptado
 const applyRectangularLayout = (cy, rootId, _containerRef, opts = {}) => {
   if (!cy) return;
@@ -136,6 +158,25 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
   const [platformLoad, setPlatformLoad] = useState(null);
   const [usernameLoad, setUsernameLoad] = useState(null);
 
+  // Shared helper to open picker and update a node photo via undo/redo
+  const openPhotoPickerAndUpdateNode = async (nodeId, cy) => {
+    try {
+      const file = await pickLocalFile({ accept: "image/*" });
+      if (!file) return; // user cancelled
+      const newUrl = await uploadImageToBackend(file);
+      if (ur.current) {
+        ur.current.do("updateNodePhoto", { id: nodeId, newUrl });
+      } else {
+        const ele = cy.$id(nodeId);
+        ele.data("photo_url", newUrl);
+        cy.style().update();
+      }
+    } catch (e) {
+      console.error(e);
+      alert("No se pudo actualizar la foto del nodo.");
+    }
+  };
+
   const attachPluginsAndMenus = (cy) => {
     try {
       cy.edgehandles && cy.edgehandles({});
@@ -215,20 +256,12 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
       });
       menusRef.current = [];
     }
-    const nodeMenu = cy.cxtmenu({
+  const nodeMenu = cy.cxtmenu({
       selector: "node",
       commands: [
         {
           content: "Editar Foto",
-          select: (ele) => {
-            const newUrl = prompt(
-              "Nueva URL de la foto:",
-              ele.data("photo_url")
-            );
-            if (newUrl !== null && ur.current) {
-              ur.current.do("updateNodePhoto", { id: ele.id(), newUrl });
-            }
-          },
+      select: (ele) => openPhotoPickerAndUpdateNode(ele.id(), cy),
         },
         {
           content: "Editar Nombre",
@@ -471,15 +504,12 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
       cy.endBatch();
     }
   };
-  const editNodePhoto = () => {
+  const editNodePhoto = async () => {
     const cy = ensureCy();
     if (!cy) return;
     const n = cy.$("node:selected").first();
     if (n && n.length) {
-      const newUrl = prompt("Nueva URL de la foto:", n.data("photo_url") || "");
-      if (newUrl !== null && ur.current) {
-        ur.current.do("updateNodePhoto", { id: n.id(), newUrl });
-      }
+      await openPhotoPickerAndUpdateNode(n.id(), cy);
     } else alert("Selecciona un nodo para editar su foto.");
   };
   const editNodeName = () => {
@@ -638,6 +668,125 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     } catch (e) {
       console.error(e);
       alert("Error al exportar a Excel");
+    }
+  };
+
+  // Guardar grafo como archivo local (JSON) con File System Access API + fallback
+  const saveGraphAsLocalFile = async () => {
+    const cy = cyRef.current;
+    if (!cy) return;
+    const payload = {
+      elements: {
+        nodes: cy.nodes().map((n) => ({
+          data: n.data(),
+          position: n.position(),
+        })),
+        edges: cy.edges().map((e) => ({ data: e.data() })),
+      },
+      layout: { name: "preset" },
+      meta: { exported_at: new Date().toISOString() },
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const defaultName = "grafo.json";
+    try {
+      if ("showSaveFilePicker" in window) {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: defaultName,
+          types: [
+            { description: "JSON", accept: { "application/json": [".json"] } },
+          ],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = defaultName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("No se pudo guardar el archivo local.");
+    }
+  };
+
+  // Cargar grafo desde archivo local (JSON) y renderizarlo
+  const loadGraphFromLocalFile = async () => {
+    try {
+      const file = await pickLocalFile({ accept: "application/json" });
+      if (!file) return;
+      const text = await file.text();
+      const json = JSON.parse(text);
+
+      const cy = ensureCy();
+      if (!cy) return;
+
+      let nodes = [];
+      let edges = [];
+
+      // Formato sesión guardada
+      if (Array.isArray(json?.elements?.nodes) || Array.isArray(json?.elements?.edges)) {
+        nodes = json.elements.nodes || [];
+        edges = json.elements.edges || [];
+      // Formato crudo (scrape/related)
+      } else if (json?.["Perfil objetivo"]) {
+        const built = buildGraphData(json);
+        const sep = built.reduce(
+          (acc, el) => {
+            if (el.data?.source) acc.edges.push(el);
+            else acc.nodes.push(el);
+            return acc;
+          },
+          { nodes: [], edges: [] }
+        );
+        nodes = sep.nodes;
+        edges = sep.edges;
+      } else {
+        alert("Formato de archivo no reconocido.");
+        return;
+      }
+
+      cy.startBatch();
+      cy.elements().remove();
+      cy.add([...(nodes || []), ...(edges || [])]);
+      cy.endBatch();
+      cy.nodes().grabify();
+
+      const rootId =
+        json?.["Perfil objetivo"]?.username ||
+        nodes?.find?.((n) => n?.data?.tipo === "perfil")?.data?.id ||
+        nodes?.[0]?.data?.id ||
+        null;
+
+      const hasPreset =
+        json?.layout?.name === "preset" &&
+        (nodes || []).some((n) => n?.position && typeof n.position.x === "number");
+
+      if (hasPreset) {
+        cy.layout({ name: "preset" }).run();
+      } else {
+        applyRectangularLayout(cy, rootId, containerRef, {
+          cellW: 310,
+          cellH: 310,
+          gapX: 10,
+          gapY: 10,
+          leftPad: 240,
+          topPad: 80,
+          rootOffsetX: 140,
+        });
+      }
+      cy.fit();
+      attachPluginsAndMenus(cy);
+    } catch (e) {
+      console.error(e);
+      alert("No se pudo cargar el archivo local.");
     }
   };
 
@@ -801,6 +950,8 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
       undo,
       redo,
       exportToExcel,
+  saveAsLocal: saveGraphAsLocalFile,
+  loadFromLocal: loadGraphFromLocalFile,
       layoutRectangular: () => {
         if (!cyRef.current) return;
         const cy = cyRef.current;
