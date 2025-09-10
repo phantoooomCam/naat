@@ -43,7 +43,7 @@
 }
 
 .network-btn {
-  background: #3498db;
+  background: #33608d;
   color: white;
   border: none;
   padding: 6px 12px;
@@ -54,7 +54,7 @@
 }
 
 .network-btn:hover {
-  background: #2980b9;
+  background: #264a6e;
 }
 
 .network-legend {

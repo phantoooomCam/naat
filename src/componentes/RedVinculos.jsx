@@ -5,6 +5,8 @@ import PropTypes from "prop-types"
 
 const RedVinculos = ({ idSabana, filtrosActivos }) => {
   const cyRef = useRef(null)
+  const tooltipRef = useRef(null)
+  const mouseMoveHandlerRef = useRef(null)
   const [cy, setCy] = useState(null)
   const [stats, setStats] = useState({ nodes: 0, edges: 0 })
   const [relaciones, setRelaciones] = useState([])
@@ -32,7 +34,7 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
     const iconMap = {
       0: ( // Datos
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h2v2H7V7zm4 0h2v2h-2V7zm4 0h2v2h-2V7zM7 11h2v2H7v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2zM7 15h2v2H7v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2z" />
+          <path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h2v2H7V7zm4 0h2v2h-2V7zm4 0h2v2h-2V7zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2z" />
         </svg>
       ),
       1: ( // MensajeriaMultimedia
@@ -47,14 +49,13 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
       ),
       3: ( // Mensaje2ViasSal
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M2 17h20v2H2zm1.15-4.05L4 11.47l.85 1.48L12 17l7.15-4.05L20 11.47 12 7.53 4 11.47z" />
+          <path d="M19 12h2c0-4.97-4.03-9-9-9v2c3.87 0 7 3.13 7 7z" />
+          <path d="M15 12h2c0-2.76-2.24-5-5-5v2c1.66 0 3 1.34 3 3z" />
         </svg>
       ),
       4: ( // VozEntrante
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
-          <path d="M19 12h2c0-4.97-4.03-9-9-9v2c3.87 0 7 3.13 7 7z" />
-          <path d="M15 12h2c0-2.76-2.24-5-5-5v2c1.66 0 3 1.34 3 3z" />
         </svg>
       ),
       5: ( // VozSaliente
@@ -105,20 +106,20 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
 
   const getTypeColor = (typeId) => {
     const colorMap = {
-      0: "#3498db",
-      1: "#9b59b6",
-      2: "#2ecc71",
-      3: "#27ae60",
-      4: "#e74c3c",
-      5: "#c0392b",
-      6: "#f39c12",
-      7: "#d35400",
-      8: "#95a5a6",
-      9: "#1abc9c",
-      10: "#8e44ad",
-      11: "#2c3e50",
+      0: "#A8D8EA", // Azul pastel (antes #3498db)
+      1: "#D1A3E0", // Púrpura pastel (antes #9b59b6)
+      2: "#A8E6CF", // Verde pastel (antes #2ecc71)
+      3: "#B8E6B8", // Verde claro pastel (antes #27ae60)
+      4: "#FFB3BA", // Rosa pastel (antes #e74c3c)
+      5: "#FFCCCB", // Rosa claro pastel (antes #c0392b)
+      6: "#FFD3A5", // Naranja pastel (antes #f39c12)
+      7: "#FFC09F", // Naranja claro pastel (antes #d35400)
+      8: "#D3D3D3", // Gris pastel (antes #95a5a6)
+      9: "#A0E7E5", // Turquesa pastel (antes #1abc9c)
+      10: "#C8A2C8", // Lavanda pastel (antes #8e44ad)
+      11: "#B0C4DE", // Azul grisáceo pastel (antes #2c3e50)
     }
-    return colorMap?.[typeId] ?? "#7f8c8d"
+    return colorMap?.[typeId] ?? "#E6E6FA"
   }
 
   useEffect(() => {
@@ -333,32 +334,34 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
           {
             selector: "node[type='central']",
             style: {
-              "background-color": "#e74c3c",
+              "background-color": "#FFB3BA", // Rosa pastel
               label: "data(label)",
-              color: "#000000ff",
+              color: "#2C3E50", // Texto más oscuro para contraste
               "text-valign": "center",
               "text-halign": "center",
-              "font-size": "14px",
+              "font-size": "50px",
               "font-weight": "bold",
               width: "60px",
               height: "60px",
               "border-width": "3px",
-              "border-color": "#c0392b",
+              "border-color": "#FF9999", // Borde rosa más oscuro
+              shape: "ellipse", // Regresando a círculo
             },
           },
           {
             selector: "node[type='peripheral']",
             style: {
-              "background-color": "#3498db",
+              "background-color": "#A8D8EA", // Azul pastel
               label: "data(label)",
-              color: "#000000ff",
+              color: "#2C3E50", // Texto más oscuro para contraste
               "text-valign": "center",
               "text-halign": "center",
-              "font-size": "12px",
+              "font-size": "30px",
               width: "40px",
               height: "40px",
               "border-width": "2px",
-              "border-color": "#2980b9",
+              "border-color": "#87CEEB", // Borde azul más oscuro
+              shape: "ellipse", // Regresando a círculo
             },
           },
           {
@@ -388,7 +391,7 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
               "curve-style": "bezier",
               opacity: 0.8,
               label: "data(type)",
-              "font-size": "9px",
+              "font-size": "25px",
               "text-rotation": "autorotate",
               "text-margin-y": -8,
             },
@@ -403,7 +406,7 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
               "curve-style": "bezier",
               opacity: 0.8,
               label: "data(type)",
-              "font-size": "9px",
+              "font-size": "25px",
               "text-rotation": "autorotate",
               "text-margin-y": -8,
             },
@@ -437,8 +440,8 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
           {
             selector: "node:selected",
             style: {
-              "background-color": "#f39c12",
-              "border-color": "#e67e22",
+              "background-color": "#FFD3A5", // Naranja pastel
+              "border-color": "#FFC09F", // Naranja más oscuro
               "border-width": "4px",
             },
           },
@@ -455,48 +458,67 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
         },
       })
 
-      cytoscapeInstance.on("mouseover", "edge", (evt) => {
-        const edge = evt.target
-        const d = edge.data()
-        const tooltip = document.createElement("div")
-        tooltip.style.position = "absolute"
-        tooltip.style.background = "rgba(0,0,0,0.9)"
-        tooltip.style.color = "white"
-        tooltip.style.padding = "10px"
-        tooltip.style.borderRadius = "6px"
-        tooltip.style.fontSize = "12px"
-        tooltip.style.zIndex = "1000"
-        tooltip.style.pointerEvents = "none"
-        tooltip.style.maxWidth = "200px"
+      // cytoscapeInstance.on("mouseover", "edge", (evt) => {
+      //   const edge = evt.target
+      //   const d = edge.data()
+      //   const tooltip = document.createElement("div")
+      //   tooltip.id = "cytoscape-tooltip" 
+      //   tooltip.style.position = "absolute"
+      //   tooltip.style.background = "rgba(0,0,0,0.9)"
+      //   tooltip.style.color = "white"
+      //   tooltip.style.padding = "10px"
+      //   tooltip.style.borderRadius = "6px"
+      //   tooltip.style.fontSize = "12px"
+      //   tooltip.style.zIndex = "1000"
+      //   tooltip.style.pointerEvents = "none"
+      //   tooltip.style.maxWidth = "200px"
 
-        let direccionTexto = ""
-        if (d.arrowDirection === "bidirectional") {
-          direccionTexto = "Bidireccional"
-        } else if (d.arrowDirection === "entrante") {
-          direccionTexto = `${d.numeroB} → ${d.numeroA}`
-        } else if (d.arrowDirection === "saliente") {
-          direccionTexto = `${d.numeroA} → ${d.numeroB}`
-        } else if (d.arrowDirection === "datos") {
-          direccionTexto = `${d.numeroA} → ${d.numeroB} (Datos)`
-        }
+      //   let direccionTexto = ""
+      //   if (d.arrowDirection === "bidirectional") {
+      //     direccionTexto = "Bidireccional"
+      //   } else if (d.arrowDirection === "entrante") {
+      //     direccionTexto = `${d.numeroB} → ${d.numeroA}`
+      //   } else if (d.arrowDirection === "saliente") {
+      //     direccionTexto = `${d.numeroA} → ${d.numeroB}`
+      //   } else if (d.arrowDirection === "datos") {
+      //     direccionTexto = `${d.numeroA} → ${d.numeroB} (Datos)`
+      //   }
 
-        tooltip.innerHTML = `
-          <strong>Tipo:</strong> ${d.type}<br>
-          <strong>Dirección:</strong> ${direccionTexto}<br>
-          ${d.duracion ? `<strong>Duración:</strong> ${Math.floor((d.duracion || 0) / 60)}:${((d.duracion || 0) % 60).toString().padStart(2, "0")}<br>` : ""}
-          ${d.fecha ? `<strong>Fecha:</strong> ${new Date(d.fecha).toLocaleString()}<br>` : ""}
-        `
-        document.body.appendChild(tooltip)
-        const updatePos = (e) => {
-          tooltip.style.left = e.clientX + 10 + "px"
-          tooltip.style.top = e.clientY + 10 + "px"
-        }
-        document.addEventListener("mousemove", updatePos)
-        edge.on("mouseout", () => {
-          document.removeEventListener("mousemove", updatePos)
-          tooltip.remove()
-        })
-      })
+      //   tooltip.innerHTML = `
+      //     <strong>Tipo:</strong> ${d.type}<br>
+      //     <strong>Dirección:</strong> ${direccionTexto}<br>
+      //     ${d.duracion ? `<strong>Duración:</strong> ${Math.floor((d.duracion || 0) / 60)}:${((d.duracion || 0) % 60).toString().padStart(2, "0")}<br>` : ""}
+      //     ${d.fecha ? `<strong>Fecha:</strong> ${new Date(d.fecha).toLocaleString()}<br>` : ""}
+      //   `
+
+      //   document.body.appendChild(tooltip)
+      //   tooltipRef.current = tooltip
+
+      //   const updatePos = (e) => {
+      //     if (tooltipRef.current) {
+      //       tooltipRef.current.style.left = e.clientX + 10 + "px"
+      //       tooltipRef.current.style.top = e.clientY + 10 + "px"
+      //     }
+      //   }
+
+      //   mouseMoveHandlerRef.current = updatePos
+      //   document.addEventListener("mousemove", updatePos)
+
+      //   const handleMouseOut = () => {
+      //     cleanupTooltip()
+      //   }
+
+      //   edge.one("mouseout", handleMouseOut)
+
+      //   const container = cyRef.current
+      //   if (container) {
+      //     const handleContainerLeave = () => {
+      //       cleanupTooltip()
+      //       container.removeEventListener("mouseleave", handleContainerLeave)
+      //     }
+      //     container.addEventListener("mouseleave", handleContainerLeave)
+      //   }
+      // })
 
       setCy(cytoscapeInstance)
       setStats({ nodes: nodeElements.length, edges: allEdges.length })
@@ -505,9 +527,27 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
     loadCytoscape()
 
     return () => {
+      cleanupTooltip()
       if (cy) cy.destroy()
     }
   }, [relaciones, filtrosActivos])
+
+  useEffect(() => {
+    return () => {
+      cleanupTooltip()
+    }
+  }, [])
+
+  const cleanupTooltip = () => {
+    if (tooltipRef.current) {
+      tooltipRef.current.remove()
+      tooltipRef.current = null
+    }
+    if (mouseMoveHandlerRef.current) {
+      document.removeEventListener("mousemove", mouseMoveHandlerRef.current)
+      mouseMoveHandlerRef.current = null
+    }
+  }
 
   const resetLayout = () => {
     if (cy) {
@@ -567,27 +607,27 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
 
       <div className="network-legend">
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: "#e74c3c" }}></div>
+          <div className="legend-color" style={{ backgroundColor: "#FFB3BA" }}></div>
           <span>Número Central (A)</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: "#3498db" }}></div>
+          <div className="legend-color" style={{ backgroundColor: "#A8D8EA" }}></div>
           <span>Número Contactado (B)</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: "#c0392b" }}></div>
+          <div className="legend-color" style={{ backgroundColor: "#FFCCCB" }}></div>
           <span>Voz Saliente (A→B)</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: "#e74c3c" }}></div>
+          <div className="legend-color" style={{ backgroundColor: "#FFB3BA" }}></div>
           <span>Voz Entrante (B→A)</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: "#2ecc71" }}></div>
+          <div className="legend-color" style={{ backgroundColor: "#A8E6CF" }}></div>
           <span>Mensajes 2 Vías (↔)</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: "#3498db" }}></div>
+          <div className="legend-color" style={{ backgroundColor: "#A8D8EA" }}></div>
           <span>Datos (A→B)</span>
         </div>
       </div>
