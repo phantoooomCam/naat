@@ -23,11 +23,11 @@ cytoscape.use(undoRedo);
 const applyRectangularLayout = (cy, rootId, _containerRef, opts = {}) => {
   if (!cy) return;
   const {
-    cols = 14,
+    cols = 20,
     cellW = 310,
     cellH = 310,
-    gapX = 10,
-    gapY = 10,
+    gapX = 50,
+    gapY = 50,
     leftPad = 260,
     topPad = 80,
     rootOffsetX = 140,
@@ -332,8 +332,9 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
             "background-image": (ele) => ele.data("photo_url") || "none",
             "background-fit": "cover",
             "background-opacity": 1,
-            width: (ele) => (ele.data("tipo") === "perfil" ? 300 : 280),
-            height: (ele) => (ele.data("tipo") === "perfil" ? 300 : 280),
+            width: (ele) => (ele.data("tipo") === "perfil" ? "400rem" : "395rem"),
+            height: (ele) => (ele.data("tipo") === "perfil" ? "400rem" : "395rem"),
+            "font-size": "20rem",
           },
         },
         {
@@ -344,27 +345,29 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
             "text-opacity": 1,
             "text-valign": "bottom",
             "text-halign": "center",
+            "font-size": "100rem",
           },
         },
         {
           selector: "edge",
           style: {
             label: (ele) => ele.data("relation_type") || ele.data("rel") || "",
-            width: 7,
+            width: 20,
             "text-rotation": "autorotate",
+            "font-size":"80rem",
             "line-color": (ele) => {
               const t = ele.data("relation_type") || ele.data("rel");
               switch (t) {
                 case "comentó":
-                  return "#192338";
+                  return "#32B028";
                 case "seguido":
                   return "#FF4E45";
                 case "seguidor":
-                  return "#075056";
+                  return "#2885B0";
                 case "reaccionó":
-                  return "#31487a";
+                  return "#F538CC";
                 default:
-                  return "#999";
+                  return "#1A2D42";
               }
             },
             "target-arrow-shape": "triangle",
@@ -372,13 +375,13 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
               const t = ele.data("relation_type") || ele.data("rel");
               switch (t) {
                 case "comentó":
-                  return "#192338";
+                  return "#32B028";
                 case "seguido":
                   return "#FF4E45";
                 case "seguidor":
-                  return "#075056";
+                  return "#2885B0";
                 case "reaccionó":
-                  return "#31487a";
+                  return "#F538CC";
                 default:
                   return "#1A2D42";
               }
@@ -414,8 +417,8 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     applyRectangularLayout(cy, root, containerRef, {
       cellW: 510,
       cellH: 510,
-      gapX: 10,
-      gapY: 10,
+      gapX: 50,
+      gapY: 50,
       topPad: 80,
       leftPad: 140,
       rootOffsetX: 140,
@@ -768,8 +771,8 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
         applyRectangularLayout(cy, username, containerRef, {
           cellW: 310,
           cellH: 310,
-          gapX: 10,
-          gapY: 10,
+          gapX: 50,
+          gapY: 50,
           leftPad: 240,
           topPad: 80,
           rootOffsetX: 140,
@@ -804,11 +807,11 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
         const root =
           elements?.["Perfil objetivo"]?.["username"] || usernameLoad || null;
         applyRectangularLayout(cy, root, {
-          cols: 14,
+          cols: 20,
           cellW: 310,
           cellH: 310,
-          gapX: 10,
-          gapY: 10,
+          gapX: 50,
+          gapY: 50,
           leftPad: 260,
           topPad: 80,
           rootOffsetX: 140,
@@ -830,8 +833,8 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     applyRectangularLayout(cy, root, containerRef, {
       cellW: 510,
       cellH: 510,
-      gapX: 10,
-      gapY: 10,
+      gapX: 50,
+      gapY: 50,
       topPad: 80,
       leftPad: 140,
       rootOffsetX: 140,

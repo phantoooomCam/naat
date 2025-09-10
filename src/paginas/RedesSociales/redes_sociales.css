@@ -195,7 +195,7 @@
   padding:8px 10px; 
   border:none; 
   border-radius:6px; 
-  background:#a0aec0; 
+  background:var(--sidebar-active); 
   color:#fff; 
   cursor:pointer; 
   font-size:0.8rem; 
@@ -214,4 +214,12 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.section-right-details{
+  background-color: #fff;
+  width: 100%;
+  margin: 0 0 1vh 0;
+  border-radius: 6px;
+  padding: 1vh;
 }

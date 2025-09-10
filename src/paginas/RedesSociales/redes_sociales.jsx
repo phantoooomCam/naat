@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./redes_sociales.css";
+import "../../componentes/RedVinculos.css";
 
 //Funcion para ActiveView
 const VinculosRedes = ({ activeView }) => {
@@ -35,14 +36,23 @@ const VinculosRedes = ({ activeView }) => {
 };
 
 //Funcion General
-import WindowNet from './WindowNet.jsx';
-import RedVinculosPanel from './RedVinculosPanel.jsx';
+import WindowNet from "./WindowNet.jsx";
+import RedVinculosPanel from "./RedVinculosPanel.jsx";
 
 const Redes = () => {
   const netRef = useRef(null);
   const [graphData, setGraphData] = useState(null);
-  const handleGraphData = (data) => { setGraphData(data); };
+  const handleGraphData = (data) => {
+    setGraphData(data);
+  };
 
+  const relaciones = {
+    seguidor: {color: "#2885B0"},
+    seguido: {color: "#FF4E45"},
+    comentó: {color: "#32B028"},
+    reaccionó: {color: "#F538CC"},
+    default: {color: "#1A2D42"},
+  };
   return (
     <div className="redes-main-container">
       <div className="redes-title-section">
@@ -59,11 +69,25 @@ const Redes = () => {
         </div>
 
         <div className="section-right">
+          <div className="section-right-details">
+            Tipos de vinculos:
+            <div className="network-legend">
+              {Object.entries(relaciones).map(([item, info], index) => (
+                <div className="legend-item">
+                  <div
+                    className="legend-color"
+                    style={{ backgroundColor: info.color }}
+                  ></div>
+                  <span key={index}>{item}</span>
+                </div>
+              ))}
+            </div>
+            <div className="tipo-vinculos"></div>
+          </div>
           <div className="content-display-area">
             <WindowNet ref={netRef} elements={graphData} />
           </div>
         </div>
-
       </div>
     </div>
   );
