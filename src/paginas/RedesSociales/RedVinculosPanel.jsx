@@ -171,7 +171,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
             <button type="submit" disabled={loading}>
               {loading ? (
                 <span>
-                  <ImSpinner className="spinner" /> Buscando...
+                  <ImSpinner className="spinner" />
                 </span>
               ) : (
                 "Buscar"
@@ -187,7 +187,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
           </div>
         </form>
         <div className="rv-status">
-          {dataResult ? `Datos cargados.` : "No hay información aún"}
+          {dataResult ? `Cargado` : "No hay información aún"}
         </div>
       </div>
 

@@ -141,10 +141,39 @@
   justify-content: center;
   width: 100%;
 }
-.rv-dropdown { position:absolute; top:110%; left:0; min-width:210px; background:#122E34; border:1px solid #274851; border-radius:8px; padding:8px; display:flex; flex-direction:column; gap:6px; z-index:20; }
-.rv-dropdown button { background:transparent; color:#fff; border:none; text-align:left; padding:6px 8px; border-radius:4px; cursor:pointer; font-size:13px; }
-.rv-dropdown button:hover { background:#1b3a42; }
-.rv-divider { height:1px; background:#274851; margin:4px 0; }
+.rv-dropdown { 
+  position:absolute; 
+  top:110%;
+  left:0; 
+  min-width:210px; 
+  background:var(--sidebar-bg); 
+  border:1px solid #274851; 
+  border-radius:8px; 
+  padding:8px; 
+  display:flex; 
+  flex-direction:column; 
+  gap:6px; 
+  z-index:20; 
+}
+.rv-dropdown button { 
+  background:transparent; 
+  color:#000;  
+  text-align:left; 
+  padding:6px 8px; 
+  border-radius:4px; 
+  cursor:pointer;
+  background-color: #fff; 
+  font-size:13px;
+  transition: 0.9s ease;
+}
+.rv-dropdown button:hover { 
+  background-color: #bababa;
+}
+.rv-divider { 
+  height:1px; 
+  background:#fff; 
+  margin:4px 0; 
+}
 .rv-form-inline { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
 .rv-form-inline select, .rv-form-inline input { background:#0e1d21; color:#fff; border:1px solid #274851; border-radius:4px; padding:4px 8px; font-size:12px; }
 .rv-form-inline button { background:#274851; color:#fff; border:1px solid transparent; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:12px; }
@@ -164,7 +193,7 @@
   display:flex; 
   flex-direction:column; 
   gap:14px;
-  margin: 3vh 0;
+  margin: 3vh 0 1vh 0;
 }
 .rv-field { display:flex; flex-direction:column; gap:4px; }
 .rv-field label { 
@@ -202,7 +231,12 @@
   transition:0.2s; 
 }
 .rv-buttons button:hover { transform:scale(1.04); }
-.rv-status { margin-top:8px; font-size:0.7rem; text-align:center; color:#444; }
+.rv-status { 
+  margin-top: none; 
+  font-size:0.7rem; 
+  text-align:center; 
+  color:#444; 
+}
 
 .netlink-graph-container { width:100%; height:100%; }
 
