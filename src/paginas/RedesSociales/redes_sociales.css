@@ -39,7 +39,7 @@
   display: grid;
   grid-template-columns: 0.5fr 1.5fr; /* Changed from 1fr 1fr to 20/80 split */
   gap: 2vh;
-  height: calc(100vh - 150px);
+  height: 70vh;
 }
 
 .section-left,
@@ -49,11 +49,11 @@
 }
 .section-left{
   width: 100%;
-  height: auto;
+  height: 80%;
 }
 .section-right{
   width: 100%;
-  height: 100%;
+  height: 90vh;
 }
 
 .inputs-wrapper-card {
@@ -142,14 +142,11 @@
   justify-content: center;
   width: 100%;
 }
-<<<<<<< Updated upstream
-.rv-dropdown { position:absolute; top:110%; left:0; min-width:210px; background:#122E34; border:1px solid #274851; border-radius:8px; padding:8px; display:flex; flex-direction:column; gap:6px; z-index:20; }
 .rv-dropdown button { background:transparent; color:#fff; border:none; text-align:left; padding:6px 8px; border-radius:4px; cursor:pointer; font-size:13px; }
 .rv-dropdown button:hover { background:#1b3a42; }
 .rv-divider { height:1px; background:#274851; margin:4px 0; }
 .rv-form-inline { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
 .rv-form-inline select, .rv-form-inline input { background:#0e1d21; color:#fff; border:1px solid #274851; border-radius:4px; padding:4px 8px; font-size:12px; }
-=======
 .rv-dropdown { 
   position:absolute; 
   top:110%;
@@ -198,7 +195,6 @@
   padding:4px 8px; 
   font-size:12px; 
 }
->>>>>>> Stashed changes
 .rv-form-inline button { background:#274851; color:#fff; border:1px solid transparent; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:12px; }
 
 .rv-seek-wrapper {  
@@ -253,10 +249,8 @@
   font-size:0.8rem; 
   transition:0.2s; 
 }
-<<<<<<< Updated upstream
 .rv-buttons button:hover { transform:scale(1.04); }
 .rv-status { margin-top:8px; font-size:0.7rem; text-align:center; color:#444; }
-=======
 .rv-buttons button:hover { 
   transform:scale(1.04);
   opacity: 0.9;
@@ -267,7 +261,6 @@
   text-align:center; 
   color:#444; 
 }
->>>>>>> Stashed changes
 
 .netlink-graph-container { 
   width: 100%; 
@@ -292,7 +285,23 @@
   color: #a9a9a9;
 }
 
+.details-red{
+  background-color: #fff;
+  margin: 0 0 1vh 0;
+  padding: 1vh;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+.relacion{
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+  margin: 0 1vh 0 0;
+}
+.legend-color{
+  margin: 0 0.5vh 0 0;
 }

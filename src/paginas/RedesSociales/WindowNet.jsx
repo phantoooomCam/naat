@@ -356,13 +356,13 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
               const t = ele.data("relation_type") || ele.data("rel");
               switch (t) {
                 case "comentó":
-                  return "#192338";
+                  return "#15a7e6";
                 case "seguido":
                   return "#FF4E45";
                 case "seguidor":
                   return "#075056";
                 case "reaccionó":
-                  return "#31487a";
+                  return "#e6de0b";
                 default:
                   return "#999";
               }
@@ -372,13 +372,13 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
               const t = ele.data("relation_type") || ele.data("rel");
               switch (t) {
                 case "comentó":
-                  return "#192338";
+                  return "#15a7e6";
                 case "seguido":
                   return "#FF4E45";
                 case "seguidor":
                   return "#075056";
                 case "reaccionó":
-                  return "#31487a";
+                  return "#e6de0b";
                 default:
                   return "#1A2D42";
               }

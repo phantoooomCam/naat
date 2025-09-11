@@ -35,13 +35,23 @@ const VinculosRedes = ({ activeView }) => {
 };
 
 //Funcion General
-import WindowNet from './WindowNet.jsx';
-import RedVinculosPanel from './RedVinculosPanel.jsx';
+import WindowNet from "./WindowNet.jsx";
+import RedVinculosPanel from "./RedVinculosPanel.jsx";
 
 const Redes = () => {
   const netRef = useRef(null);
   const [graphData, setGraphData] = useState(null);
-  const handleGraphData = (data) => { setGraphData(data); };
+  const relaciones_ = {
+    comentó: { color: "#15a7e6" },
+    seguido: { color: "#FF4E45" },
+    seguidor: { color: "#075056" },
+    reaccionó: { color: "#e6de0b" },
+    default: { color: "#1A2D42" },
+  };
+
+  const handleGraphData = (data) => {
+    setGraphData(data);
+  };
 
   return (
     <div className="redes-main-container">
@@ -59,11 +69,28 @@ const Redes = () => {
         </div>
 
         <div className="section-right">
+          <div className="details-red">
+            Tipos de relación:
+            <div className="network-legend">
+              <div className="legend-item">
+                {Object.entries(relaciones_).map(([item, info], index) => (
+                  <div className="relacion">
+                    <div
+                      className="legend-color"
+                      style={{ backgroundColor: info.color }}
+                    ></div>
+                    <div className="relacion-nombre">
+                      {item}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
           <div className="content-display-area">
             <WindowNet ref={netRef} elements={graphData} />
           </div>
         </div>
-
       </div>
     </div>
   );
