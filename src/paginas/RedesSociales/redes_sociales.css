@@ -49,18 +49,19 @@
 }
 .section-left{
   width: 100%;
+  height: auto;
 }
 .section-right{
   width: 100%;
+  height: 100%;
 }
 
 .inputs-wrapper-card {
-  background: white;
+  background-color: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
   transition: box-shadow 0.3s ease;
-  flex: 1;
+  padding: 0 0 1vh 0;
 }
 
 .inputs-wrapper-card:hover {
@@ -85,12 +86,12 @@
 
 
 .content-display-area {
+  height: 60vh;
   background: white;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   transition: box-shadow 0.3s ease;
-  flex: 1;
   padding: 0;
 }
 
@@ -109,7 +110,7 @@
   justify-content: center;
   align-items:center;
   flex-direction: column;
-  padding:8px 12px; 
+  padding:0 1vh;
   color:#000; 
   border-bottom:1px solid #1c3035; 
 }
@@ -141,12 +142,63 @@
   justify-content: center;
   width: 100%;
 }
+<<<<<<< Updated upstream
 .rv-dropdown { position:absolute; top:110%; left:0; min-width:210px; background:#122E34; border:1px solid #274851; border-radius:8px; padding:8px; display:flex; flex-direction:column; gap:6px; z-index:20; }
 .rv-dropdown button { background:transparent; color:#fff; border:none; text-align:left; padding:6px 8px; border-radius:4px; cursor:pointer; font-size:13px; }
 .rv-dropdown button:hover { background:#1b3a42; }
 .rv-divider { height:1px; background:#274851; margin:4px 0; }
 .rv-form-inline { display:flex; gap:4px; align-items:center; flex-wrap:wrap; }
 .rv-form-inline select, .rv-form-inline input { background:#0e1d21; color:#fff; border:1px solid #274851; border-radius:4px; padding:4px 8px; font-size:12px; }
+=======
+.rv-dropdown { 
+  position:absolute; 
+  top:110%;
+  left:0; 
+  min-width:210px; 
+  background:var(--sidebar-bg); 
+  border:1px solid #274851; 
+  border-radius:8px; 
+  padding:8px; 
+  display:flex; 
+  flex-direction:column; 
+  gap:6px; 
+  z-index:20; 
+}
+.rv-dropdown button { 
+  background:transparent; 
+  color:#000;  
+  text-align:left; 
+  padding:6px 8px; 
+  border-radius:4px; 
+  cursor:pointer;
+  background-color: #fff; 
+  font-size:13px;
+  transition: 0.9s ease;
+}
+.rv-dropdown button:hover { 
+  background-color: #bababa;
+}
+.rv-divider { 
+  height:1px; 
+  background:#fff; 
+  margin:4px 0; 
+}
+.rv-form-inline { 
+  display:flex; 
+  gap:4px; 
+  align-items:center; 
+  flex-wrap:wrap; 
+}
+.rv-form-inline select,
+ .rv-form-inline input { 
+  background:#0e1d21; 
+  color:#fff; 
+  border:1px solid #274851; 
+  border-radius:4px; 
+  padding:4px 8px; 
+  font-size:12px; 
+}
+>>>>>>> Stashed changes
 .rv-form-inline button { background:#274851; color:#fff; border:1px solid transparent; border-radius:4px; padding:4px 8px; cursor:pointer; font-size:12px; }
 
 .rv-seek-wrapper {  
@@ -201,14 +253,43 @@
   font-size:0.8rem; 
   transition:0.2s; 
 }
+<<<<<<< Updated upstream
 .rv-buttons button:hover { transform:scale(1.04); }
 .rv-status { margin-top:8px; font-size:0.7rem; text-align:center; color:#444; }
+=======
+.rv-buttons button:hover { 
+  transform:scale(1.04);
+  opacity: 0.9;
+}
+.rv-status { 
+  margin-top: none; 
+  font-size:0.7rem; 
+  text-align:center; 
+  color:#444; 
+}
+>>>>>>> Stashed changes
 
-.netlink-graph-container { width:100%; height:100%; }
+.netlink-graph-container { 
+  width: 100%; 
+  height: 90vh;
+}
 
 .spinner {
-  color: #fff;
+  color: #0e1d21;
+  border: none;
   animation: spin 1s linear infinite;
+}
+.rv-buttons button:disabled {
+  background-color: #d3d3d3;
+  color: #a9a9a9; 
+  cursor: not-allowed;
+  opacity: 0.6;
+  transition: background-color 0.3s ease, opacity 0.3s ease;
+  pointer-events: none;
+}
+.rv-buttons button:disabled:hover {
+  background-color: #d3d3d3;
+  color: #a9a9a9;
 }
 
 @keyframes spin {

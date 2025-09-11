@@ -17,7 +17,7 @@ cytoscape.use(edgehandles);
 cytoscape.use(cxtmenu);
 cytoscape.use(undoRedo);
 
-// const SERVER_BASE = "http://192.168.100.207:8000"; // replaced by relative proxied paths
+const SERVER_BASE = "http://192.168.100.207:8000"; // replaced by relative proxied paths
 
 // Layout rectangular adaptado
 const applyRectangularLayout = (cy, rootId, _containerRef, opts = {}) => {
