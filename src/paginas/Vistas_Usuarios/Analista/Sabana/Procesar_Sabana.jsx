@@ -416,6 +416,39 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       const numeroData = await numeroResponse.json();
       const idNumeroTelefonico = numeroData.id;
 
+      const unionCaso = {
+        idNumeroTelefonico: idNumeroTelefonico,
+      };
+
+      console.log("ID Caso Seleccionado:", casoSeleccionado);
+      console.log("Payload de Unión:", unionCaso);
+      try {
+        const casoUnion = await fetchWithAuth(
+          `/api/sabanas/numeros-telefonicos-casos/${casoSeleccionado}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(unionCaso),
+          }
+        );
+
+        if (!casoUnion) {
+          throw new Error("No se recibió respuesta del servidor.");
+        }
+
+        if (!casoUnion.ok) {
+          const errorData = await casoUnion.json();
+          throw new Error(
+            errorData?.mensaje || "Error al unir el número con el dato"
+          );
+        }
+
+        const unionData = await casoUnion.json();
+        console.log("Relación creada correctamente:", unionData);
+      } catch (error) {
+        console.error("Error al guardar en la BD:", error.message);
+      }
+
       const formData = new FormData();
       for (let i = 0; i < files.length; i++) {
         if (files[i].rawFile) {
