@@ -266,6 +266,7 @@
   border:none; 
   border-radius:6px; 
   background: var(--sidebar-active); 
+
   color:#fff; 
   cursor:pointer; 
   font-size:0.8rem; 
@@ -277,6 +278,7 @@
   transform:scale(1.04);
   opacity: 0.9;
 }
+
 .rv-status { 
   margin-top: none; 
   font-size:0.7rem; 
@@ -326,4 +328,5 @@
 }
 .legend-color{
   margin: 0 0.5vh 0 0;
+
 }

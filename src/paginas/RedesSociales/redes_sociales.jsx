@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./redes_sociales.css";
+import "../../componentes/RedVinculos.css";
 
 //Funcion para ActiveView
 const VinculosRedes = ({ activeView }) => {
@@ -41,6 +42,7 @@ import RedVinculosPanel from "./RedVinculosPanel.jsx";
 const Redes = () => {
   const netRef = useRef(null);
   const [graphData, setGraphData] = useState(null);
+
   const relaciones_ = {
     comentó: { color: "#15a7e6" },
     seguido: { color: "#FF4E45" },
@@ -48,11 +50,17 @@ const Redes = () => {
     reaccionó: { color: "#e6de0b" },
     default: { color: "#1A2D42" },
   };
-
   const handleGraphData = (data) => {
     setGraphData(data);
   };
 
+  const relaciones = {
+    seguidor: {color: "#2885B0"},
+    seguido: {color: "#FF4E45"},
+    comentó: {color: "#32B028"},
+    reaccionó: {color: "#F538CC"},
+    default: {color: "#1A2D42"},
+  };
   return (
     <div className="redes-main-container">
       <div className="redes-title-section">

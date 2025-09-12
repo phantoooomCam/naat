@@ -173,7 +173,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
             <button type="submit" disabled={loading}>
               {loading ? (
                 <span>
-                  <ImSpinner className="spinner" /> Buscando...
+                  <ImSpinner className="spinner" />
                 </span>
               ) : (
                 "Buscar"
@@ -189,7 +189,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
           </div>
         </form>
         <div className="rv-status">
-          {dataResult ? `Datos cargados.` : "No hay información aún"}
+          {dataResult ? `Cargado` : "No hay información aún"}
         </div>
       </div>
 
@@ -203,10 +203,8 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
             </button>
             {openMenu === "archivo" && (
               <div className="rv-dropdown">
-                <label htmlFor="" className="seccion-submenu-rv">
-                  Red de vinculos
-                </label>
-                <button onClick={() => call("saveGraph")}>Guardar red de vinculos</button>
+                <button onClick={() => call("saveGraph")}>Guardar grafo</button>
+                <div className="rv-divider" />
                 <div className="rv-form-inline">
                   <select
                     value={loadPlatform}
@@ -234,6 +232,8 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
                     Cargar red de vinculos
                   </button>
                 </div>
+                <div className="rv-divider" />
+                <button onClick={() => call("loadFromLocal")}>Cargar desde archivo</button>
                 <div className="rv-divider" />
                 <label htmlFor="" className="seccion-submenu-rv">
                   Archivo
