@@ -175,7 +175,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
             disabled={loading}>
               {loading ? (
                 <span>
-                  <ImSpinner className="spinner" /> Buscando...
+                  <ImSpinner className="spinner" />
                 </span>
               ) : (
                 "Buscar"
@@ -191,7 +191,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
           </div>
         </form>
         <div className="rv-status">
-          {dataResult ? `Datos cargados.` : "No hay información aún"}
+          {dataResult ? `Cargado` : "No hay información aún"}
         </div>
       </div>
 
@@ -206,6 +206,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
             {openMenu === "archivo" && (
               <div className="rv-dropdown">
                 <button onClick={() => call("saveGraph")}>Guardar grafo</button>
+                <button onClick={() => call("saveAsLocal")}>Guardar como (archivo)</button>
                 <div className="rv-divider" />
                 <div className="rv-form-inline">
                   <select
@@ -233,6 +234,8 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
                     Cargar
                   </button>
                 </div>
+                <div className="rv-divider" />
+                <button onClick={() => call("loadFromLocal")}>Cargar desde archivo</button>
                 <div className="rv-divider" />
                 <button onClick={() => call("exportToExcel")}>
                   Exportar a Excel

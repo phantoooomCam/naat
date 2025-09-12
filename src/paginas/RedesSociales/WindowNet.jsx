@@ -19,15 +19,128 @@ cytoscape.use(undoRedo);
 
 const SERVER_BASE = "http://192.168.100.207:8000"; // replaced by relative proxied paths
 
+// -----------------------------
+// Config / Helpers
+// -----------------------------
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "webp"]; // extensiones aceptadas en frontend
+const LS_KEY_NODE_IMAGES = "windowNetNodeImages"; // persistencia local temporal (hasta que backend guarde en perfiles)
+const IMAGE_RETRY_DELAY = 250; // ms para un retry tras 404
+
+// Helpers: simple file picker for local files
+function pickLocalFile({ accept } = {}) {
+  return new Promise((resolve) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    if (accept) input.accept = accept;
+    input.onchange = () => resolve(input.files?.[0] || null);
+    input.click();
+  });
+}
+
+// Persistencia local de imagenes para nodos (clave = username/id)
+function loadPersistedNodeImages() {
+  try {
+    const raw = localStorage.getItem(LS_KEY_NODE_IMAGES);
+    if (!raw) return {};
+    return JSON.parse(raw) || {};
+  } catch {
+    return {};
+  }
+}
+
+function persistNodeImage(nodeId, url) {
+  try {
+    const current = loadPersistedNodeImages();
+    current[nodeId] = url;
+    localStorage.setItem(LS_KEY_NODE_IMAGES, JSON.stringify(current));
+  } catch {
+    // ignore
+  }
+}
+
+function removePersistedNodeImage(nodeId) {
+  try {
+    const current = loadPersistedNodeImages();
+    if (current[nodeId]) {
+      delete current[nodeId];
+      localStorage.setItem(LS_KEY_NODE_IMAGES, JSON.stringify(current));
+    }
+  } catch {}
+}
+
+function resolveStoredUrl(raw) {
+  // Alias aceptados actualmente: /data/storage/... y /storage/...
+  if (typeof raw !== "string") return raw;
+  if (raw.startsWith("/data/storage/images/")) return raw;
+  if (raw.startsWith("/storage/images/")) return raw; // alias backend
+  return raw; // fallback (posible CDN futuro)
+}
+
+// Validar imagen antes de subir
+function validateImageFile(file) {
+  if (!file) throw new Error("No se seleccionó archivo");
+  if (file.size > MAX_IMAGE_SIZE) {
+    throw new Error("El archivo supera 2MB");
+  }
+  const ext = (file.name.split(".").pop() || "").toLowerCase();
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    throw new Error(
+      `Extensión no permitida (.${ext}). Use: ${ALLOWED_EXTENSIONS.join(", ")}`
+    );
+  }
+  if (!file.type.startsWith("image/")) {
+    throw new Error("El archivo debe ser una imagen válida");
+  }
+}
+
+// Subir imagen al backend y devolver la URL pública (contrato actual)
+async function uploadImageToBackend(file) {
+  validateImageFile(file);
+  const form = new FormData();
+  form.append("file", file);
+  // Determinar endpoint real: si backend expone /files/upload-image (anterior) o /upload-image
+  // Preferimos usar /api/upload-image si se coloca detrás del proxy /api (ya existente)
+  // Fallback: /upload-image
+  const candidates = ["/api/upload-image", "/upload-image", "/files/upload-image"]; // orden de prueba
+  let lastError = null;
+  let resp = null;
+  for (const url of candidates) {
+    try {
+      resp = await fetch(url, { method: "POST", body: form, credentials: "include" });
+      if (resp.status !== 404) {
+        // Si no es 404 asumimos que este endpoint responde (200, 400, etc.)
+        break;
+      }
+      lastError = `Endpoint ${url} devolvió 404`;
+    } catch (e) {
+      lastError = e.message;
+    }
+  }
+  if (!resp) throw new Error(lastError || "No se pudo contactar al backend");
+  if (!resp.ok) {
+    let detail = `Error ${resp.status}`;
+    try {
+      const errJson = await resp.json();
+      detail = errJson?.detail || errJson?.error || detail;
+    } catch {}
+    throw new Error(`${detail}${lastError ? ` (${lastError})` : ""}`);
+  }
+  const json = await resp.json();
+  if (!json?.url) throw new Error("Respuesta sin url");
+  // Ya no normalizamos: usar exactamente la URL que devuelve backend
+  return json.url;
+}
+
 // Layout rectangular adaptado
 const applyRectangularLayout = (cy, rootId, _containerRef, opts = {}) => {
   if (!cy) return;
   const {
-    cols = 14,
+    cols = 20,
     cellW = 310,
     cellH = 310,
-    gapX = 10,
-    gapY = 10,
+    gapX = 50,
+    gapY = 50,
     leftPad = 260,
     topPad = 80,
     rootOffsetX = 140,
@@ -136,6 +249,49 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
   const [platformLoad, setPlatformLoad] = useState(null);
   const [usernameLoad, setUsernameLoad] = useState(null);
 
+  // Shared helper to open picker and update a node photo via undo/redo
+  const attemptApplyNodeImage = (cy, nodeId, url, attempt = 1) => {
+    const img = new Image();
+    img.onload = () => {
+      const ele = cy.$id(nodeId);
+      if (ele && ele.nonempty()) {
+        ele.data("photo_url", url);
+        cy.style().update();
+      }
+    };
+    img.onerror = () => {
+      if (attempt === 1) {
+        setTimeout(() => attemptApplyNodeImage(cy, nodeId, url, 2), IMAGE_RETRY_DELAY);
+      } else {
+        console.warn("Imagen no accesible tras retry, limpiando:", url);
+        removePersistedNodeImage(nodeId);
+        const ele = cy.$id(nodeId);
+        if (ele && ele.nonempty()) {
+          ele.data("photo_url", "");
+          cy.style().update();
+        }
+      }
+    };
+    img.src = url;
+  };
+
+  const openPhotoPickerAndUpdateNode = async (nodeId, cy) => {
+    try {
+      const file = await pickLocalFile({ accept: "image/*" });
+      if (!file) return; // usuario canceló
+      const newUrl = await uploadImageToBackend(file);
+      // Persistir localmente para rehidratar
+      persistNodeImage(nodeId, newUrl);
+      // Verificar accesibilidad antes de aplicar (se aplicará al onload)
+      attemptApplyNodeImage(cy, nodeId, newUrl);
+      // Undo/redo mantiene consistencia de data (photo_url) si se hace revert
+      if (ur.current) ur.current.do("updateNodePhoto", { id: nodeId, newUrl });
+    } catch (e) {
+      console.error(e);
+      alert(e.message || "No se pudo actualizar la foto del nodo.");
+    }
+  };
+
   const attachPluginsAndMenus = (cy) => {
     try {
       cy.edgehandles && cy.edgehandles({});
@@ -215,20 +371,12 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
       });
       menusRef.current = [];
     }
-    const nodeMenu = cy.cxtmenu({
+  const nodeMenu = cy.cxtmenu({
       selector: "node",
       commands: [
         {
           content: "Editar Foto",
-          select: (ele) => {
-            const newUrl = prompt(
-              "Nueva URL de la foto:",
-              ele.data("photo_url")
-            );
-            if (newUrl !== null && ur.current) {
-              ur.current.do("updateNodePhoto", { id: ele.id(), newUrl });
-            }
-          },
+      select: (ele) => openPhotoPickerAndUpdateNode(ele.id(), cy),
         },
         {
           content: "Editar Nombre",
@@ -332,8 +480,9 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
             "background-image": (ele) => ele.data("photo_url") || "none",
             "background-fit": "cover",
             "background-opacity": 1,
-            width: (ele) => (ele.data("tipo") === "perfil" ? 300 : 280),
-            height: (ele) => (ele.data("tipo") === "perfil" ? 300 : 280),
+            width: (ele) => (ele.data("tipo") === "perfil" ? "400rem" : "395rem"),
+            height: (ele) => (ele.data("tipo") === "perfil" ? "400rem" : "395rem"),
+            "font-size": "20rem",
           },
         },
         {
@@ -344,14 +493,16 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
             "text-opacity": 1,
             "text-valign": "bottom",
             "text-halign": "center",
+            "font-size": "100rem",
           },
         },
         {
           selector: "edge",
           style: {
             label: (ele) => ele.data("relation_type") || ele.data("rel") || "",
-            width: 7,
+            width: 20,
             "text-rotation": "autorotate",
+            "font-size":"80rem",
             "line-color": (ele) => {
               const t = ele.data("relation_type") || ele.data("rel");
               switch (t) {
@@ -360,11 +511,11 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
                 case "seguido":
                   return "#FF4E45";
                 case "seguidor":
-                  return "#075056";
+                  return "#2885B0";
                 case "reaccionó":
                   return "#e6de0b";
                 default:
-                  return "#999";
+                  return "#1A2D42";
               }
             },
             "target-arrow-shape": "triangle",
@@ -373,12 +524,14 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
               switch (t) {
                 case "comentó":
                   return "#15a7e6";
+
                 case "seguido":
                   return "#FF4E45";
                 case "seguidor":
-                  return "#075056";
+                  return "#2885B0";
                 case "reaccionó":
                   return "#e6de0b";
+
                 default:
                   return "#1A2D42";
               }
@@ -389,6 +542,41 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
       ],
     });
     cyRef.current = cy;
+    // Rehidratar imágenes persistidas comprobando 404 y retry
+    try {
+      const persisted = loadPersistedNodeImages();
+      if (persisted && typeof persisted === "object") {
+        Object.entries(persisted).forEach(([id, rawUrl]) => {
+          const url = resolveStoredUrl(rawUrl);
+            const n = cy.$id(id);
+            if (!n || n.empty()) return;
+            // Si ya trae photo_url desde backend, no sobreescribir
+            if (n.data("photo_url")) return;
+            // Intentar cargar (aplicación diferida al onload)
+            const img = new Image();
+            img.onload = () => {
+              n.data("photo_url", url);
+              cy.style().update();
+            };
+            img.onerror = () => {
+              // Retry único
+              setTimeout(() => {
+                const img2 = new Image();
+                img2.onload = () => {
+                  n.data("photo_url", url);
+                  cy.style().update();
+                };
+                img2.onerror = () => {
+                  console.warn("Rehidratación fallida imagen nodo", id, url);
+                  removePersistedNodeImage(id);
+                };
+                img2.src = url;
+              }, IMAGE_RETRY_DELAY);
+            };
+            img.src = url;
+        });
+      }
+    } catch {}
     attachPluginsAndMenus(cy);
     return cy;
   };
@@ -414,8 +602,8 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     applyRectangularLayout(cy, root, containerRef, {
       cellW: 510,
       cellH: 510,
-      gapX: 10,
-      gapY: 10,
+      gapX: 50,
+      gapY: 50,
       topPad: 80,
       leftPad: 140,
       rootOffsetX: 140,
@@ -468,15 +656,12 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
       cy.endBatch();
     }
   };
-  const editNodePhoto = () => {
+  const editNodePhoto = async () => {
     const cy = ensureCy();
     if (!cy) return;
     const n = cy.$("node:selected").first();
     if (n && n.length) {
-      const newUrl = prompt("Nueva URL de la foto:", n.data("photo_url") || "");
-      if (newUrl !== null && ur.current) {
-        ur.current.do("updateNodePhoto", { id: n.id(), newUrl });
-      }
+      await openPhotoPickerAndUpdateNode(n.id(), cy);
     } else alert("Selecciona un nodo para editar su foto.");
   };
   const editNodeName = () => {
@@ -638,6 +823,125 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     }
   };
 
+  // Guardar grafo como archivo local (JSON) con File System Access API + fallback
+  const saveGraphAsLocalFile = async () => {
+    const cy = cyRef.current;
+    if (!cy) return;
+    const payload = {
+      elements: {
+        nodes: cy.nodes().map((n) => ({
+          data: n.data(),
+          position: n.position(),
+        })),
+        edges: cy.edges().map((e) => ({ data: e.data() })),
+      },
+      layout: { name: "preset" },
+      meta: { exported_at: new Date().toISOString() },
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json",
+    });
+    const defaultName = "grafo.json";
+    try {
+      if ("showSaveFilePicker" in window) {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: defaultName,
+          types: [
+            { description: "JSON", accept: { "application/json": [".json"] } },
+          ],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = defaultName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("No se pudo guardar el archivo local.");
+    }
+  };
+
+  // Cargar grafo desde archivo local (JSON) y renderizarlo
+  const loadGraphFromLocalFile = async () => {
+    try {
+      const file = await pickLocalFile({ accept: "application/json" });
+      if (!file) return;
+      const text = await file.text();
+      const json = JSON.parse(text);
+
+      const cy = ensureCy();
+      if (!cy) return;
+
+      let nodes = [];
+      let edges = [];
+
+      // Formato sesión guardada
+      if (Array.isArray(json?.elements?.nodes) || Array.isArray(json?.elements?.edges)) {
+        nodes = json.elements.nodes || [];
+        edges = json.elements.edges || [];
+      // Formato crudo (scrape/related)
+      } else if (json?.["Perfil objetivo"]) {
+        const built = buildGraphData(json);
+        const sep = built.reduce(
+          (acc, el) => {
+            if (el.data?.source) acc.edges.push(el);
+            else acc.nodes.push(el);
+            return acc;
+          },
+          { nodes: [], edges: [] }
+        );
+        nodes = sep.nodes;
+        edges = sep.edges;
+      } else {
+        alert("Formato de archivo no reconocido.");
+        return;
+      }
+
+      cy.startBatch();
+      cy.elements().remove();
+      cy.add([...(nodes || []), ...(edges || [])]);
+      cy.endBatch();
+      cy.nodes().grabify();
+
+      const rootId =
+        json?.["Perfil objetivo"]?.username ||
+        nodes?.find?.((n) => n?.data?.tipo === "perfil")?.data?.id ||
+        nodes?.[0]?.data?.id ||
+        null;
+
+      const hasPreset =
+        json?.layout?.name === "preset" &&
+        (nodes || []).some((n) => n?.position && typeof n.position.x === "number");
+
+      if (hasPreset) {
+        cy.layout({ name: "preset" }).run();
+      } else {
+        applyRectangularLayout(cy, rootId, containerRef, {
+          cellW: 310,
+          cellH: 310,
+          gapX: 10,
+          gapY: 10,
+          leftPad: 240,
+          topPad: 80,
+          rootOffsetX: 140,
+        });
+      }
+      cy.fit();
+      attachPluginsAndMenus(cy);
+    } catch (e) {
+      console.error(e);
+      alert("No se pudo cargar el archivo local.");
+    }
+  };
+
   const saveGraph = async () => {
     if (!cyRef.current) return;
     const cy = cyRef.current;
@@ -768,8 +1072,8 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
         applyRectangularLayout(cy, username, containerRef, {
           cellW: 310,
           cellH: 310,
-          gapX: 10,
-          gapY: 10,
+          gapX: 50,
+          gapY: 50,
           leftPad: 240,
           topPad: 80,
           rootOffsetX: 140,
@@ -798,17 +1102,19 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
       undo,
       redo,
       exportToExcel,
+  saveAsLocal: saveGraphAsLocalFile,
+  loadFromLocal: loadGraphFromLocalFile,
       layoutRectangular: () => {
         if (!cyRef.current) return;
         const cy = cyRef.current;
         const root =
           elements?.["Perfil objetivo"]?.["username"] || usernameLoad || null;
         applyRectangularLayout(cy, root, {
-          cols: 14,
+          cols: 20,
           cellW: 310,
           cellH: 310,
-          gapX: 10,
-          gapY: 10,
+          gapX: 50,
+          gapY: 50,
           leftPad: 260,
           topPad: 80,
           rootOffsetX: 140,
@@ -830,8 +1136,8 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     applyRectangularLayout(cy, root, containerRef, {
       cellW: 510,
       cellH: 510,
-      gapX: 10,
-      gapY: 10,
+      gapX: 50,
+      gapY: 50,
       topPad: 80,
       leftPad: 140,
       rootOffsetX: 140,
