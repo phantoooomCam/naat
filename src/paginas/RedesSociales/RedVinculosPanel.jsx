@@ -8,6 +8,7 @@ import { ImSpinner } from "react-icons/im";
 const RedVinculosPanel = ({ netRef, onGraphData }) => {
   const platformOptions = ["facebook", "instagram", "x"];
   const [openMenu, setOpenMenu] = useState(null);
+  const [openSubmenu, setOpenSubmenu] = useState(null);
   const [formState, setFormState] = useState(() => {
     const saved = localStorage.getItem("rv_formState");
     return saved
@@ -23,8 +24,14 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
     localStorage.setItem("rv_formState", JSON.stringify(formState));
   }, [formState]);
 
-  const toggle = (menu) => setOpenMenu((m) => (m === menu ? null : menu));
+  const toggle = (menu) => {
+    setOpenMenu((m) => (m === menu ? null : menu));
+    setOpenSubmenu(null);
+  };
 
+  const toggleSub = (submenu) => {
+    setOpenSubmenu((s) => (s === submenu ? null : submenu));
+  };
   const handleInputChange = (name, value) => {
     setFormState((prev) => {
       const ns = { ...prev, [name]: value };
@@ -199,49 +206,70 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
         <div className="rv-left">
           <div className="rv-section">
             <button className="rv-item" onClick={() => toggle("archivo")}>
-              Acciones con mi Red de vinculos ▾
+              Archivos ▾
             </button>
+
             {openMenu === "archivo" && (
-              <div className="rv-dropdown">
-                <button onClick={() => call("saveGraph")}>Guardar grafo</button>
-                <div className="rv-divider" />
-                <div className="rv-form-inline">
-                  <select
-                    value={loadPlatform}
-                    onChange={(e) => setLoadPlatform(e.target.value)}
-                  >
-                    <option value="">plataforma</option>
-                    {platformOptions.map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="text"
-                    placeholder="usuario"
-                    value={loadUsername}
-                    onChange={(e) => setLoadUsername(e.target.value)}
-                  />
-                  <button
-                    className="btn-save"
-                    onClick={() =>
-                      call("loadGraph", loadPlatform, loadUsername)
-                    }
-                  >
-                    Cargar red de vinculos
-                  </button>
+              <div className="rv-dropdown" style={{ borderTopLeftRadius:'10px', borderTopRightRadius:'10px'}}>
+                <label className="seccion-submenu-rv" style={{ borderTopLeftRadius:'10px', borderTopRightRadius:'10px'}} >Red de vínculos</label>
+
+                <button
+                  className="seccion-submenu-rv-2"
+                  type="button"
+                  onClick={() => toggleSub("cargarGrafo")}
+                >
+                  Cargar red de vínculos ▾
+                </button>
+
+                {/* Submenú animable */}
+                <div className="rv-subdropdown">
+                  {openSubmenu === "cargarGrafo" && (
+                    <div className="rv-form-inline">
+                      <select
+                        value={loadPlatform}
+                        onChange={(e) => setLoadPlatform(e.target.value)}
+                      >
+                        <option value="">plataforma</option>
+                        {platformOptions.map((p) => (
+                          <option key={p} value={p}>
+                            {p}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="usuario"
+                        value={loadUsername}
+                        onChange={(e) => setLoadUsername(e.target.value)}
+                      />
+                      <button
+                        className="btn-save"
+                        type="button"
+                        onClick={() =>
+                          call("loadGraph", loadPlatform, loadUsername)
+                        }
+                      >
+                        Cargar red de vínculos
+                      </button>
+                    </div>
+                  )}
                 </div>
+
+                <button onClick={() => call("saveGraph")} type="button">
+                  Guardar grafo
+                </button>
+                <button onClick={() => call("loadFromLocal")} type="button">
+                  Cargar desde archivo
+                </button>
                 <div className="rv-divider" />
-                <button onClick={() => call("loadFromLocal")}>Cargar desde archivo</button>
-                <div className="rv-divider" />
-                <label htmlFor="" className="seccion-submenu-rv">
-                  Archivo
-                </label>
-                <button onClick={() => call("saveGraphAsLocalFile")}>
+                <label className="seccion-submenu-rv">Archivo</label>
+                <button
+                  onClick={() => call("saveGraphAsLocalFile")}
+                  type="button"
+                >
                   Guardar archivo local
                 </button>
-                <button onClick={() => call("exportToExcel")}>
+                <button onClick={() => call("exportToExcel")} type="button">
                   Exportar a Excel
                 </button>
               </div>
@@ -253,7 +281,9 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
             </button>
             {openMenu === "insertar" && (
               <div className="rv-dropdown">
-                <button onClick={() => call("createNode")}>Nuevo involucrado</button>
+                <button onClick={() => call("createNode")}>
+                  Nuevo involucrado
+                </button>
                 <button onClick={() => call("createEdge")}>
                   Nuevo vínculo
                 </button>
