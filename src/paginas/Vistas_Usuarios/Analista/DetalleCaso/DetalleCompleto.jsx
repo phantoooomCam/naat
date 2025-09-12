@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
   faArrowLeft,
@@ -22,41 +22,54 @@ import {
   faEnvelope,
   faChevronRight,
 } from "@fortawesome/free-solid-svg-icons"
-import PropTypes from "prop-types"
+import fetchWithAuth from "../../../../utils/fetchWithAuth"
 
-// Componente de vista principal
+// Vista principal de detalle
 const DetalleView = ({ isSidebarCollapsed, casoId }) => {
   const navigate = useNavigate()
   const [casoData, setCasoData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [selectedSection, setSelectedSection] = useState(null)
 
-  // Datos ficticios del caso
+  // --- CARGA REAL DESDE EL BACKEND ---
   useEffect(() => {
-    // Simular carga de datos
-    setTimeout(() => {
-      setCasoData({
-        id: casoId,
-        titulo: "Investigación de Fraude Financiero - Caso #2024-001",
-        descripcion:
-          "Investigación exhaustiva sobre actividades fraudulentas detectadas en transacciones bancarias. Se requiere análisis de múltiples fuentes de información para determinar el alcance y los responsables del fraude.",
-        estado: "En proceso",
-        fechaCreacion: "2024-01-15T10:30:00Z",
-        fechaActualizacion: "2024-01-20T14:45:00Z",
-        asignado: "Ana García Rodríguez",
-        organizacion: "Fiscalía General del Estado",
-        area: "Delitos Financieros",
-        departamento: "Investigación Especializada",
-        prioridad: "Alta",
-        numeroExpediente: "FGE-2024-DF-001",
-        investigadorPrincipal: "Lic. Carlos Mendoza",
-        supervisorCaso: "Mtro. Roberto Silva",
-      })
-      setLoading(false)
-    }, 1000)
+    let alive = true
+    ;(async () => {
+      try {
+        const res = await fetchWithAuth(`/api/casos/${casoId}`)
+        if (!res || !res.ok) throw new Error("No se pudo cargar el caso")
+        const raw = await res.json()
+
+        // Mapeo defensivo hacia las claves usadas por tu UI
+        const data = {
+          id: raw.idCaso ?? raw.id ?? casoId,
+          titulo: raw.nombre ?? raw.titulo ?? "Caso sin título",
+          descripcion: raw.descripcion ?? "",
+          estado: raw.estado ?? "Activo",
+          fechaCreacion: raw.fechaCreacion ?? null,
+          fechaActualizacion: raw.fechaActualizacion ?? null,
+          asignado: raw.asignadoA ?? raw.investigadorPrincipal ?? "—",
+          organizacion: raw.nombreOrganizacion ?? raw.organizacion ?? "No especificada",
+          area: raw.nombreArea ?? raw.area ?? "No especificada",
+          departamento: raw.nombreDepartamento ?? raw.departamento ?? "No especificado",
+          prioridad: raw.prioridad ?? "—",
+          numeroExpediente: raw.folio ?? raw.numeroExpediente ?? `CASO-${casoId}`,
+          investigadorPrincipal: raw.investigadorPrincipal ?? "—",
+          supervisorCaso: raw.supervisorCaso ?? undefined,
+        }
+
+        if (alive) setCasoData(data)
+      } catch (err) {
+        console.error(err)
+        if (alive) setCasoData(null)
+      } finally {
+        if (alive) setLoading(false)
+      }
+    })()
+    return () => { alive = false }
   }, [casoId])
 
-  // Secciones disponibles para el caso
+  // --- SECCIONES DEL CASO (SIN CAMBIOS) ---
   const secciones = [
     {
       id: "redes-sociales",
@@ -141,25 +154,16 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
   ]
 
   const handleSectionClick = (seccion) => {
-    if (seccion.disponible) {
-      setSelectedSection(seccion)
-      // Aquí podrías navegar a una subsección específica
-      console.log(`Navegando a sección: ${seccion.id}`)
-    }
+    if (seccion.disponible) setSelectedSection(seccion)
   }
 
   const getEstadoClass = (estado) => {
-    switch (estado) {
-      case "En proceso":
-        return "estado-en-proceso"
-      case "Activo":
-        return "estado-activo"
-      case "Resuelto":
-        return "estado-resuelto"
-      case "Archivado":
-        return "estado-archivado"
-      default:
-        return ""
+    switch ((estado || "").toLowerCase()) {
+      case "en proceso": return "estado-en-proceso"
+      case "activo":     return "estado-activo"
+      case "resuelto":   return "estado-resuelto"
+      case "archivado":  return "estado-archivado"
+      default:           return ""
     }
   }
 
@@ -206,13 +210,13 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
             <div className="caso-metadata">
               <span className={`estado-badge ${getEstadoClass(casoData.estado)}`}>{casoData.estado}</span>
               <span className="caso-expediente">#{casoData.numeroExpediente}</span>
-              <span className="caso-prioridad prioridad-alta">Prioridad {casoData.prioridad}</span>
+              {casoData.prioridad && <span className="caso-prioridad prioridad-alta">Prioridad {casoData.prioridad}</span>}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Información general del caso */}
+      {/* Información general del caso (datos reales) */}
       <div className="caso-info-grid">
         <div className="info-card">
           <div className="info-header">
@@ -220,7 +224,7 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
             <h3>Información General</h3>
           </div>
           <div className="info-content">
-            <p className="caso-descripcion">{casoData.descripcion}</p>
+            {casoData.descripcion && <p className="caso-descripcion">{casoData.descripcion}</p>}
 
             <div className="info-details">
               <div className="detail-item">
@@ -228,10 +232,9 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
                 <div className="detail-content">
                   <span className="detail-label">Fecha de creación:</span>
                   <span className="detail-value">
-                    {new Date(casoData.fechaCreacion).toLocaleString("es-MX", {
-                      dateStyle: "full",
-                      timeStyle: "short",
-                    })}
+                    {casoData.fechaCreacion
+                      ? new Date(casoData.fechaCreacion).toLocaleString("es-MX", { dateStyle: "full", timeStyle: "short" })
+                      : "—"}
                   </span>
                 </div>
               </div>
@@ -240,7 +243,7 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
                 <FontAwesomeIcon icon={faUser} className="detail-icon" />
                 <div className="detail-content">
                   <span className="detail-label">Investigador principal:</span>
-                  <span className="detail-value">{casoData.investigadorPrincipal}</span>
+                  <span className="detail-value">{casoData.investigadorPrincipal ?? "—"}</span>
                 </div>
               </div>
 
@@ -264,7 +267,7 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
         </div>
       </div>
 
-      {/* Secciones del caso */}
+      {/* --- Secciones del caso (SIN CAMBIOS) --- */}
       <div className="secciones-container">
         <div className="secciones-header">
           <h2>Secciones del Caso</h2>
@@ -275,9 +278,7 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
           {secciones.map((seccion) => (
             <div
               key={seccion.id}
-              className={`seccion-card ${!seccion.disponible ? "disabled" : ""} ${
-                selectedSection?.id === seccion.id ? "selected" : ""
-              }`}
+              className={`seccion-card ${!seccion.disponible ? "disabled" : ""} ${selectedSection?.id === seccion.id ? "selected" : ""}`}
               onClick={() => handleSectionClick(seccion)}
             >
               <div className="seccion-icon-container" style={{ backgroundColor: seccion.color }}>
@@ -307,7 +308,7 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
         </div>
       </div>
 
-      {/* Información adicional */}
+      {/* --- Información adicional (SIN CAMBIOS) --- */}
       <div className="additional-info">
         <div className="info-summary">
           <h3>Resumen del Caso</h3>
@@ -318,7 +319,9 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
             </div>
             <div className="stat-item">
               <span className="stat-number">
-                {Math.floor((Date.now() - new Date(casoData.fechaCreacion).getTime()) / (1000 * 60 * 60 * 24))}
+                {casoData.fechaCreacion
+                  ? Math.floor((Date.now() - new Date(casoData.fechaCreacion).getTime()) / (1000 * 60 * 60 * 24))
+                  : 0}
               </span>
               <span className="stat-label">Días activo</span>
             </div>
@@ -333,9 +336,10 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
   )
 }
 
-// Componente principal con estructura dash-home y container
-const DetalleCompleto = ({ casoId }) => {
+// Componente principal: obtiene :id de la URL y lo pasa a la vista
+const DetalleCompleto = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const { id } = useParams()
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -344,25 +348,17 @@ const DetalleCompleto = ({ casoId }) => {
         setIsSidebarCollapsed(sidebar.classList.contains("closed"))
       }
     })
-
     observer.observe(document.body, { attributes: true, subtree: true })
-
     return () => observer.disconnect()
   }, [])
 
-  const views = {
-    detalle: <DetalleView isSidebarCollapsed={isSidebarCollapsed} casoId={casoId} />,
-  }
-
   return (
     <div className={`dash-home ${isSidebarCollapsed ? "collapsed" : ""}`}>
-      <div className="container">{views.detalle}</div>
+      <div className="container">
+        <DetalleView isSidebarCollapsed={isSidebarCollapsed} casoId={id} />
+      </div>
     </div>
   )
-}
-
-DetalleCompleto.propTypes = {
-  casoId: PropTypes.string.isRequired,
 }
 
 export default DetalleCompleto
