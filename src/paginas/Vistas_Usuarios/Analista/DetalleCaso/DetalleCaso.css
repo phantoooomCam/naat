@@ -321,12 +321,6 @@
   background-color: rgba(51, 96, 141, 0.05);
 }
 
-.seccion-card.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  background-color: #f8f9fa;
-}
-
 .seccion-icon-container {
   display: flex;
   align-items: center;
@@ -359,29 +353,6 @@
   color: var(--text-secondary);
   line-height: 1.4;
   margin-bottom: 0.75rem;
-}
-
-.seccion-status {
-  display: flex;
-  align-items: center;
-}
-
-.status-disponible {
-  background-color: rgba(44, 122, 123, 0.15);
-  color: #10b981;
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.status-no-disponible {
-  background-color: rgba(100, 116, 139, 0.15);
-  color: #64748b;
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 600;
 }
 
 .seccion-arrow {
