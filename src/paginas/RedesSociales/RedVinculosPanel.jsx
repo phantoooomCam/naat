@@ -238,7 +238,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
                 <label htmlFor="" className="seccion-submenu-rv">
                   Archivo
                 </label>
-                <button onClick={() => call("exportToExcel")}>
+                <button onClick={() => call("saveGraphAsLocalFile")}>
                   Guardar archivo local
                 </button>
                 <button onClick={() => call("exportToExcel")}>
