@@ -102,7 +102,7 @@ async function uploadImageToBackend(file) {
   // Determinar endpoint real: si backend expone /files/upload-image (anterior) o /upload-image
   // Preferimos usar /api/upload-image si se coloca detrás del proxy /api (ya existente)
   // Fallback: /upload-image
-  const candidates = ["/api/upload-image", "/upload-image", "/files/upload-image"]; // orden de prueba
+  const candidates = ["/files/upload-image"]; // orden de prueba
   let lastError = null;
   let resp = null;
   for (const url of candidates) {
