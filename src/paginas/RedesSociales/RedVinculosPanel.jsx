@@ -1,6 +1,6 @@
 // Fusion of WindowSeek + Navbar for RedesSociales module
 import React, { useState, useEffect, useRef } from "react";
-import img from "/naat_blanco.png";
+import img from "../../assets/naat_blanco.png";
 import "./redes_sociales.css";
 import { ImSpinner } from "react-icons/im";
 
@@ -59,6 +59,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
 
   const handleFetchOrScrape = async (e) => {
     e.preventDefault();
+    if (loading) return;
     if (!formState.platform || !formState.username || !formState.url) return;
     setLoading(true);
     setDataResult(null);
@@ -98,6 +99,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
 
   const handleForceScrape = async (e) => {
     e.preventDefault();
+    if (loading) return;
     if (!formState.platform || !formState.url) return;
     setLoading(true);
     try {
@@ -168,7 +170,9 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
             />
           </div>
           <div className="rv-buttons">
-            <button type="submit" disabled={loading}>
+            <button 
+            type="submit" 
+            disabled={loading}>
               {loading ? (
                 <span>
                   <ImSpinner className="spinner" />

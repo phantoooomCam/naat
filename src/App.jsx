@@ -40,6 +40,7 @@ import ProtectedRoute from "./componentes/ProtectedRoute";
 // Funciones Analista
 import Sabana from "./paginas/Vistas_Usuarios/Analista/Sabana/Sabana";
 import Caso from "./paginas/Vistas_Usuarios/Analista/Caso/Caso";
+import DetalleCaso from "./paginas/Vistas_Usuarios/Analista/DetalleCaso/DetalleCaso";
 import LogsCasos from "./paginas/Vistas_Usuarios/Analista/Caso/LogsCasos";
 
 
@@ -48,6 +49,7 @@ import InfoSabana from "./paginas/Analisis_Sabanas/Informacion_Sabana/informacio
 
 //Redes Sociales
 import RedesSociales from "./paginas/RedesSociales/redes_sociales_general";
+
 
 
 function App() {
@@ -89,6 +91,7 @@ function App() {
         <Route path="/sabana" element={<Sabana />} />
         <Route path="/logscasos" element={<LogsCasos />} />
         <Route path="/casos" element={<Caso />} />
+        <Route path="/detalles_caso" element={<DetalleCaso />} />
 
         {/* Procesamiento de Sabanas */}
         <Route path="/procesamiento_sabana" element={<InfoSabana/>}/>

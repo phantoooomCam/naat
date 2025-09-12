@@ -17,7 +17,7 @@ cytoscape.use(edgehandles);
 cytoscape.use(cxtmenu);
 cytoscape.use(undoRedo);
 
-// const SERVER_BASE = "http://192.168.100.207:8000"; // replaced by relative proxied paths
+const SERVER_BASE = "http://192.168.100.207:8000"; // replaced by relative proxied paths
 
 // -----------------------------
 // Config / Helpers
@@ -507,13 +507,13 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
               const t = ele.data("relation_type") || ele.data("rel");
               switch (t) {
                 case "comentó":
-                  return "#32B028";
+                  return "#15a7e6";
                 case "seguido":
                   return "#FF4E45";
                 case "seguidor":
                   return "#2885B0";
                 case "reaccionó":
-                  return "#F538CC";
+                  return "#e6de0b";
                 default:
                   return "#1A2D42";
               }
@@ -523,13 +523,15 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
               const t = ele.data("relation_type") || ele.data("rel");
               switch (t) {
                 case "comentó":
-                  return "#32B028";
+                  return "#15a7e6";
+
                 case "seguido":
                   return "#FF4E45";
                 case "seguidor":
                   return "#2885B0";
                 case "reaccionó":
-                  return "#F538CC";
+                  return "#e6de0b";
+
                 default:
                   return "#1A2D42";
               }
