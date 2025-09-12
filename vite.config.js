@@ -49,6 +49,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      "/data": { // para servir /data/storage/images/* directamente
+        target: "http://192.168.100.207:8000",
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 })

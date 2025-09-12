@@ -829,7 +829,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                       className="view-details-button"
                       onClick={() => {
                         // Navegar a la nueva ruta con el ID del caso
-                        navigate(`/detalles_caso`)
+                        navigate(`/detalles_caso/${selectedCaso.id}`)
                       }}
                     >
                       <FontAwesomeIcon icon={faFolderOpen} />
