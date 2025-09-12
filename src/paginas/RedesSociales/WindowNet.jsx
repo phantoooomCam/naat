@@ -19,6 +19,14 @@ cytoscape.use(undoRedo);
 
 // const SERVER_BASE = "http://192.168.100.207:8000"; // replaced by relative proxied paths
 
+// -----------------------------
+// Config / Helpers
+// -----------------------------
+const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
+const ALLOWED_EXTENSIONS = ["png", "jpg", "jpeg", "webp"]; // extensiones aceptadas en frontend
+const LS_KEY_NODE_IMAGES = "windowNetNodeImages"; // persistencia local temporal (hasta que backend guarde en perfiles)
+const IMAGE_RETRY_DELAY = 250; // ms para un retry tras 404
+
 // Helpers: simple file picker for local files
 function pickLocalFile({ accept } = {}) {
   return new Promise((resolve) => {
@@ -30,15 +38,98 @@ function pickLocalFile({ accept } = {}) {
   });
 }
 
-// Upload image to backend and return a public URL
+// Persistencia local de imagenes para nodos (clave = username/id)
+function loadPersistedNodeImages() {
+  try {
+    const raw = localStorage.getItem(LS_KEY_NODE_IMAGES);
+    if (!raw) return {};
+    return JSON.parse(raw) || {};
+  } catch {
+    return {};
+  }
+}
+
+function persistNodeImage(nodeId, url) {
+  try {
+    const current = loadPersistedNodeImages();
+    current[nodeId] = url;
+    localStorage.setItem(LS_KEY_NODE_IMAGES, JSON.stringify(current));
+  } catch {
+    // ignore
+  }
+}
+
+function removePersistedNodeImage(nodeId) {
+  try {
+    const current = loadPersistedNodeImages();
+    if (current[nodeId]) {
+      delete current[nodeId];
+      localStorage.setItem(LS_KEY_NODE_IMAGES, JSON.stringify(current));
+    }
+  } catch {}
+}
+
+function resolveStoredUrl(raw) {
+  // Alias aceptados actualmente: /data/storage/... y /storage/...
+  if (typeof raw !== "string") return raw;
+  if (raw.startsWith("/data/storage/images/")) return raw;
+  if (raw.startsWith("/storage/images/")) return raw; // alias backend
+  return raw; // fallback (posible CDN futuro)
+}
+
+// Validar imagen antes de subir
+function validateImageFile(file) {
+  if (!file) throw new Error("No se seleccionó archivo");
+  if (file.size > MAX_IMAGE_SIZE) {
+    throw new Error("El archivo supera 2MB");
+  }
+  const ext = (file.name.split(".").pop() || "").toLowerCase();
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    throw new Error(
+      `Extensión no permitida (.${ext}). Use: ${ALLOWED_EXTENSIONS.join(", ")}`
+    );
+  }
+  if (!file.type.startsWith("image/")) {
+    throw new Error("El archivo debe ser una imagen válida");
+  }
+}
+
+// Subir imagen al backend y devolver la URL pública (contrato actual)
 async function uploadImageToBackend(file) {
+  validateImageFile(file);
   const form = new FormData();
   form.append("file", file);
-  const resp = await fetch(`/files/upload-image`, { method: "POST", body: form });
-  if (!resp.ok) throw new Error(`Upload failed: ${resp.status}`);
+  // Determinar endpoint real: si backend expone /files/upload-image (anterior) o /upload-image
+  // Preferimos usar /api/upload-image si se coloca detrás del proxy /api (ya existente)
+  // Fallback: /upload-image
+  const candidates = ["/api/upload-image", "/upload-image", "/files/upload-image"]; // orden de prueba
+  let lastError = null;
+  let resp = null;
+  for (const url of candidates) {
+    try {
+      resp = await fetch(url, { method: "POST", body: form, credentials: "include" });
+      if (resp.status !== 404) {
+        // Si no es 404 asumimos que este endpoint responde (200, 400, etc.)
+        break;
+      }
+      lastError = `Endpoint ${url} devolvió 404`;
+    } catch (e) {
+      lastError = e.message;
+    }
+  }
+  if (!resp) throw new Error(lastError || "No se pudo contactar al backend");
+  if (!resp.ok) {
+    let detail = `Error ${resp.status}`;
+    try {
+      const errJson = await resp.json();
+      detail = errJson?.detail || errJson?.error || detail;
+    } catch {}
+    throw new Error(`${detail}${lastError ? ` (${lastError})` : ""}`);
+  }
   const json = await resp.json();
-  if (!json?.url) throw new Error("Upload response missing url");
-  return json.url; // e.g., "/storage/images/<uuid>.jpg"
+  if (!json?.url) throw new Error("Respuesta sin url");
+  // Ya no normalizamos: usar exactamente la URL que devuelve backend
+  return json.url;
 }
 
 // Layout rectangular adaptado
@@ -159,21 +250,45 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
   const [usernameLoad, setUsernameLoad] = useState(null);
 
   // Shared helper to open picker and update a node photo via undo/redo
+  const attemptApplyNodeImage = (cy, nodeId, url, attempt = 1) => {
+    const img = new Image();
+    img.onload = () => {
+      const ele = cy.$id(nodeId);
+      if (ele && ele.nonempty()) {
+        ele.data("photo_url", url);
+        cy.style().update();
+      }
+    };
+    img.onerror = () => {
+      if (attempt === 1) {
+        setTimeout(() => attemptApplyNodeImage(cy, nodeId, url, 2), IMAGE_RETRY_DELAY);
+      } else {
+        console.warn("Imagen no accesible tras retry, limpiando:", url);
+        removePersistedNodeImage(nodeId);
+        const ele = cy.$id(nodeId);
+        if (ele && ele.nonempty()) {
+          ele.data("photo_url", "");
+          cy.style().update();
+        }
+      }
+    };
+    img.src = url;
+  };
+
   const openPhotoPickerAndUpdateNode = async (nodeId, cy) => {
     try {
       const file = await pickLocalFile({ accept: "image/*" });
-      if (!file) return; // user cancelled
+      if (!file) return; // usuario canceló
       const newUrl = await uploadImageToBackend(file);
-      if (ur.current) {
-        ur.current.do("updateNodePhoto", { id: nodeId, newUrl });
-      } else {
-        const ele = cy.$id(nodeId);
-        ele.data("photo_url", newUrl);
-        cy.style().update();
-      }
+      // Persistir localmente para rehidratar
+      persistNodeImage(nodeId, newUrl);
+      // Verificar accesibilidad antes de aplicar (se aplicará al onload)
+      attemptApplyNodeImage(cy, nodeId, newUrl);
+      // Undo/redo mantiene consistencia de data (photo_url) si se hace revert
+      if (ur.current) ur.current.do("updateNodePhoto", { id: nodeId, newUrl });
     } catch (e) {
       console.error(e);
-      alert("No se pudo actualizar la foto del nodo.");
+      alert(e.message || "No se pudo actualizar la foto del nodo.");
     }
   };
 
@@ -425,6 +540,41 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
       ],
     });
     cyRef.current = cy;
+    // Rehidratar imágenes persistidas comprobando 404 y retry
+    try {
+      const persisted = loadPersistedNodeImages();
+      if (persisted && typeof persisted === "object") {
+        Object.entries(persisted).forEach(([id, rawUrl]) => {
+          const url = resolveStoredUrl(rawUrl);
+            const n = cy.$id(id);
+            if (!n || n.empty()) return;
+            // Si ya trae photo_url desde backend, no sobreescribir
+            if (n.data("photo_url")) return;
+            // Intentar cargar (aplicación diferida al onload)
+            const img = new Image();
+            img.onload = () => {
+              n.data("photo_url", url);
+              cy.style().update();
+            };
+            img.onerror = () => {
+              // Retry único
+              setTimeout(() => {
+                const img2 = new Image();
+                img2.onload = () => {
+                  n.data("photo_url", url);
+                  cy.style().update();
+                };
+                img2.onerror = () => {
+                  console.warn("Rehidratación fallida imagen nodo", id, url);
+                  removePersistedNodeImage(id);
+                };
+                img2.src = url;
+              }, IMAGE_RETRY_DELAY);
+            };
+            img.src = url;
+        });
+      }
+    } catch {}
     attachPluginsAndMenus(cy);
     return cy;
   };
