@@ -170,9 +170,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
             />
           </div>
           <div className="rv-buttons">
-            <button 
-            type="submit" 
-            disabled={loading}>
+            <button type="submit" disabled={loading}>
               {loading ? (
                 <span>
                   <ImSpinner className="spinner" /> Buscando...
@@ -201,12 +199,14 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
         <div className="rv-left">
           <div className="rv-section">
             <button className="rv-item" onClick={() => toggle("archivo")}>
-              Archivo ▾
+              Acciones con mi Red de vinculos ▾
             </button>
             {openMenu === "archivo" && (
               <div className="rv-dropdown">
-                <button onClick={() => call("saveGraph")}>Guardar grafo</button>
-                <div className="rv-divider" />
+                <label htmlFor="" className="seccion-submenu-rv">
+                  Red de vinculos
+                </label>
+                <button onClick={() => call("saveGraph")}>Guardar red de vinculos</button>
                 <div className="rv-form-inline">
                   <select
                     value={loadPlatform}
@@ -226,14 +226,21 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
                     onChange={(e) => setLoadUsername(e.target.value)}
                   />
                   <button
+                    className="btn-save"
                     onClick={() =>
                       call("loadGraph", loadPlatform, loadUsername)
                     }
                   >
-                    Cargar
+                    Cargar red de vinculos
                   </button>
                 </div>
                 <div className="rv-divider" />
+                <label htmlFor="" className="seccion-submenu-rv">
+                  Archivo
+                </label>
+                <button onClick={() => call("exportToExcel")}>
+                  Guardar archivo local
+                </button>
                 <button onClick={() => call("exportToExcel")}>
                   Exportar a Excel
                 </button>
@@ -246,7 +253,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
             </button>
             {openMenu === "insertar" && (
               <div className="rv-dropdown">
-                <button onClick={() => call("createNode")}>Nuevo nodo</button>
+                <button onClick={() => call("createNode")}>Nuevo involucrado</button>
                 <button onClick={() => call("createEdge")}>
                   Nuevo vínculo
                 </button>
