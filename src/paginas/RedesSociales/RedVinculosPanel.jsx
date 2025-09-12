@@ -1,6 +1,6 @@
 // Fusion of WindowSeek + Navbar for RedesSociales module
 import React, { useState, useEffect, useRef } from "react";
-import img from "/naat_blanco.png";
+import img from "../../assets/naat_blanco.png";
 import "./redes_sociales.css";
 import { ImSpinner } from "react-icons/im";
 
