@@ -99,10 +99,7 @@ async function uploadImageToBackend(file) {
   validateImageFile(file);
   const form = new FormData();
   form.append("file", file);
-  // Determinar endpoint real: si backend expone /files/upload-image (anterior) o /upload-image
-  // Preferimos usar /api/upload-image si se coloca detrás del proxy /api (ya existente)
-  // Fallback: /upload-image
-  const candidates = ["/api/upload-image", "/upload-image", "/files/upload-image"]; // orden de prueba
+  const candidates = ["/api/upload-image"]; // orden de prueba
   let lastError = null;
   let resp = null;
   for (const url of candidates) {
@@ -261,6 +258,12 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     };
     img.onerror = () => {
       if (attempt === 1) {
+        // Si es prefijo /data/storage intentar alias /storage antes del retry
+        if (url.startsWith("/data/storage/images/")) {
+          const alias = url.replace("/data/storage/", "/storage/");
+          setTimeout(() => attemptApplyNodeImage(cy, nodeId, alias, 2), IMAGE_RETRY_DELAY);
+          return;
+        }
         setTimeout(() => attemptApplyNodeImage(cy, nodeId, url, 2), IMAGE_RETRY_DELAY);
       } else {
         console.warn("Imagen no accesible tras retry, limpiando:", url);
@@ -559,18 +562,22 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
               cy.style().update();
             };
             img.onerror = () => {
-              // Retry único
+              // Retry único + alias
               setTimeout(() => {
+                const candidate = url.startsWith("/data/storage/")
+                  ? url.replace("/data/storage/", "/storage/")
+                  : url;
                 const img2 = new Image();
                 img2.onload = () => {
-                  n.data("photo_url", url);
+                  n.data("photo_url", candidate);
                   cy.style().update();
+                  if (candidate !== url) persistNodeImage(id, candidate);
                 };
                 img2.onerror = () => {
                   console.warn("Rehidratación fallida imagen nodo", id, url);
                   removePersistedNodeImage(id);
                 };
-                img2.src = url;
+                img2.src = candidate;
               }, IMAGE_RETRY_DELAY);
             };
             img.src = url;
