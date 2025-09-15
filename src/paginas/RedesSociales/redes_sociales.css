@@ -361,3 +361,9 @@
   opacity: 1;
   transform: scaleY(1);
 }
+.text-error{
+  display: flex;
+  justify-content: center;
+  color: #de1304;
+  font-size: 1.1vh;
+}
