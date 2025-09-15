@@ -21,7 +21,7 @@ import {
   faEnvelope,
   faChevronRight,
   faStar,
-  faExclamationTriangle, // <- se usa solo para el estado del caso
+  faExclamationTriangle,
 } from "@fortawesome/free-solid-svg-icons"
 import fetchWithAuth from "../../../../utils/fetchWithAuth"
 
@@ -41,6 +41,21 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
         if (!res || !res.ok) throw new Error("No se pudo cargar el caso")
         const raw = await res.json()
 
+        // Extrae idSabana si viene en el caso (múltiples formas posibles)
+        const collectIds = (arr) => {
+          if (!Array.isArray(arr)) return []
+          return arr
+            .map((s) => s?.idSabana ?? s?.id_sabana ?? s?.id ?? s?.Id ?? null)
+            .filter(Boolean)
+        }
+        const sabanasCampo =
+          raw.ids_sabanas ?? raw.idsSabanas ?? raw.sabanas ?? raw.Sabanas ?? null
+        const sabanaIds = Array.isArray(sabanasCampo)
+          ? collectIds(sabanasCampo) // arreglo de objetos o ids
+          : (sabanasCampo ? [sabanasCampo] : []) // id suelto
+        const sabanaIdPrimaria =
+          sabanaIds.find(Boolean) ?? raw.idSabana ?? raw.IdSabana ?? null
+
         const data = {
           id: raw.idCaso ?? raw.id ?? casoId,
           titulo: raw.nombre ?? raw.titulo ?? "Caso sin título",
@@ -56,6 +71,7 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
           numeroExpediente: raw.folio ?? raw.numeroExpediente ?? `CASO-${casoId}`,
           investigadorPrincipal: raw.investigadorPrincipal ?? "—",
           supervisorCaso: raw.supervisorCaso ?? undefined,
+          sabanaId: sabanaIdPrimaria, // <-- nuevo
         }
 
         if (alive) setCasoData(data)
@@ -71,7 +87,7 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
     }
   }, [casoId])
 
-  // --- SECCIONES (dejamos los datos; ya no mostramos status en UI) ---
+  // --- SECCIONES (sin mostrar estados en UI) ---
   const secciones = [
     { id: "redes-sociales", titulo: "Redes Sociales", descripcion: "Análisis completo de perfiles y actividad en plataformas sociales", icon: faShare, color: "#1DA1F2", disponible: true,  progreso: 85 },
     { id: "sabanas-telefonicas", titulo: "Sábanas Telefónicas", descripcion: "Registros detallados de llamadas y comunicaciones móviles", icon: faPhone, color: "#25D366", disponible: true,  progreso: 92 },
@@ -85,8 +101,18 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
     { id: "comunicaciones-email", titulo: "Comunicaciones Email", descripcion: "Correos electrónicos y comunicaciones digitales", icon: faEnvelope, color: "#9B59B6", disponible: true,  progreso: 73 },
   ]
 
-  // Ya no condicionamos el click por "disponible"
-  const handleSectionClick = (seccion) => setSelectedSection(seccion)
+  // Click: si es Sábanas, navega a /procesamiento_sabana con idCaso e idSabana (si existe)
+  const handleSectionClick = (seccion) => {
+    if (seccion.id === "sabanas-telefonicas" && casoData?.id) {
+      if (casoData?.sabanaId) {
+        navigate("/procesamiento_sabana", { state: { idSabana: casoData.sabanaId, idCaso: casoData.id } })
+      } else {
+        navigate("/procesamiento_sabana", { state: { idCaso: casoData.id } })
+      }
+      return
+    }
+    setSelectedSection(seccion)
+  }
 
   // Estado del caso (no de tarjetas)
   const getEstadoClass = (estado) => {
@@ -137,7 +163,7 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
     )
   }
 
-  // KPIs para el resumen (lo dejamos como lo tienes)
+  // KPIs para el resumen (puedes retirarlos si ya no usas "progreso")
   const seccionesDisponibles = secciones.filter((s) => s.disponible)
   const diasActivo = casoData?.fechaCreacion
     ? Math.floor((Date.now() - new Date(casoData.fechaCreacion).getTime()) / (1000 * 60 * 60 * 24))
@@ -281,7 +307,6 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
                   <div className="seccion-content">
                     <h3 className="seccion-titulo">{seccion.titulo}</h3>
                     <p className="seccion-descripcion">{seccion.descripcion}</p>
-                    {/* ⬇️ YA NO MOSTRAMOS ESTATUS */}
                   </div>
 
                   {/* Flecha siempre visible */}
