@@ -4,17 +4,61 @@ import img from "../../assets/naat_blanco.png";
 import "./redes_sociales.css";
 import { ImSpinner } from "react-icons/im";
 
+// Valida https://(www.)?(facebook|instagram|x).com/<segmento>
+export function validateSocialUrl(raw) {
+  try {
+    const u = new URL(raw);
+
+    if (u.protocol !== "https:") {
+      return { ok: false, msg: "URL invalido" };
+    }
+
+    const host = u.hostname.replace(/^www\./i, "").toLowerCase();
+    const allowed = new Set(["facebook.com", "instagram.com", "x.com"]);
+    if (!allowed.has(host)) {
+      return {
+        ok: false,
+        msg: "URL invalido",
+      };
+    }
+
+    const segments = u.pathname.split("/").filter(Boolean);
+    if (segments.length === 0) {
+      return {
+        ok: false,
+        msg: "URL invalido",
+      };
+    }
+
+    // (Opcional) Reglas del identificador
+    if (!/^[A-Za-z0-9._%-\-]+$/.test(segments[0])) {
+      return {
+        ok: false,
+        msg: "URL invalido",
+      };
+    }
+
+    return { ok: true, msg: "" };
+  } catch {
+    return { ok: false, msg: "URL inválido" };
+  }
+}
+
 // Espera ref del grafo (WindowNet) via props
 const RedVinculosPanel = ({ netRef, onGraphData }) => {
   const platformOptions = ["facebook", "instagram", "x"];
   const [openMenu, setOpenMenu] = useState(null);
   const [openSubmenu, setOpenSubmenu] = useState(null);
-  const [formState, setFormState] = useState(() => {
-    const saved = localStorage.getItem("rv_formState");
-    return saved
-      ? JSON.parse(saved)
-      : { url: "", username: "", platform: "", cantidadFotos: 5 };
-  });
+  const [formErrors, setFormErrors] = useState({ url: true, username: true });
+  // Mensajes de error por campo (solo se usa si formErrors[campo] === false)
+  const [errorMsg, setErrorMsg] = useState({ url: "", username: "" });
+  const DEFAULT_FORM = {
+    url: "",
+    username: "",
+    platform: "",
+    cantidadFotos: 5,
+  };
+  const [formState, setFormState] = useState(DEFAULT_FORM);
   const [loading, setLoading] = useState(false);
   const [dataResult, setDataResult] = useState(null);
   const [loadPlatform, setLoadPlatform] = useState("");
@@ -36,8 +80,13 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
     setFormState((prev) => {
       const ns = { ...prev, [name]: value };
       if (name === "url") {
-        const extracted = extractUsernameFromUrl(value);
-        ns.username = extracted || "";
+        const { ok, msg } = validateSocialUrl(value);
+
+        // Booleans para errores (true = ok, false = muestra mensaje)
+        setFormErrors((e) => ({ ...e, url: ok }));
+
+        // Mensaje (solo se usa cuando ok === false)
+        setErrorMsg((m) => ({ ...m, url: ok ? "" : msg }));
       }
       return ns;
     });
@@ -146,6 +195,11 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
               onChange={(e) => handleInputChange("url", e.target.value)}
               required
             />
+            {formErrors.url === false && (
+              <small className="text-error">
+                {errorMsg.url}
+              </small>
+            )}
           </div>
           <div className="rv-field">
             <label>Plataforma:</label>
@@ -210,8 +264,22 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
             </button>
 
             {openMenu === "archivo" && (
-              <div className="rv-dropdown" style={{ borderTopLeftRadius:'10px', borderTopRightRadius:'10px'}}>
-                <label className="seccion-submenu-rv" style={{ borderTopLeftRadius:'10px', borderTopRightRadius:'10px'}} >Red de vínculos</label>
+              <div
+                className="rv-dropdown"
+                style={{
+                  borderTopLeftRadius: "10px",
+                  borderTopRightRadius: "10px",
+                }}
+              >
+                <label
+                  className="seccion-submenu-rv"
+                  style={{
+                    borderTopLeftRadius: "10px",
+                    borderTopRightRadius: "10px",
+                  }}
+                >
+                  Red de vínculos
+                </label>
 
                 <button
                   className="seccion-submenu-rv-2"
