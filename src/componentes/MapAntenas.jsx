@@ -12,15 +12,17 @@ const libraries = ["geometry"]
  * - Etiqueta numérica en cada antena (rank); icono más grande para Top 1..3
  * - Sectores/círculos con strokeWeight/opacity en función del rank
  * - Sectores optimizados con 3 puntos (triángulo): centro + (azimuth-5) + (azimuth+5) a 400 m
+ * - API key SOLO desde .env (VITE_GOOGLE_MAPS_API_KEY)
+ * - Autenticación SOLO por cookie (credentials:"include")
  */
-const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444", googleMapsApiKey }) => {
+const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
   const [antenas, setAntenas] = useState([])
   const [error, setError] = useState("")
   const [selectedAntenna, setSelectedAntenna] = useState(null)
   const [mapRef, setMapRef] = useState(null)
 
-  // API Key desde prop o variable de entorno (Vite)
-  const apiKey = googleMapsApiKey || import.meta.env.VITE_GOOGLE_MAPS_API_KEY
+  // API Key únicamente desde variable de entorno (Vite)
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-map-script",
@@ -38,7 +40,7 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444", googleMapsAp
     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
   }, [])
 
-  // Opciones memoizadas base; los pesos/opacity por rank se ajustan por shape
+  // Opciones base memoizadas (los pesos/opacity por rank se ajustan por shape)
   const circleOptionsBase = useMemo(
     () => ({
       fillColor: "var(--coverage-circle-color)",
@@ -61,7 +63,7 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444", googleMapsAp
     [],
   )
 
-  // Cargar antenas (ahora el backend ya devuelve frecuencia/rank)
+  // Cargar antenas (el backend ya devuelve frecuencia/rank en CoordenadaDecimalDto)
   useEffect(() => {
     if (!idSabana) return
 
@@ -70,16 +72,18 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444", googleMapsAp
     const fetchAntenas = async () => {
       try {
         setError("")
-        // Usa el mismo endpoint; ahora responde con frecuencia/rank en el DTO
         const url = `${baseUrl}/api/sabanas/${idSabana}/registros/coordenadas-decimales`
 
         const response = await fetch(url, {
-          credentials: "include",
+          credentials: "include", // ← leemos sesión desde cookie, como en todo el proyecto
           headers: { "Content-Type": "application/json" },
           signal: controller.signal,
         })
 
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        if (!response || !response.ok) {
+          const status = response?.status ?? "fetch failed"
+          throw new Error(`HTTP ${status}`)
+        }
 
         const data = await response.json()
         const items = Array.isArray(data) ? data : data.items || data.Items || []
