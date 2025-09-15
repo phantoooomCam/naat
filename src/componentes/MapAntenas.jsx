@@ -1,21 +1,23 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { useJsApiLoader, GoogleMap, Marker, Polygon, Circle, InfoWindow } from "@react-google-maps/api"
+import { GoogleMap, useJsApiLoader, Marker, Polygon, Circle, InfoWindow } from "@react-google-maps/api"
+// ⚠️ Ajusta esta ruta según tu estructura (misma que uses en informacion3_sabana.jsx)
+import fetchWithAuth from "../../../utils/fetchWithAuth.js"
 import "./MapAntenas.css"
 
 const libraries = ["geometry"]
 
 /**
- * Mapa de Antenas — con ranking/frecuencia:
- * - Lee { latitudDecimal, longitudDecimal, azimuth, frecuencia, rank } del backend
- * - Etiqueta numérica en cada antena (rank); icono más grande para Top 1..3
- * - Sectores/círculos con strokeWeight/opacity en función del rank
- * - Sectores optimizados con 3 puntos (triángulo): centro + (azimuth-5) + (azimuth+5) a 400 m
- * - API key SOLO desde .env (VITE_GOOGLE_MAPS_API_KEY)
- * - Autenticación SOLO por cookie (credentials:"include")
+ * Mapa de Antenas — cookies + fetchWithAuth + .env API key:
+ * - Backend devuelve: { latitudDecimal, longitudDecimal, azimuth, frecuencia, rank }
+ * - Marker con label = rank; tamaño/visibilidad según rank
+ * - Sectores: triángulo (centro, azimuth-5°, azimuth+5°) a 400 m
+ * - Google key: SOLO desde .env (VITE_GOOGLE_MAPS_API_KEY)
+ * - Auth: SOLO cookie (manejado por fetchWithAuth)
+ * - URL: relativa por defecto (útil con proxy Vite). Puedes pasar apiBase para forzar host.
  */
-const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
+const MapAntenas = ({ idSabana, apiBase = "" }) => {
   const [antenas, setAntenas] = useState([])
   const [error, setError] = useState("")
   const [selectedAntenna, setSelectedAntenna] = useState(null)
@@ -30,7 +32,7 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
     libraries,
   })
 
-  // Icono de torre celular (Material Symbols "cell_tower") como data URL SVG
+  // Icono Material Symbols "cell_tower" en SVG data URL
   const cellTowerIcon = useMemo(() => {
     const svg = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#2563eb">
@@ -40,7 +42,7 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
   }, [])
 
-  // Opciones base memoizadas (los pesos/opacity por rank se ajustan por shape)
+  // Opciones base memoizadas
   const circleOptionsBase = useMemo(
     () => ({
       fillColor: "var(--coverage-circle-color)",
@@ -63,27 +65,42 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
     [],
   )
 
-  // Cargar antenas (el backend ya devuelve frecuencia/rank en CoordenadaDecimalDto)
+  // Helpers visuales según rank
+  const iconSizeForRank = (rank) => {
+    if (rank === 1) return 36
+    if (rank === 2 || rank === 3) return 32
+    return 30
+  }
+  const strokeWeightForRank = (rank) => {
+    if (rank === 1) return 3
+    if (rank === 2 || rank === 3) return 2.25
+    return 1.5
+  }
+  const strokeOpacityForRank = (rank) => {
+    if (rank === 1) return 0.95
+    if (rank === 2 || rank === 3) return 0.85
+    return 0.7
+  }
+
+  // Cargar antenas (vía fetchWithAuth: cookies, 401/403, etc.)
   useEffect(() => {
     if (!idSabana) return
-
     const controller = new AbortController()
 
     const fetchAntenas = async () => {
       try {
         setError("")
-        const url = `${baseUrl}/api/sabanas/${idSabana}/registros/coordenadas-decimales`
+        const url = `${apiBase}/api/sabanas/${idSabana}/registros/coordenadas-decimales`
 
-        const response = await fetch(url, {
-          credentials: "include", // ← leemos sesión desde cookie, como en todo el proyecto
+        const response = await fetchWithAuth(url, {
+          method: "GET",
           headers: { "Content-Type": "application/json" },
           signal: controller.signal,
         })
 
-        if (!response || !response.ok) {
-          const status = response?.status ?? "fetch failed"
-          throw new Error(`HTTP ${status}`)
-        }
+        // fetchWithAuth retorna null en errores (y ya notifica/redirect)
+        if (!response) return
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
         const data = await response.json()
         const items = Array.isArray(data) ? data : data.items || data.Items || []
@@ -103,7 +120,7 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
               typeof it.azimuth === "number",
           )
 
-        // Orden: rank asc (1,2,3...), después por lat/lng estable
+        // Ordenar por rank asc; estable por lat/lng/azimuth
         normalized.sort((a, b) => {
           const ra = a.rank ?? Number.MAX_SAFE_INTEGER
           const rb = b.rank ?? Number.MAX_SAFE_INTEGER
@@ -123,41 +140,21 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
 
     fetchAntenas()
     return () => controller.abort()
-  }, [idSabana, baseUrl])
-
-  // Helpers visuales según rank
-  const iconSizeForRank = (rank) => {
-    if (rank === 1) return 36
-    if (rank === 2 || rank === 3) return 32
-    return 30
-  }
-
-  const strokeWeightForRank = (rank) => {
-    if (rank === 1) return 3
-    if (rank === 2 || rank === 3) return 2.25
-    return 1.5
-  }
-
-  const strokeOpacityForRank = (rank) => {
-    if (rank === 1) return 0.95
-    if (rank === 2 || rank === 3) return 0.85
-    return 0.7
-  }
+  }, [idSabana, apiBase])
 
   /**
    * Cobertura:
-   * - Si azimuth === 360 → círculo de 400 m (con peso/opacity según rank)
-   * - Si azimuth ∈ [0,360) → sector como TRIÁNGULO de 3 puntos:
-   *   paths = [center, point(azimuth-5, 400m), point(azimuth+5, 400m)]
+   * - azimuth === 360 → círculo 400 m
+   * - azimuth ∈ [0,360) → sector como TRIÁNGULO de 3 puntos: centro + (A-5°) + (A+5°)
    */
   const coverageShapes = useMemo(() => {
     if (!isLoaded || !window.google || antenas.length === 0) return []
 
     return antenas.map((antena, index) => {
       const center = new window.google.maps.LatLng(antena.latitudDecimal, antena.longitudDecimal)
-      const rank = antena.rank ?? 9999
-      const weight = strokeWeightForRank(rank)
-      const opacity = strokeOpacityForRank(rank)
+      const r = antena.rank ?? 9999
+      const weight = strokeWeightForRank(r)
+      const opacity = strokeOpacityForRank(r)
 
       if (antena.azimuth === 360) {
         return {
@@ -165,11 +162,7 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
           key: `circle-${index}`,
           center: { lat: antena.latitudDecimal, lng: antena.longitudDecimal },
           radius: 400,
-          options: {
-            ...circleOptionsBase,
-            strokeWeight: weight,
-            strokeOpacity: opacity,
-          },
+          options: { ...circleOptionsBase, strokeWeight: weight, strokeOpacity: opacity },
         }
       }
 
@@ -187,19 +180,15 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
           { lat: left.lat(), lng: left.lng() },
           { lat: right.lat(), lng: right.lng() },
         ],
-        options: {
-          ...sectorOptionsBase,
-          strokeWeight: weight,
-          strokeOpacity: opacity,
-        },
+        options: { ...sectorOptionsBase, strokeWeight: weight, strokeOpacity: opacity },
       }
     })
   }, [antenas, isLoaded, circleOptionsBase, sectorOptionsBase])
 
-  // Ajustar vista
+  // Controles
+  const onMapLoad = useCallback((map) => setMapRef(map), [])
   const fitBounds = useCallback(() => {
     if (!mapRef || antenas.length === 0) return
-
     if (antenas.length === 1) {
       const a = antenas[0]
       mapRef.setCenter({ lat: a.latitudDecimal, lng: a.longitudDecimal })
@@ -210,16 +199,9 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
       mapRef.fitBounds(bounds)
     }
   }, [mapRef, antenas])
+  const recalculateSectors = useCallback(() => setAntenas((prev) => prev), [])
 
-  // Re-render suave (por si en el futuro cambian parámetros)
-  const recalculateSectors = useCallback(() => {
-    setAntenas((prev) => prev)
-  }, [])
-
-  const onMapLoad = useCallback((map) => {
-    setMapRef(map)
-  }, [])
-
+  // Estados de carga/errores
   if (loadError) {
     return (
       <div className="mapa-antenas-wrapper">
@@ -227,7 +209,6 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
       </div>
     )
   }
-
   if (!isLoaded) {
     return (
       <div className="mapa-antenas-wrapper">
@@ -235,7 +216,6 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
       </div>
     )
   }
-
   if (error) {
     return (
       <div className="mapa-antenas-wrapper">
@@ -243,7 +223,6 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
       </div>
     )
   }
-
   if (antenas.length === 0) {
     return (
       <div className="mapa-antenas-wrapper">
@@ -252,13 +231,13 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
     )
   }
 
-  // Métricas resumen para header (Top 1)
-  const top = antenas.find(a => a.rank === 1)
+  // Resumen Top #1
+  const top = antenas.find((a) => a.rank === 1)
   const topText = top ? `Top #1: ${top.frecuencia} apariciones` : null
 
   return (
     <div className="mapa-antenas-wrapper">
-      {/* Header con controles */}
+      {/* Header + controles */}
       <div className="mapa-antenas-header">
         <h4>
           Mapa de Antenas — {antenas.length} ubicación{antenas.length !== 1 ? "es" : ""}
@@ -311,7 +290,7 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
           fullscreenControl: true,
         }}
       >
-        {/* Marcadores con label de rank y tamaño por rank */}
+        {/* Markers */}
         {antenas.map((antena, index) => {
           const r = antena.rank ?? 9999
           const size = iconSizeForRank(r)
@@ -326,21 +305,16 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
               }}
               label={
                 antena.rank
-                  ? {
-                      text: String(antena.rank),
-                      color: "#ffffff",
-                      fontSize: "12px",
-                      fontWeight: "700",
-                    }
+                  ? { text: String(antena.rank), color: "#ffffff", fontSize: "12px", fontWeight: "700" }
                   : undefined
               }
-              zIndex={100000 - r} // Top ranks por encima
+              zIndex={100000 - r}
               onClick={() => setSelectedAntenna({ ...antena, index })}
             />
           )
         })}
 
-        {/* Cobertura (opciones ajustadas por rank por shape) */}
+        {/* Cobertura */}
         {coverageShapes.map((shape) =>
           shape.type === "circle" ? (
             <Circle key={shape.key} center={shape.center} radius={shape.radius} options={shape.options} />
@@ -349,7 +323,7 @@ const MapAntenas = ({ idSabana, baseUrl = "http://localhost:44444" }) => {
           ),
         )}
 
-        {/* InfoWindow con frecuencia y rank */}
+        {/* InfoWindow */}
         {selectedAntenna && (
           <InfoWindow
             position={{ lat: selectedAntenna.latitudDecimal, lng: selectedAntenna.longitudDecimal }}
