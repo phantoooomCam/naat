@@ -194,7 +194,7 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
   {/*--------rutas para usar en los detalles completos de gestion de casos-------------*/}
   const rutas = {
     "redes-sociales": "/redes_sociales",
-    "sabanas-telefonicas": "/sabanas",
+    "sabanas-telefonicas": "/listado_sabanas",
     "registros-automovilisticos": "/autos",
     "evidencia-fotografica": "/fotos",
     "ubicaciones-gps": "/gps",
