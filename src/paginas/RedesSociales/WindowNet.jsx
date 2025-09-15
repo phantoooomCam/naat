@@ -199,7 +199,7 @@ function buildGraphData(data) {
       nodesMap.set(id, {
         data: {
           id,
-          label: rel.full_name || id,
+          label: rel.username || id,
           tipo: "rel",
           profile_url: rel.profile_url,
           photo_url: rel.photo_url,
@@ -383,7 +383,7 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
           select: (ele) => {
             const newName = prompt(
               "Nuevo nombre:",
-              ele.data("label") || ele.data("full_name") || ele.id()
+              ele.data("label") || ele.data("username") || ele.id()
             );
             if (newName && ur.current) {
               ur.current.do("updateNodeName", { id: ele.id(), newName });
@@ -489,7 +489,7 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
           selector: "node:selected",
           style: {
             label: (ele) =>
-              ele.data("label") || ele.data("full_name") || ele.data("id"),
+              ele.data("label") || ele.data("username") || ele.data("id"),
             "text-opacity": 1,
             "text-valign": "bottom",
             "text-halign": "center",
@@ -669,7 +669,7 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     if (!cy) return;
     const n = cy.$("node:selected").first();
     if (n && n.length) {
-      const current = n.data("label") || n.data("full_name") || n.id();
+      const current = n.data("label") || n.data("username") || n.id();
       const newName = prompt("Nuevo nombre:", current);
       if (newName && ur.current) {
         ur.current.do("updateNodeName", { id: n.id(), newName });
@@ -951,7 +951,7 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
         data: {
           id: n.id(),
           username: d.username || n.id(),
-          label: d.label || d.full_name || d.username || n.id(),
+          label: d.label || d.username || d.full_name || n.id(),
           full_name: d.full_name || d.label || n.id(),
           photo_url: d.photo_url || "",
           profile_url: d.profile_url || "",
