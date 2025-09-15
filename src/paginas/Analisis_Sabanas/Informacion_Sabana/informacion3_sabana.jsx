@@ -8,6 +8,7 @@ import "./informacion_sabana.css"
 import { useLocation } from "react-router-dom"
 import TablaRegistros from "../../../componentes/TablaRegistros.jsx"
 import RedVinculos from "../../../componentes/RedVinculos.jsx"
+import MapAntenas from "../../../componentes/MapAntenas.jsx"
 import "../../../componentes/RedVinculos.css"
 import fetchWithAuth from "../../../utils/fetchWithAuth.js"
 
@@ -290,12 +291,8 @@ const GestionSabanaView = () => {
         return <RedVinculos idSabana={idSabana} filtrosActivos={filtrosRedVinculos} />
 
       case "map":
-        return (
-          <div className="placeholder-text">
-            <p>Funcionalidad de mapa en desarrollo</p>
-            <p>Próximamente se mostrará la ubicación en el mapa</p>
-          </div>
-        )
+        return <MapAntenas idSabana={idSabana} />
+
       default:
         return (
           <TablaRegistros
