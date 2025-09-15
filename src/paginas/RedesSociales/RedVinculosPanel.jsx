@@ -3,6 +3,14 @@ import React, { useState, useEffect, useRef } from "react";
 import img from "../../assets/naat_blanco.png";
 import "./redes_sociales.css";
 import { ImSpinner } from "react-icons/im";
+import { MdOutlineAddPhotoAlternate } from "react-icons/md";
+import { MdPersonAddAlt } from "react-icons/md";
+import { CiEdit } from "react-icons/ci";
+import { FaEdit } from "react-icons/fa";
+import { AiOutlineUserDelete } from "react-icons/ai";
+import { HiOutlineViewGridAdd } from "react-icons/hi";
+import { MdOutlineKeyboardArrowRight } from "react-icons/md";
+import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 
 // Valida https://(www.)?(facebook|instagram|x).com/<segmento>
 export function validateSocialUrl(raw) {
@@ -51,12 +59,11 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [formErrors, setFormErrors] = useState({ url: true, username: true });
   // Mensajes de error por campo (solo se usa si formErrors[campo] === false)
-  const [errorMsg, setErrorMsg] = useState({ url: "", username: "" });
+  const [errorMsg, setErrorMsg] = useState({ url: "" });
   const DEFAULT_FORM = {
     url: "",
-    username: "",
     platform: "",
-    cantidadFotos: 5,
+    cantidadFotos: 1,
   };
   const [formState, setFormState] = useState(DEFAULT_FORM);
   const [loading, setLoading] = useState(false);
@@ -76,18 +83,36 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
   const toggleSub = (submenu) => {
     setOpenSubmenu((s) => (s === submenu ? null : submenu));
   };
+  const hostFrom = (raw) => {
+    try {
+      return new URL(raw).hostname.replace(/^www\./i, "").toLowerCase();
+    } catch {
+      return "";
+    }
+  };
+
   const handleInputChange = (name, value) => {
     setFormState((prev) => {
       const ns = { ...prev, [name]: value };
+
       if (name === "url") {
         const { ok, msg } = validateSocialUrl(value);
-
-        // Booleans para errores (true = ok, false = muestra mensaje)
         setFormErrors((e) => ({ ...e, url: ok }));
-
-        // Mensaje (solo se usa cuando ok === false)
         setErrorMsg((m) => ({ ...m, url: ok ? "" : msg }));
+
+        // ⬇️ Autocompletar username y platform
+        const extracted = extractUsernameFromUrl(value);
+        ns.username = extracted || "";
+
+        const host = hostFrom(value);
+        const map = {
+          "facebook.com": "facebook",
+          "instagram.com": "instagram",
+          "x.com": "x",
+        };
+        if (map[host]) ns.platform = map[host];
       }
+
       return ns;
     });
   };
@@ -105,6 +130,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
   function fetchProfileData(platform, username) {
     return fetch(`/related/${platform}/${username}`).then((r) => r.json());
   }
+
   function scrapeProfile(platform, url, max_photos = 5) {
     return fetch(`/scrape`, {
       method: "POST",
@@ -116,9 +142,14 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
   const handleFetchOrScrape = async (e) => {
     e.preventDefault();
     if (loading) return;
+
+    // Si la URL es inválida, no sigas
+    if (formErrors.url === false) return;
+
     if (!formState.platform || !formState.username || !formState.url) return;
     setLoading(true);
     setDataResult(null);
+    console.log(formState.username);
     try {
       const relatedData = await fetchProfileData(
         formState.platform,
@@ -196,9 +227,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
               required
             />
             {formErrors.url === false && (
-              <small className="text-error">
-                {errorMsg.url}
-              </small>
+              <small className="text-error">{errorMsg.url}</small>
             )}
           </div>
           <div className="rv-field">
@@ -259,130 +288,151 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
         <h4 className="rv-titulo-grafo">Opciones </h4>
         <div className="rv-left">
           <div className="rv-section">
-            <button className="rv-item" onClick={() => toggle("archivo")}>
-              Archivos ▾
+            <button
+              className={`rv-item ${openMenu === "archivo" ? "is-active" : ""}`}
+              onClick={() => toggle("archivo")}
+            >
+              Archivos{" "}
+              {openMenu === "archivo" ? (
+                <MdOutlineKeyboardArrowDown />
+              ) : (
+                <MdOutlineKeyboardArrowRight />
+              )}
             </button>
 
             {openMenu === "archivo" && (
-              <div
-                className="rv-dropdown"
-                style={{
-                  borderTopLeftRadius: "10px",
-                  borderTopRightRadius: "10px",
-                }}
-              >
-                <label
-                  className="seccion-submenu-rv"
-                  style={{
-                    borderTopLeftRadius: "10px",
-                    borderTopRightRadius: "10px",
-                  }}
-                >
-                  Red de vínculos
-                </label>
+              <div className="rv-dropdown-submenu">
+                <div className="rv-dropdown-inner">
+                  <label
+                    className="seccion-submenu-rv"
+                  >
+                    Red de vínculos
+                  </label>
 
-                <button
-                  className="seccion-submenu-rv-2"
-                  type="button"
-                  onClick={() => toggleSub("cargarGrafo")}
-                >
-                  Cargar red de vínculos ▾
-                </button>
+                  <button
+                    className="seccion-submenu-rv-2"
+                    type="button"
+                    onClick={() => toggleSub("cargarGrafo")}
+                  >
+                    Cargar red de vínculos ▾
+                  </button>
 
-                {/* Submenú animable */}
-                <div className="rv-subdropdown">
-                  {openSubmenu === "cargarGrafo" && (
-                    <div className="rv-form-inline">
-                      <select
-                        value={loadPlatform}
-                        onChange={(e) => setLoadPlatform(e.target.value)}
-                      >
-                        <option value="">plataforma</option>
-                        {platformOptions.map((p) => (
-                          <option key={p} value={p}>
-                            {p}
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        type="text"
-                        placeholder="usuario"
-                        value={loadUsername}
-                        onChange={(e) => setLoadUsername(e.target.value)}
-                      />
-                      <button
-                        className="btn-save"
-                        type="button"
-                        onClick={() =>
-                          call("loadGraph", loadPlatform, loadUsername)
-                        }
-                      >
-                        Cargar red de vínculos
-                      </button>
-                    </div>
-                  )}
+                  {/* Submenú animable */}
+                  <div className="rv-subdropdown">
+                    {openSubmenu === "cargarGrafo" && (
+                      <div className="rv-form-inline">
+                        <select
+                          value={loadPlatform}
+                          onChange={(e) => setLoadPlatform(e.target.value)}
+                        >
+                          <option value="">plataforma</option>
+                          {platformOptions.map((p) => (
+                            <option key={p} value={p}>
+                              {p}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          placeholder="usuario"
+                          value={loadUsername}
+                          onChange={(e) => setLoadUsername(e.target.value)}
+                        />
+                        <button
+                          className="btn-save"
+                          type="button"
+                          onClick={() =>
+                            call("loadGraph", loadPlatform, loadUsername)
+                          }
+                        >
+                          Cargar red de vínculos
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <button onClick={() => call("saveGraph")} type="button">
+                    Guardar grafo
+                  </button>
+                  <button onClick={() => call("loadFromLocal")} type="button">
+                    Cargar desde archivo
+                  </button>
+                  <div className="rv-divider" />
+                  <label className="seccion-submenu-rv">Archivo</label>
+                  <button
+                    onClick={() => call("saveGraphAsLocalFile")}
+                    type="button"
+                  >
+                    Guardar archivo local
+                  </button>
+                  <button onClick={() => call("exportToExcel")} type="button">
+                    Exportar a Excel
+                  </button>
                 </div>
-
-                <button onClick={() => call("saveGraph")} type="button">
-                  Guardar grafo
-                </button>
-                <button onClick={() => call("loadFromLocal")} type="button">
-                  Cargar desde archivo
-                </button>
-                <div className="rv-divider" />
-                <label className="seccion-submenu-rv">Archivo</label>
-                <button
-                  onClick={() => call("saveGraphAsLocalFile")}
-                  type="button"
-                >
-                  Guardar archivo local
-                </button>
-                <button onClick={() => call("exportToExcel")} type="button">
-                  Exportar a Excel
-                </button>
               </div>
             )}
           </div>
           <div className="rv-section">
-            <button className="rv-item" onClick={() => toggle("insertar")}>
-              Insertar ▾
+            <button
+              className={`rv-item ${
+                openMenu === "insertar" ? "is-active" : ""
+              }`}
+              onClick={() => toggle("insertar")}
+            >
+              Insertar{" "}
+              {openMenu === "insertar" ? (
+                <MdOutlineKeyboardArrowDown />
+              ) : (
+                <MdOutlineKeyboardArrowRight />
+              )}
             </button>
             {openMenu === "insertar" && (
               <div className="rv-dropdown">
                 <button onClick={() => call("createNode")}>
-                  Nuevo involucrado
+                  <MdPersonAddAlt /> Nuevo involucrado
                 </button>
                 <button onClick={() => call("createEdge")}>
-                  Nuevo vínculo
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="rv-section">
-            <button className="rv-item" onClick={() => toggle("editar")}>
-              Editar ▾
-            </button>
-            {openMenu === "editar" && (
-              <div className="rv-dropdown">
-                <button onClick={() => call("editNodePhoto")}>
-                  Editar foto (nodo)
-                </button>
-                <button onClick={() => call("editNodeName")}>
-                  Editar nombre (nodo)
-                </button>
-                <button onClick={() => call("editEdgeRelation")}>
-                  Editar vínculo (arista)
-                </button>
-                <div className="rv-divider" />
-                <button onClick={() => call("deleteSelected")}>
-                  Eliminar seleccionado
+                  <HiOutlineViewGridAdd /> Nuevo vínculo
                 </button>
               </div>
             )}
           </div>
           <div className="rv-section">
             <button
-              className="rv-item"
+              className={`rv-item ${openMenu === "editar" ? "is-active" : ""}`}
+              onClick={() => {
+                toggle("editar");
+              }}
+            >
+              Editar{" "}
+              {openMenu === "editar" ? (
+                <MdOutlineKeyboardArrowDown />
+              ) : (
+                <MdOutlineKeyboardArrowRight />
+              )}
+            </button>
+            {openMenu === "editar" && (
+              <div className="rv-dropdown">
+                <button onClick={() => call("editNodePhoto")}>
+                  <MdOutlineAddPhotoAlternate /> Editar foto (nodo)
+                </button>
+                <button onClick={() => call("editNodeName")}>
+                  <CiEdit /> Editar nombre (nodo)
+                </button>
+                <button onClick={() => call("editEdgeRelation")}>
+                  <FaEdit /> Editar vínculo (arista)
+                </button>
+                <button onClick={() => call("deleteSelected")}>
+                  <AiOutlineUserDelete /> Eliminar seleccionado
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="rv-section">
+            <button
+              className={`rv-item ${
+                openMenu === "rectangular" ? "is-active" : ""
+              }`}
               onClick={() => call("layoutRectangular")}
             >
               Rectangular
