@@ -50,7 +50,7 @@
   height: calc(100vh - 150px);
 }
 
-.section-left,
+.section-left-sabana,
 .section-right {
   display: flex;
   flex-direction: column;
@@ -426,7 +426,7 @@
     height: auto;
   }
 
-  .section-left {
+  .section-left-sabana {
     order: 1;
   }
 
