@@ -91,7 +91,7 @@ function App() {
         <Route path="/sabana" element={<Sabana />} />
         <Route path="/logscasos" element={<LogsCasos />} />
         <Route path="/casos" element={<Caso />} />
-        <Route path="/detalles_caso" element={<DetalleCaso />} />
+        <Route path="/detalles_caso/:id" element={<DetalleCaso />} />
 
         {/* Procesamiento de Sabanas */}
         <Route path="/procesamiento_sabana" element={<InfoSabana/>}/>
