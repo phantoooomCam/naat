@@ -457,7 +457,7 @@ const DetalleView = ({ isSidebarCollapsed, casoId }) => {
                   className={`seccion-card ${
                     selectedSection?.id === seccion.id ? "selected" : ""
                   }`}
-                  onClick={() => navigate(rutas[seccion.id])}
+                  onClick={() => navigate(rutas[seccion.id], { state: { idCaso: casoData.id } })}
                 >
                   <div
                     className="seccion-icon-container"
