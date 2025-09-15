@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import { GoogleMap, useJsApiLoader, Marker, Polygon, Circle, InfoWindow } from "@react-google-maps/api"
 // ⚠️ Ajusta esta ruta según tu estructura (misma que uses en informacion3_sabana.jsx)
-import fetchWithAuth from "../../../utils/fetchWithAuth.js"
+import fetchWithAuth from "../utils/fetchWithAuth"
 import "./MapAntenas.css"
 
 const libraries = ["geometry"]

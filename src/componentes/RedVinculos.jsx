@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import PropTypes from "prop-types"
+import fetchWithAuth from "../utils/fetchWithAuth"
 
 const RedVinculos = ({ idSabana, filtrosActivos }) => {
   const cyRef = useRef(null)
@@ -132,7 +133,7 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
         const API_URL = "/api"
         const url = `${API_URL}/sabanas/${idSabana}/registros/relaciones-unicas`
 
-        const res = await fetch(`/api/sabanas/${idSabana}/registros/relaciones-unicas`, {
+        const res = await fetchWithAuth(`/api/sabanas/${idSabana}/registros/relaciones-unicas`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
