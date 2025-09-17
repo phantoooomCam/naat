@@ -12,6 +12,37 @@
   --antenna-shadow: rgba(0, 0, 0, 0.1);
 }
 
+/* Botón contenedor del icono */
+.antenna-marker {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+/* Etiqueta con el rank, estilo similar al label antiguo */
+.antenna-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background: var(--antenna-primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
 /* Main wrapper */
 .mapa-antenas-wrapper {
   width: 100%;
