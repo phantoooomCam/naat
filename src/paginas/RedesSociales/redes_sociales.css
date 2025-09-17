@@ -62,12 +62,14 @@
   transition: box-shadow 0.3s ease;
   padding: 0 0 1vh 0;
 }
-.rv-dropdown .btn-save{
-  background-color: #222a35;
+.rv-subdropdown .rv-form-inline .btn-save{
   width: 100%;
+  display: flex;
+  justify-content: center;
   padding: 1vh 0;
   border: none;
   color: #fff !important;
+  background-color: #222a35;
 }
 .redes-header {
   padding: 16px 20px;
