@@ -1,5 +1,5 @@
 // Fusion of WindowSeek + Navbar for RedesSociales module
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import img from "../../assets/naat_blanco.png";
 import "./redes_sociales.css";
 import { ImSpinner } from "react-icons/im";
@@ -8,14 +8,23 @@ import { ImSpinner } from "react-icons/im";
 const RedVinculosPanel = ({ netRef, onGraphData }) => {
   const platformOptions = ["facebook", "instagram", "x"];
   const [openMenu, setOpenMenu] = useState(null);
-  const [formState, setFormState] = useState(() => {
-    const saved = localStorage.getItem("rv_formState");
-    return saved
-      ? JSON.parse(saved)
-      : { url: "", username: "", platform: "", cantidadFotos: 5 };
-  });
+  const [openSubmenu, setOpenSubmenu] = useState(null);
+  const [showAddRoot, setShowAddRoot] = useState(false);
+  const [formErrors, setFormErrors] = useState({ url: true, username: true });
+  // Mensajes de error por campo (solo se usa si formErrors[campo] === false)
+  const [errorMsg, setErrorMsg] = useState({ url: "" });
+  const DEFAULT_FORM = {
+    url: "",
+    platform: "",
+    cantidadFotos: 1,
+  };
+  const [formState, setFormState] = useState(DEFAULT_FORM);
   const [loading, setLoading] = useState(false);
   const [dataResult, setDataResult] = useState(null);
+  const [roots, setRoots] = useState([]); // array de {platform, username}
+  const [newRootPlatform, setNewRootPlatform] = useState("instagram");
+  const [newRootUsername, setNewRootUsername] = useState("");
+  const [warnings, setWarnings] = useState([]);
   const [loadPlatform, setLoadPlatform] = useState("");
   const [loadUsername, setLoadUsername] = useState("");
 
@@ -46,52 +55,53 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
     }
   }
 
-  function fetchProfileData(platform, username) {
-    return fetch(`/related/${platform}/${username}`).then((r) => r.json());
-  }
-  function scrapeProfile(platform, url, max_photos = 5) {
-    return fetch(`/scrape`, {
+
+  // Llamada al endpoint multi-root
+  function multiScrape(body) {
+    return fetch(`/multi-scrape`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ platform, url, max_photos }),
-    }).then((r) => r.json());
+      body: JSON.stringify(body),
+    }).then(async (r) => {
+      let json = null;
+      try {
+        json = await r.json();
+      } catch {
+        json = null;
+      }
+      if (!r.ok) throw new Error(json?.error?.message || `Error ${r.status}`);
+      return json;
+    });
   }
 
+  // Buscar / agregar root usando formulario principal
   const handleFetchOrScrape = async (e) => {
     e.preventDefault();
     if (loading) return;
-    if (!formState.platform || !formState.username || !formState.url) return;
+    if (formErrors.url === false) return;
+    if (!formState.platform || !formState.username) return;
     setLoading(true);
-    setDataResult(null);
+
     try {
-      const relatedData = await fetchProfileData(
-        formState.platform,
-        formState.username
-      );
-      const updatedAt =
-        relatedData["Perfil objetivo"]?.updated_at ||
-        relatedData["Perfil objetivo"]?.created_at;
-      let useScrape = true;
-      if (updatedAt) {
-        const last = new Date(updatedAt);
-        const now = new Date();
-        const diffDays = (now - last) / (1000 * 60 * 60 * 24);
-        if (diffDays <= 1) useScrape = false;
+      let updatedRoots = roots;
+      if (!roots.some(r => r.platform === formState.platform && r.username === formState.username)) {
+        updatedRoots = [...roots, { platform: formState.platform, username: formState.username }];
+        setRoots(updatedRoots);
       }
-      let data;
-      if (useScrape) {
-        data = await scrapeProfile(
-          formState.platform,
-          formState.url,
-          formState.cantidadFotos || 5
-        );
+      const reqBody = { roots: updatedRoots };
+      const json = await multiScrape(reqBody);
+      setWarnings(json.warnings || []);
+      setDataResult(json);
+      if (updatedRoots.length === 1) {
+        onGraphData && onGraphData(json);
+      } else if (netRef?.current?.mergeMultiRootPayload) {
+        netRef.current.mergeMultiRootPayload(json);
       } else {
-        data = relatedData;
+        onGraphData && onGraphData(json);
       }
-      setDataResult(data);
-      onGraphData && onGraphData(data);
     } catch (err) {
       console.error(err);
+      alert(err.message || "Error al cargar datos");
     } finally {
       setLoading(false);
     }
@@ -100,18 +110,51 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
   const handleForceScrape = async (e) => {
     e.preventDefault();
     if (loading) return;
-    if (!formState.platform || !formState.url) return;
+    if (!formState.platform || !formState.username) return;
     setLoading(true);
     try {
-      const data = await scrapeProfile(
-        formState.platform,
-        formState.url,
-        formState.cantidadFotos || 5
-      );
-      setDataResult(data);
-      onGraphData && onGraphData(data);
+      // Fuerza re-scrape solo de ese root y lo fusiona
+      const json = await multiScrape({ roots: [{ platform: formState.platform, username: formState.username }] });
+      setWarnings(json.warnings || []);
+      if (!roots.some(r => r.platform === formState.platform && r.username === formState.username)) {
+        setRoots(prev => [...prev, { platform: formState.platform, username: formState.username }]);
+      }
+      if (netRef?.current?.mergeMultiRootPayload && roots.length) {
+        netRef.current.mergeMultiRootPayload(json);
+      } else {
+        onGraphData && onGraphData(json);
+      }
+      setDataResult(json);
     } catch (err) {
       console.error(err);
+      alert(err.message || "Error forzando root");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addAnotherRoot = async () => {
+    if (!newRootPlatform || !newRootUsername) return;
+    if (roots.some(r => r.platform === newRootPlatform && r.username === newRootUsername)) {
+      alert("Ese root ya está cargado");
+      return;
+    }
+    setLoading(true);
+    try {
+      const json = await multiScrape({ roots: [{ platform: newRootPlatform, username: newRootUsername }] });
+      setWarnings(json.warnings || []);
+      setRoots(prev => [...prev, { platform: newRootPlatform, username: newRootUsername }]);
+      if (netRef?.current?.mergeMultiRootPayload) {
+        netRef.current.mergeMultiRootPayload(json);
+      } else {
+        onGraphData && onGraphData(json);
+      }
+      setShowAddRoot(false);
+      setNewRootUsername("");
+      setDataResult(json);
+    } catch (e) {
+      console.error(e);
+      alert(e.message || "Error agregando root");
     } finally {
       setLoading(false);
     }
@@ -128,7 +171,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
     <div className="redvinc-panel">
       {/* Seek / search form */}
       <div className="rv-seek-wrapper">
-        <h3 className="rv-title">Red de vínculos</h3>
+    <h3 className="rv-title">Red de vínculos (multi-root)</h3>
         <form className="rv-form" onSubmit={handleFetchOrScrape}>
           <div className="rv-field">
             <label>Enlace del perfil (URL):</label>
@@ -170,29 +213,32 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
             />
           </div>
           <div className="rv-buttons">
-            <button 
-            type="submit" 
-            disabled={loading}>
-              {loading ? (
-                <span>
-                  <ImSpinner className="spinner" />
-                </span>
-              ) : (
-                "Buscar"
-              )}
+
+            <button type="submit" disabled={loading}>
+              {loading ? <ImSpinner className="spinner" /> : roots.length ? "Agregar / Refrescar" : "Buscar"}
             </button>
-            <button
-              type="button"
-              onClick={handleForceScrape}
-              disabled={loading}
-            >
-              Actualizar
+            <button type="button" onClick={handleForceScrape} disabled={loading}>
+              Forzar (solo root actual)
             </button>
           </div>
         </form>
         <div className="rv-status">
-          {dataResult ? `Cargado` : "No hay información aún"}
+          {dataResult ? `Roots: ${roots.length}` : "No hay información aún"}
         </div>
+        {roots.length > 0 && (
+          <div className="rv-roots-chips">
+            {roots.map(r => (
+              <span key={`${r.platform}:${r.username}`} className="rv-chip">
+                {r.platform}:{r.username}
+              </span>
+            ))}
+          </div>
+        )}
+        {warnings.length > 0 && (
+          <div className="rv-warnings">
+            {warnings.map((w,i)=>(<div key={i} className="rv-warning-item">⚠ {w.code || w}</div>))}
+          </div>
+        )}
       </div>
 
       {/* Toolbar */}
@@ -288,6 +334,36 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
           </div>
         </div>
         <div className="rv-right">
+          <button
+            className="rv-item"
+            title="Agregar otro root"
+            type="button"
+            onClick={() => setShowAddRoot(s=>!s)}
+          >
+            + Root
+          </button>
+          {showAddRoot && (
+            <div className="rv-add-root-pop">
+              <div className="rv-add-root-inner">
+                <h4>Añadir Root</h4>
+                <div className="rv-field-inline">
+                  <select value={newRootPlatform} onChange={e=>setNewRootPlatform(e.target.value)}>
+                    {platformOptions.map(p=> <option key={p} value={p}>{p}</option>)}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="username"
+                    value={newRootUsername}
+                    onChange={e=>setNewRootUsername(e.target.value)}
+                  />
+                </div>
+                <div className="rv-buttons-inline">
+                  <button type="button" disabled={loading || !newRootUsername} onClick={addAnotherRoot}>{loading? <ImSpinner className="spinner" /> : 'Agregar'}</button>
+                  <button type="button" onClick={()=>setShowAddRoot(false)}>Cerrar</button>
+                </div>
+              </div>
+            </div>
+          )}
           <button className="rv-item" onClick={() => call("undo")}>
             ⟲ Deshacer
           </button>

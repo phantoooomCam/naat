@@ -5,6 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
   useEffect,
+  useCallback,
 } from "react";
 import cytoscape from "cytoscape";
 import dagre from "cytoscape-dagre";
@@ -167,31 +168,32 @@ const applyRectangularLayout = (cy, rootId, _containerRef, opts = {}) => {
   cy.fit();
 };
 
-// Construir elementos desde JSON original (para primera carga via scraping)
-function buildGraphData(data) {
-  console.log("[buildGraphData] input:", data);
-  if (!data || !data["Perfil objetivo"]) {
-    console.warn("[buildGraphData] No Perfil objetivo en data");
-    return [];
-  }
+// Construir elementos desde JSON legacy v1 (single root)
+function buildGraphDataV1(data) {
+  if (!data || !data["Perfil objetivo"]) return [];
   const nodesMap = new Map();
   const edges = [];
   const edgeSet = new Set();
   const objetivo = data["Perfil objetivo"];
   const relacionados = data["Perfiles relacionados"] || [];
-  nodesMap.set(objetivo.username, {
+  const rootId = objetivo.username;
+  nodesMap.set(rootId, {
     data: {
-      id: objetivo.username,
+      id: rootId,
       label: objetivo.username || objetivo.full_name,
       tipo: "perfil",
       profile_url: objetivo.profile_url,
       photo_url: objetivo.photo_url,
       username: objetivo.username,
       full_name: objetivo.full_name || objetivo.username,
+      is_root: true,
+      sources: [rootId],
+      sources_count: 1,
     },
   });
   relacionados.forEach((rel) => {
     const id = rel.username;
+    if (!id) return;
     if (!nodesMap.has(id)) {
       nodesMap.set(id, {
         data: {
@@ -202,24 +204,25 @@ function buildGraphData(data) {
           photo_url: rel.photo_url,
           username: id,
           full_name: rel.full_name || id,
+          is_root: false,
+          sources: [rootId],
+          sources_count: 1,
         },
       });
     }
-    let edgeKey, sourceNode, targetNode;
     const relacion = rel["tipo de relacion"];
+    let sourceNode, targetNode;
     if (relacion === "seguidor") {
       sourceNode = id;
-      targetNode = objetivo.username;
-      edgeKey = `${sourceNode}->${targetNode}->seguidor`;
+      targetNode = rootId;
     } else if (relacion === "seguido") {
-      sourceNode = objetivo.username;
+      sourceNode = rootId;
       targetNode = id;
-      edgeKey = `${sourceNode}->${targetNode}->seguido`;
     } else {
       sourceNode = id;
-      targetNode = objetivo.username;
-      edgeKey = `${sourceNode}->${targetNode}->${relacion}`;
+      targetNode = rootId;
     }
+    const edgeKey = `${sourceNode}->${targetNode}->${relacion}`;
     if (!edgeSet.has(edgeKey)) {
       edges.push({
         data: {
@@ -228,14 +231,76 @@ function buildGraphData(data) {
           target: targetNode,
           rel: relacion,
           relation_type: relacion,
+          type: relacion,
         },
       });
       edgeSet.add(edgeKey);
     }
   });
-  const result = [...nodesMap.values(), ...edges];
-  console.log("[buildGraphData] output:", result);
-  return result;
+  return [...nodesMap.values(), ...edges];
+}
+
+// Construir elementos desde schema v2 multi-root (F1 backend)
+function buildGraphDataV2(payload) {
+  if (!payload || payload.schema_version !== 2) return [];
+  const nodes = [];
+  const edges = [];
+  const rootSet = new Set(payload.root_profiles || []); // strings platform:username
+  const profiles = payload.profiles || [];
+  profiles.forEach((p) => {
+    if (!p || !p.platform || !p.username) return;
+    const id = `${p.platform}:${p.username}`;
+    const sources = Array.isArray(p.sources) ? p.sources.slice().sort() : [];
+    nodes.push({
+      data: {
+        id,
+        platform: p.platform,
+        username: p.username,
+        label: p.full_name || p.username,
+        full_name: p.full_name || p.username,
+        profile_url: p.profile_url || "",
+        photo_url: p.photo_url || "",
+        tipo: rootSet.has(id) ? "perfil" : "rel",
+        is_root: rootSet.has(id),
+        sources,
+        sources_count: sources.length || 1,
+      },
+    });
+  });
+  const relations = payload.relations || [];
+  relations.forEach((r) => {
+    if (!r || !r.platform || !r.source || !r.target || !r.type) return;
+    const sourceId = `${r.platform}:${r.source}`;
+    const targetId = `${r.platform}:${r.target}`;
+    const edgeId = `${r.platform}:${r.source}->${r.target}:${r.type}`;
+    edges.push({
+      data: {
+        id: edgeId,
+        source: sourceId,
+        target: targetId,
+        relation_type: r.type,
+        rel: r.type,
+        type: r.type,
+        platform: r.platform,
+      },
+      classes: `rel-${r.type}`,
+    });
+  });
+  return [...nodes, ...edges];
+}
+
+function detectSchemaVersion(elements) {
+  if (!elements) return 1;
+  if (elements && typeof elements === "object" && elements.schema_version === 2) return 2;
+  // legacy heuristic
+  if (elements["Perfil objetivo"]) return 1;
+  return 1;
+}
+
+function buildGraphDataUniversal(data) {
+  const v = detectSchemaVersion(data);
+  if (v === 2) return buildGraphDataV2(data);
+  return buildGraphDataV1(data);
 }
 
 const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
@@ -472,7 +537,7 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     if (!containerRef.current) return null;
     const cy = cytoscape({
       container: containerRef.current,
-      elements: buildGraphData(elements),
+  elements: buildGraphDataUniversal(elements),
       layout: { name: "preset" },
       style: [
         {
@@ -588,35 +653,108 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     return cy;
   };
 
-  // Rebuild graph when new raw data (from Buscar / Actualizar) arrives
+  // Rebuild graph when new input data (legacy v1 or schema v2) arrives
   useEffect(() => {
-    if (!elements) return; // nothing to do
-    const isRaw = !!(
-      elements["Perfil objetivo"] && elements["Perfiles relacionados"]
-    );
-    // Don't interfere with graph-session loading (handled inside getGraphSession)
-    if (!isRaw) return;
+    if (!elements) return;
+    const schemaV = detectSchemaVersion(elements);
     const cy = ensureCy();
     if (!cy) return;
-    console.log("[WindowNet] Rebuilding graph from raw data");
-    const built = buildGraphData(elements);
+    const built = buildGraphDataUniversal(elements);
+    if (!built.length) return;
     cy.startBatch();
     cy.elements().remove();
     cy.add(built);
     cy.endBatch();
     cy.nodes().grabify();
-    const root = elements?.["Perfil objetivo"]?.username;
-    applyRectangularLayout(cy, root, containerRef, {
-      cellW: 510,
-      cellH: 510,
+    // Layout: for multi-root pick first root as anchor for now
+    let rootId = null;
+    if (schemaV === 1) {
+      rootId = elements?.["Perfil objetivo"]?.username || null;
+    } else if (schemaV === 2) {
+      const firstRoot = Array.isArray(elements.root_profiles) ? elements.root_profiles[0] : null;
+      rootId = firstRoot || null;
+    }
+    applyRectangularLayout(cy, rootId, containerRef, {
+      cellW: schemaV === 2 ? 400 : 510,
+      cellH: schemaV === 2 ? 400 : 510,
       gapX: 50,
       gapY: 50,
       topPad: 80,
       leftPad: 140,
       rootOffsetX: 140,
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    cy.fit();
   }, [elements]);
+
+  // Imperative merge for incremental multi-root additions (schema v2 payload fragment)
+  const mergeMultiRootPayload = useCallback((payload) => {
+    if (!payload || payload.schema_version !== 2) return;
+    const cy = ensureCy();
+    if (!cy) return;
+    const existingNodes = new Map();
+    cy.nodes().forEach((n) => existingNodes.set(n.id(), n));
+    const rootSet = new Set(payload.root_profiles || []);
+    const profiles = payload.profiles || [];
+    cy.startBatch();
+    profiles.forEach((p) => {
+      if (!p.platform || !p.username) return;
+      const id = `${p.platform}:${p.username}`;
+      const incomingSources = Array.isArray(p.sources) ? p.sources.slice().sort() : [];
+      if (existingNodes.has(id)) {
+        const node = existingNodes.get(id);
+        const prevSources = node.data("sources") || [];
+        const mergedSources = Array.from(new Set([...prevSources, ...incomingSources])).sort();
+        node.data({
+          ...node.data(),
+          label: node.data("label") || p.full_name || p.username,
+          full_name: node.data("full_name") || p.full_name || p.username,
+          photo_url: node.data("photo_url") || p.photo_url || "",
+          sources: mergedSources,
+          sources_count: mergedSources.length,
+          is_root: node.data("is_root") || rootSet.has(id),
+        });
+      } else {
+        cy.add({
+          group: "nodes",
+          data: {
+            id,
+            platform: p.platform,
+            username: p.username,
+            label: p.full_name || p.username,
+            full_name: p.full_name || p.username,
+            profile_url: p.profile_url || "",
+            photo_url: p.photo_url || "",
+            tipo: rootSet.has(id) ? "perfil" : "rel",
+            is_root: rootSet.has(id),
+            sources: incomingSources,
+            sources_count: incomingSources.length || 1,
+          },
+        });
+      }
+    });
+    const existingEdges = new Set();
+    cy.edges().forEach((e) => existingEdges.add(e.id()));
+    (payload.relations || []).forEach((r) => {
+      if (!r.platform || !r.source || !r.target || !r.type) return;
+      const edgeId = `${r.platform}:${r.source}->${r.target}:${r.type}`;
+      if (existingEdges.has(edgeId)) return;
+      cy.add({
+        group: "edges",
+        data: {
+          id: edgeId,
+          source: `${r.platform}:${r.source}`,
+            target: `${r.platform}:${r.target}`,
+          relation_type: r.type,
+          rel: r.type,
+          type: r.type,
+          platform: r.platform,
+        },
+        classes: `rel-${r.type}`,
+      });
+    });
+    cy.endBatch();
+    cy.style().update();
+  }, []);
 
   // Acciones expuestas
   const createNode = () => {
@@ -1109,8 +1247,9 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
       undo,
       redo,
       exportToExcel,
-  saveAsLocal: saveGraphAsLocalFile,
-  loadFromLocal: loadGraphFromLocalFile,
+      saveAsLocal: saveGraphAsLocalFile,
+      loadFromLocal: loadGraphFromLocalFile,
+      mergeMultiRootPayload, // nueva API para multi-root incremental
       layoutRectangular: () => {
         if (!cyRef.current) return;
         const cy = cyRef.current;
