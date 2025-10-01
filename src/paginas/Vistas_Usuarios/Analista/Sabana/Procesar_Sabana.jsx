@@ -37,8 +37,8 @@ const Procesar_Sabana = ({ activeView }) => {
   };
 
   return (
-    <div className={`dash-home ${isSidebarCollapsed ? "collapsed" : ""}`}>
-      <div className="container">
+    <div className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
+      <div className="content-wrapper">
         {views[activeView] || views.procesamiento}
       </div>
     </div>
@@ -511,7 +511,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
   return (
     <div
-      className={`sabana-container ${isSidebarCollapsed ? "collapsed" : ""}`}
+      className={`dashh-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}
     >
       {processingStatus && (
         <div className={`status-message ${processingStatus}`}>
@@ -527,7 +527,10 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       )}
 
       <div className="sabana-header">
-        <h2>Procesamiento de Sabanas</h2>
+        <div className="header-content">
+          <h2>Procesamiento de Sabanas</h2>
+        </div>
+        
         {/* <div>
           <h2>
             Estado de WebSocket: {isConnected ? "Conectado" : "Desconectado"}

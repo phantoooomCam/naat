@@ -40,8 +40,8 @@ const Procesar_Caso = ({ activeView }) => {
   }
 
   return (
-    <div className={`dash-home ${isSidebarCollapsed ? "collapsed" : ""}`}>
-      <div className="container">{views[activeView] || views.procesamiento}</div>
+    <div className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
+      <div className="content-wrapper">{views[activeView] || views.procesamiento}</div>
     </div>
   )
 }
@@ -454,7 +454,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   }
 
   return (
-    <div className={`caso-container ${isSidebarCollapsed ? "collapsed" : ""}`}>
+    <div className={`dashh-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
       {processingStatus && (
         <div className={`status-message ${processingStatus}`}>
           <span>{statusMessage}</span>
