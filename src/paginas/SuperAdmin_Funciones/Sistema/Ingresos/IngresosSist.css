@@ -39,15 +39,15 @@
 .paginacion button {
   padding: 8px 12px;
   border: none;
-  background: #222a35;
+  background: #66707e;
   color: white;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 20px;
   transition: all 0.3s ease;
 }
 
 .paginacion button:hover {
-  background: #4b5058;
+  background: rgb(61, 72, 85);
 }
 
 .paginacion button:disabled {

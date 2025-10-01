@@ -3,10 +3,13 @@
   width: 100%;
   height: 100%;
   padding: 20px;
-  background-color: #e8e8e8;
+  background-color: #ffffff;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
   transition: margin-left 0.3s ease-in-out;
   margin-top: 70px;
   margin-left: -10px; /* Sidebar abierto */
+  border-style: 20px;
 }
 
 .sabana-container.collapsed {
@@ -52,7 +55,7 @@
 /* Upload area */
 .upload-card {
   text-align: center;
-  border: 2px dashed #33608d;
+  border: 2px dashed #222e52;
   transition: all 0.3s ease;
   position: relative;
   overflow: hidden;
@@ -60,7 +63,7 @@
 
 .upload-card.drag-active {
   background-color: rgba(51, 96, 141, 0.05);
-  border-color: #33608d;
+  border-color: #222a35;
   transform: scale(1.01);
 }
 
@@ -74,12 +77,12 @@
 
 .upload-icon {
   font-size: 3rem;
-  color: #33608d;
+  color: #222e52;
   margin-bottom: 10px;
 }
 
 .upload-button {
-  background-color: #33608d;
+  background-color: #222e52;
   color: white;
   border: none;
   padding: 12px 24px;
@@ -701,7 +704,11 @@
 }
 
 .file-item-enhanced.selected {
-  background: linear-gradient(135deg, rgba(51, 96, 141, 0.1) 0%, rgba(51, 96, 141, 0.05) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(51, 96, 141, 0.1) 0%,
+    rgba(51, 96, 141, 0.05) 100%
+  );
   border-color: #33608d;
   box-shadow: 0 0 0 2px rgba(51, 96, 141, 0.2);
 }

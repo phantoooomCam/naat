@@ -2,10 +2,11 @@
 :root {
   --sidebar-width: 280px;
   --sidebar-width-collapsed: 80px;
-  --sidebar-bg: linear-gradient(195deg, #42424a, #222a35);
+  /* --sidebar-bg: linear-gradient(195deg, #42424a, #222a35); */
+  --sidebar-bg: linear-gradient(195deg, #222a35, #222a35);
   --sidebar-color: #fff;
   --sidebar-hover: rgba(255, 255, 255, 0.1);
-  --sidebar-active: #33608d;
+  --sidebar-active: #737b83;
   --sidebar-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-shadow: 0 0 10px rgba(0, 0, 0, 0.3);

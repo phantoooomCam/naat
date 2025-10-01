@@ -6,7 +6,7 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  background: #e8e8e8;
+  background: #fafafa;
   transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 

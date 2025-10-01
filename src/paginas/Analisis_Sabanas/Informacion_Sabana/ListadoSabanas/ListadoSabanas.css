@@ -1,7 +1,7 @@
 /* ListadoSabanas.css - Estilos basados en Procesar_Caso.jsx */
 :root {
-  --primary-color: #33608d;
-  --primary-hover: #264a6e;
+  --primary-color: #222a35;
+  --primary-hover: rgb(61, 72, 85);
   --secondary-color: #64748b;
   --success-color: #2c7a7b;
   --warning-color: #6b46c1;

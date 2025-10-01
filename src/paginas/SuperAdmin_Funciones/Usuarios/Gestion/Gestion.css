@@ -9,7 +9,7 @@
   transition: all 0.3s ease;
 }
 .main-content{
-  background-color: #e8e8e8;
+  background-color: #fafafa;
   min-height: 100vh;
 }
 .dashboard-container{
@@ -21,7 +21,7 @@
   width: 100%;
   overflow-x: auto;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(99, 47, 47, 0.05);
   margin-top: 20px;
 }
 
@@ -113,7 +113,7 @@ select:focus {
 /* Botones */
 button {
   padding: 10px 16px;
-  border-radius: 8px;
+  border-radius: 20px;
   font-size: 0.95rem;
   transition: all 0.3s;
   cursor: pointer;
@@ -126,14 +126,14 @@ button {
 
 .btn-edit,
 .add-button {
-  background-color: #33608d;
+  background-color: #66707e;
   color: white;
   border: none;
 }
 
 .btn-edit:hover,
 .add-button:hover {
-  background-color: #264a6e;
+  background-color: rgb(61, 72, 85);
 }
 
 .btn-cancel {
@@ -157,7 +157,7 @@ button {
 .table-container {
   margin-top: 25px;
   overflow-x: auto;
-  border-radius: 12px;
+  border-radius: 15px;
 }
 
 table {
@@ -173,8 +173,8 @@ td {
 }
 
 th {
-  background-color: #222a35;
-  color: white;
+  background-color: #e9e9e9;
+  color: rgb(0, 0, 0);
   font-weight: 500;
   white-space: nowrap;
 }
@@ -238,8 +238,8 @@ tr:hover {
 
 .add-button {
   white-space: nowrap;
-  padding: 12px 20px;
-  border-radius: 8px;
+  padding: 8px 14px;
+  border-radius: 20px;
   transition: all 0.3s ease;
 }
 
@@ -259,7 +259,7 @@ tr:hover {
 .dash-gestion.collapsed {
   margin-left: -192px;
   transition: margin 0.3s ease-in-out;
-  background-color:#e8e8e8;
+  background-color:#fafafa;
 }
 
 
@@ -341,9 +341,9 @@ tr:hover {
 }
 
 .pagination-button:hover:not(:disabled) {
-  background-color: #33608d;
+  background-color: rgb(61, 72, 85);
   color: white;
-  border-color: #33608d;
+  border-color: rgb(61, 72, 85);
 }
 
 .pagination-button:disabled {
@@ -431,35 +431,35 @@ tr:hover {
 /* Badges para niveles */
 .nivel-badge {
   display: inline-block;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 4px 10px;
+  border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 500;
   text-align: center;
 }
 
 .nivel-1 {
-  background-color: #4a148c;
+  background-color: #a988d0;
   color: white;
 }
 
 .nivel-2 {
-  background-color: #1565c0;
+  background-color: #5099eb;
   color: white;
 }
 
 .nivel-3 {
-  background-color: #2e7d32;
+  background-color: #5d945f;
   color: white;
 }
 
 .nivel-4 {
-  background-color: #ef6c00;
+  background-color: #f39a51;
   color: white;
 }
 
 .nivel-5 {
-  background-color: #546e7a;
+  background-color: #687c86;
   color: white;
 }
 
