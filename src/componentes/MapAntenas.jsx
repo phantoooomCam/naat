@@ -1,19 +1,15 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import {
-  GoogleMap,
-  useJsApiLoader,
-  Polygon,
-  Circle,
-  InfoWindow,
-  OverlayView,
-} from "@react-google-maps/api";
-import { LuRadioTower } from "react-icons/lu";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { GoogleMap, useJsApiLoader, Polygon, Circle, InfoWindow, OverlayView } from "@react-google-maps/api";
+import { MarkerClusterer } from "@googlemaps/markerclusterer"; // ya no se usa, pero se deja comentado si quieres clustering más adelante
+// Eliminado el icono MdCellTower: ahora solo se muestra un círculo con el número de rank
 import fetchWithAuth from "../utils/fetchWithAuth.js";
 import "./MapAntenas.css";
 
 const libraries = ["geometry"];
+
+// Ya no se muestran markers ni clustering: cada antena se dibuja como un círculo con su rank usando OverlayView.
 
 /**
  * Mapa de Antenas — cookies + fetchWithAuth + .env API key:
@@ -29,6 +25,8 @@ const MapAntenas = ({ idSabana, apiBase = "" }) => {
   const [error, setError] = useState("");
   const [selectedAntenna, setSelectedAntenna] = useState(null);
   const [mapRef, setMapRef] = useState(null);
+  // Antenas visibles actualmente en el viewport (optimización rendimiento)
+  const debounceTimerRef = useRef(null);
 
   // API Key únicamente desde variable de entorno (Vite)
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -63,10 +61,11 @@ const MapAntenas = ({ idSabana, apiBase = "" }) => {
   );
 
   // Helpers visuales según rank
-  const iconSizeForRank = (rank) => {
-    if (rank === 1) return 36;
-    if (rank === 2 || rank === 3) return 32;
-    return 30;
+  // Tamaños reducidos para círculos (más compactos en el mapa)
+  const circleSizeForRank = (rank) => {
+    if (rank === 1) return 28; // antes 40
+    if (rank === 2 || rank === 3) return 24; // antes 36
+    return 20; // antes 32
   };
   const strokeWeightForRank = (rank) => {
     if (rank === 1) return 3;
@@ -298,11 +297,9 @@ const MapAntenas = ({ idSabana, apiBase = "" }) => {
       <div className="mapa-antenas-legend">
         <div className="legend-item">
           <div className="legend-icon">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="#2563eb">
-              <path d="M7.3 14.7l1.4 1.4C9.4 15.4 10.6 15 12 15s2.6.4 3.3 1.1l1.4-1.4C15.8 13.8 14 13 12 13s-3.8.8-4.7 1.7zM4.9 12.3l1.4 1.4C7.6 12.4 9.7 11.5 12 11.5s4.4.9 5.7 2.2l1.4-1.4C17.4 10.6 14.8 9.5 12 9.5s-5.4 1.1-7.1 2.8zM2.5 9.9l1.4 1.4C5.6 9.6 8.6 8.5 12 8.5s6.4 1.1 8.1 2.8l1.4-1.4C19.7 8.1 16 6.5 12 6.5s-7.7 1.6-9.5 3.4zM12 2L8.5 5.5 10 7l2-2 2 2 1.5-1.5L12 2zm0 11c-.8 0-1.5.7-1.5 1.5S11.2 16 12 16s1.5-.7 1.5-1.5S12.8 13 12 13z" />
-            </svg>
+            <span className="antenna-legend-circle">1</span>
           </div>
-          <span>Antena (número = rank)</span>
+          <span>Antena (círculo con rank)</span>
         </div>
         <div className="legend-item">
           <div className="legend-color sector"></div>
@@ -334,38 +331,34 @@ const MapAntenas = ({ idSabana, apiBase = "" }) => {
           fullscreenControl: true,
         }}
       >
+        {/* Círculo con número de rank */}
         {antenas.map((antena, index) => {
-          const r = antena.rank ?? 9999;
-          const size = iconSizeForRank(r);
+          const rankVal = antena.rank ?? null;
+          const sizePx = circleSizeForRank(rankVal || 9999);
+          const displayNumber = rankVal || index + 1; // fallback
           return (
             <OverlayView
-              key={`ov-${index}`}
+              key={`antenna-rank-${index}`}
               position={{
                 lat: antena.latitudDecimal,
                 lng: antena.longitudDecimal,
               }}
               mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-              // fondo-centro: el píxel de la coordenada es la base del ícono
-              getPixelPositionOffset={(w, h) => {
-                // leve “fudge” para compensar el padding del glifo de react-icons
-                const fudge = 0.12; // 12% de la altura
-                return { x: -w / 2, y: -h + h * fudge };
-              }}
             >
               <button
-                className="antenna-marker"
-                style={{
-                  zIndex: 100000 - r,
-                  width: size,
-                  height: size,
-                }}
+                type="button"
                 onClick={() => setSelectedAntenna({ ...antena, index })}
-                aria-label={`Antena ${antena.rank ?? index + 1}`}
+                className="antenna-rank-circle"
+                title={`Antena #${displayNumber}`}
+                style={{
+                  width: sizePx,
+                  height: sizePx,
+                  transform: "translate(-50%, -50%)",
+                  zIndex: 100000 - (rankVal || 9999),
+                  fontSize: Math.max(10, Math.round(sizePx * 0.45)),
+                }}
               >
-                <LuRadioTower size={size} color="var(--antenna-primary)" />
-                {antena.rank ? (
-                  <span className="antenna-badge">{antena.rank}</span>
-                ) : null}
+                {displayNumber}
               </button>
             </OverlayView>
           );

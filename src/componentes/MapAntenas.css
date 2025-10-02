@@ -144,6 +144,21 @@
   height: 20px;
 }
 
+/* Pequeño círculo de ejemplo en la leyenda */
+.antenna-legend-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: var(--antenna-primary);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 1px #ffffff, 0 2px 4px rgba(0,0,0,0.3);
+}
+
 .legend-color {
   width: 16px;
   height: 16px;
@@ -167,6 +182,34 @@
   width: 100%;
   height: 100%;
   min-height: 600px;
+}
+
+/* Círculo real sobre el mapa con rank */
+.antenna-rank-circle {
+  background: var(--antenna-primary);
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  padding: 0;
+}
+.antenna-rank-circle:hover {
+  transform: translate(-50%, -50%) scale(1.08);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.45);
+}
+.antenna-rank-circle:active {
+  transform: translate(-50%, -50%) scale(0.95);
+}
+.antenna-rank-circle:focus {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
 }
 
 /* Status messages */
