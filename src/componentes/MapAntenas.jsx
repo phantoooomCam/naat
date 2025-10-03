@@ -20,7 +20,9 @@ const libraries = ["geometry"];
  * - Auth: SOLO cookie (manejado por fetchWithAuth)
  * - URL: relativa por defecto (útil con proxy Vite). Puedes pasar apiBase para forzar host.
  */
-const MapAntenas = ({ idSabana, apiBase = "" }) => {
+// height: permite ajustar el alto desde el padre (por ejemplo "100%" para ocupar todo el content-display-area,
+// o valores como "600px", "70vh", etc.). Por defecto 100% para que se adapte.
+const MapAntenas = ({ idSabana, apiBase = "", height = "100%" }) => {
   const [antenas, setAntenas] = useState([]);
   const [error, setError] = useState("");
   const [selectedAntenna, setSelectedAntenna] = useState(null);
@@ -281,7 +283,7 @@ const MapAntenas = ({ idSabana, apiBase = "" }) => {
   const topText = top ? `Top #1: ${top.frecuencia} apariciones` : null;
 
   return (
-    <div className="mapa-antenas-wrapper">
+    <div className="mapa-antenas-wrapper" style={{ height }}>
       {/* Header + controles */}
       <div className="mapa-antenas-header">
         <h4>
