@@ -73,7 +73,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [pendingMessages, setPendingMessages] = useState([]); // 🔧 NUEVO: Mensajes pendientes
 
   // ---- Estado derivado para 1 solo archivo ----
-  const hasSingleFile = files.length === 1;
+  const hasSingleFile = files.length === 2;
   const onlyFileId = hasSingleFile ? files[0].id : null;
   const onlyFileStatus = hasSingleFile ? fileStatus[onlyFileId] : null;
   const onlyFileProgress = hasSingleFile ? fileProgress[onlyFileId] || 0 : 0;
@@ -84,7 +84,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
 
   // REGLAS:
   // Guardar en BD: hay archivo y NO está procesado
-  const canGuardar = hasSingleFile && !isProcessed && !isProcessing;
+  const canGuardar =  !isProcessed && !isProcessing;
 
   // Procesar Archivos: hay archivo y SÍ está procesado
   const canProcesar = hasSingleFile && isProcessed && !isProcessing;
