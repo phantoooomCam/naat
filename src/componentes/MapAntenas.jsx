@@ -20,13 +20,20 @@ const libraries = ["geometry"];
  * - Auth: SOLO cookie (manejado por fetchWithAuth)
  * - URL: relativa por defecto (útil con proxy Vite). Puedes pasar apiBase para forzar host.
  */
-const MapAntenas = ({ idSabana, apiBase = "" }) => {
+// height: permite ajustar el alto desde el padre (por ejemplo "100%" para ocupar todo el content-display-area,
+// o valores como "600px", "70vh", etc.). Por defecto 100% para que se adapte.
+// Filtro: Se añade un dropdown estilo Excel para seleccionar qué ranks de antenas mostrar.
+const MapAntenas = ({ idSabana, apiBase = "", height = "100%" }) => {
   const [antenas, setAntenas] = useState([]);
   const [error, setError] = useState("");
   const [selectedAntenna, setSelectedAntenna] = useState(null);
   const [mapRef, setMapRef] = useState(null);
   // Antenas visibles actualmente en el viewport (optimización rendimiento)
   const debounceTimerRef = useRef(null);
+  // Filtro por rank
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [selectedRanks, setSelectedRanks] = useState(new Set());
+  const [rankSearch, setRankSearch] = useState("");
 
   // API Key únicamente desde variable de entorno (Vite)
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -142,15 +149,37 @@ const MapAntenas = ({ idSabana, apiBase = "" }) => {
     return () => controller.abort();
   }, [idSabana, apiBase]);
 
-  /**
-   * Cobertura:
-   * - azimuth === 360 → círculo 400 m
-   * - azimuth ∈ [0,360) → sector como TRIÁNGULO de 3 puntos: centro + (A-5°) + (A+5°)
-   */
-  const coverageShapes = useMemo(() => {
-    if (!isLoaded || !window.google || antenas.length === 0) return [];
+  // Actualizar set de ranks disponibles cuando cambian las antenas
+  useEffect(() => {
+    if (antenas.length === 0) return;
+    const unique = new Set(
+      antenas.map((a) => (a.rank == null ? "__SIN_RANK__" : String(a.rank)))
+    );
+    // Si no hay selección previa (o se han incorporado nuevos ranks), inicializar con todos
+    if (selectedRanks.size === 0) {
+      setSelectedRanks(unique);
+    } else {
+      // Asegurar que la selección no contenga ranks que ya no existen
+      const filtered = new Set();
+      selectedRanks.forEach((r) => {
+        if (unique.has(r)) filtered.add(r);
+      });
+      if (filtered.size !== selectedRanks.size) setSelectedRanks(filtered);
+    }
+  }, [antenas]);
 
-    return antenas.map((antena, index) => {
+  const filteredAntenas = useMemo(() => {
+    if (selectedRanks.size === 0) return [];
+    return antenas.filter((a) =>
+      selectedRanks.has(a.rank == null ? "__SIN_RANK__" : String(a.rank))
+    );
+  }, [antenas, selectedRanks]);
+
+  /** Cobertura calculada sólo sobre las antenas filtradas */
+  const coverageShapes = useMemo(() => {
+    if (!isLoaded || !window.google || filteredAntenas.length === 0) return [];
+
+    return filteredAntenas.map((antena, index) => {
       const center = new window.google.maps.LatLng(
         antena.latitudDecimal,
         antena.longitudDecimal
@@ -202,27 +231,87 @@ const MapAntenas = ({ idSabana, apiBase = "" }) => {
         },
       };
     });
-  }, [antenas, isLoaded, circleOptionsBase, sectorOptionsBase]);
+  }, [filteredAntenas, isLoaded, circleOptionsBase, sectorOptionsBase]);
 
   // Controles
-  const onMapLoad = useCallback((map) => setMapRef(map), []);
+  const onMapLoad = useCallback((map) => {
+    setMapRef(map);
+    // Mover controles para que no queden pegados al borde inferior (evita desbordes visibles)
+    try {
+      if (window.google && window.google.maps) {
+        map.setOptions({
+          zoomControlOptions: {
+            position: window.google.maps.ControlPosition.RIGHT_CENTER,
+          },
+          mapTypeControlOptions: {
+            position: window.google.maps.ControlPosition.TOP_LEFT,
+          },
+        });
+      }
+    } catch (e) {
+      // Silenciar si algo falla (ambiente SSR o google undefined temporalmente)
+      // console.warn('No se pudo reubicar controles del mapa', e);
+    }
+  }, []);
   const fitBounds = useCallback(() => {
-    if (!mapRef || antenas.length === 0) return;
-    if (antenas.length === 1) {
-      const a = antenas[0];
+    if (!mapRef || filteredAntenas.length === 0) return;
+    if (filteredAntenas.length === 1) {
+      const a = filteredAntenas[0];
       mapRef.setCenter({ lat: a.latitudDecimal, lng: a.longitudDecimal });
       mapRef.setZoom(16);
     } else {
       const bounds = new window.google.maps.LatLngBounds();
-      antenas.forEach((a) =>
+      filteredAntenas.forEach((a) =>
         bounds.extend({ lat: a.latitudDecimal, lng: a.longitudDecimal })
       );
       mapRef.fitBounds(bounds);
     }
-  }, [mapRef, antenas]);
-  const recalculateSectors = useCallback(() => setAntenas((prev) => prev), []);
+  }, [mapRef, filteredAntenas]);
+  // recalculateSectors removed — se maneja automáticamente mediante filtros y re-render
 
-  // Estados de carga/errores
+  // Ranks únicos ordenados para dropdown (mover arriba de returns para respetar orden de hooks)
+  const uniqueRanksSorted = useMemo(() => {
+    const set = new Set(
+      antenas.map((a) => (a.rank == null ? "__SIN_RANK__" : String(a.rank)))
+    );
+    const arr = Array.from(set);
+    // Separar sin rank al final
+    const numeric = arr
+      .filter((r) => r !== "__SIN_RANK__")
+      .map((r) => Number(r))
+      .filter((n) => !Number.isNaN(n))
+      .sort((a, b) => a - b);
+    const result = numeric.map(String);
+    if (arr.includes("__SIN_RANK__")) result.push("__SIN_RANK__");
+    return result;
+  }, [antenas]);
+
+  const toggleRank = (rankKey) => {
+    setSelectedRanks((prev) => {
+      const next = new Set(prev);
+      if (next.has(rankKey)) next.delete(rankKey);
+      else next.add(rankKey);
+      return next;
+    });
+  };
+  const allSelected = selectedRanks.size === uniqueRanksSorted.length && uniqueRanksSorted.length > 0;
+  const selectAll = () => setSelectedRanks(new Set(uniqueRanksSorted));
+  const clearAll = () => setSelectedRanks(new Set());
+
+  const filteredRankList = uniqueRanksSorted.filter((rk) => {
+    if (!rankSearch.trim()) return true;
+    const label = rk === "__SIN_RANK__" ? "Sin rank" : rk;
+    return label.toLowerCase().includes(rankSearch.toLowerCase());
+  });
+
+  const visibleCount = filteredAntenas.length;
+  const totalCount = antenas.length;
+
+  // Resumen Top #1
+  const top = antenas.find((a) => a.rank === 1);
+  const topText = top ? `Top #1: ${top.frecuencia} apariciones` : null;
+
+  // Estados de carga/errores (después de todos los hooks)
   if (loadError) {
     return (
       <div className="mapa-antenas-wrapper">
@@ -258,17 +347,13 @@ const MapAntenas = ({ idSabana, apiBase = "" }) => {
     );
   }
 
-  // Resumen Top #1
-  const top = antenas.find((a) => a.rank === 1);
-  const topText = top ? `Top #1: ${top.frecuencia} apariciones` : null;
-
   return (
-    <div className="mapa-antenas-wrapper">
+    <div className="mapa-antenas-wrapper" style={{ height }}>
       {/* Header + controles */}
       <div className="mapa-antenas-header">
         <h4>
-          Mapa de Antenas — {antenas.length} ubicación
-          {antenas.length !== 1 ? "es" : ""}
+          Mapa de Antenas — {visibleCount} / {totalCount} visibles
+          {totalCount !== 1 ? " ubicaciones" : " ubicación"}
           {topText ? (
             <span style={{ marginLeft: 10, color: "#6b7280", fontWeight: 500 }}>
               ({topText})
@@ -283,42 +368,78 @@ const MapAntenas = ({ idSabana, apiBase = "" }) => {
           >
             Ajustar vista
           </button>
-          <button
-            className="mapa-antenas-btn"
-            onClick={recalculateSectors}
-            title="Recalcular sectores"
-          >
-            Recalcular sectores
-          </button>
-        </div>
-      </div>
-
-      {/* Leyenda */}
-      <div className="mapa-antenas-legend">
-        <div className="legend-item">
-          <div className="legend-icon">
-            <span className="antenna-legend-circle">1</span>
+          {/* botón "Recalcular sectores" eliminado */}
+          <div className="mapa-antenas-filter-wrapper">
+            <button
+              type="button"
+              className="mapa-antenas-btn"
+              onClick={() => setFilterOpen((o) => !o)}
+              title="Filtrar por rank"
+            >
+              Filtrar antenas
+            </button>
+            {filterOpen && (
+              <div className="mapa-antenas-filter-panel" role="dialog" aria-label="Filtro de ranks">
+                <div className="filter-header">
+                  <strong>Filtrar ranks</strong>
+                  <button
+                    type="button"
+                    className="close-btn"
+                    onClick={() => setFilterOpen(false)}
+                    aria-label="Cerrar"
+                  >×</button>
+                </div>
+                <div className="filter-actions">
+                  <button type="button" onClick={selectAll} disabled={allSelected}>
+                    Seleccionar todo
+                  </button>
+                  <button type="button" onClick={clearAll} disabled={selectedRanks.size === 0}>
+                    Limpiar
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  className="filter-search"
+                  placeholder="Buscar rank..."
+                  value={rankSearch}
+                  onChange={(e) => setRankSearch(e.target.value)}
+                />
+                <div className="filter-list">
+                  {filteredRankList.length === 0 && (
+                    <div className="filter-empty">Sin coincidencias</div>
+                  )}
+                  {filteredRankList.map((rk) => {
+                    const checked = selectedRanks.has(rk);
+                    const label = rk === "__SIN_RANK__" ? "Sin rank" : rk;
+                    return (
+                      <label key={rk} className="filter-item">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleRank(rk)}
+                        />
+                        <span>{label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <div className="filter-footer">
+                  <span>{visibleCount} visibles</span>
+                </div>
+              </div>
+            )}
           </div>
-          <span>Antena (círculo con rank)</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color sector"></div>
-          <span>Sector 400 m ±5° (peso según rank)</span>
-        </div>
-        <div className="legend-item">
-          <div className="legend-color circle"></div>
-          <span>Círculo 400 m si azimuth=360°</span>
         </div>
       </div>
-
+      {/* Sin leyenda: reemplazada por panel de filtro */}
       {/* Mapa */}
       <GoogleMap
         mapContainerClassName="mapa-antenas-canvas"
         center={
-          antenas[0]
+          filteredAntenas[0]
             ? {
-                lat: antenas[0].latitudDecimal,
-                lng: antenas[0].longitudDecimal,
+                lat: filteredAntenas[0].latitudDecimal,
+                lng: filteredAntenas[0].longitudDecimal,
               }
             : { lat: 0, lng: 0 }
         }
@@ -332,7 +453,7 @@ const MapAntenas = ({ idSabana, apiBase = "" }) => {
         }}
       >
         {/* Círculo con número de rank */}
-        {antenas.map((antena, index) => {
+        {filteredAntenas.map((antena, index) => {
           const rankVal = antena.rank ?? null;
           const sizePx = circleSizeForRank(rankVal || 9999);
           const displayNumber = rankVal || index + 1; // fallback
@@ -421,6 +542,11 @@ const MapAntenas = ({ idSabana, apiBase = "" }) => {
           </InfoWindow>
         )}
       </GoogleMap>
+      {filteredAntenas.length === 0 && (
+        <div className="mapa-antenas-status" style={{ position: "absolute", inset: 0 }}>
+          Ninguna antena coincide con el filtro.
+        </div>
+      )}
     </div>
   );
 };

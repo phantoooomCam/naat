@@ -47,13 +47,17 @@
 .mapa-antenas-wrapper {
   width: 100%;
   max-width: 100%;
-  height: 800px;
+  /* Dynamic height: now controlled by parent or inline style (height prop in component).
+     Provide a sensible min-height so the map is usable if parent has auto height. */
+  height: 100%;
+  min-height: 500px;
   display: flex;
   flex-direction: column;
   background: var(--antenna-bg);
   border: 1px solid var(--antenna-border);
   border-radius: 12px;
-  overflow: hidden;
+  /* allow some map controls to overflow visually while keeping inner map canvas clipped */
+  overflow: visible;
   box-shadow: 0 4px 12px var(--antenna-shadow);
   position: relative;
 }
@@ -86,6 +90,122 @@
   align-items: center;
 }
 
+/* Filtro (dropdown estilo Excel) */
+.mapa-antenas-filter-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.mapa-antenas-filter-panel {
+  position: absolute;
+  top: 110%;
+  right: 0;
+  width: 240px;
+  max-height: 360px;
+  background: #ffffff;
+  border: 1px solid var(--antenna-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+  padding: 10px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 12000; /* sobre mapa y controles */
+}
+
+.mapa-antenas-filter-panel .filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--antenna-text);
+  border-bottom: 1px solid var(--antenna-border);
+  padding-bottom: 4px;
+}
+
+.mapa-antenas-filter-panel .close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  color: var(--antenna-text-secondary);
+}
+.mapa-antenas-filter-panel .close-btn:hover {
+  color: var(--antenna-text);
+}
+
+.mapa-antenas-filter-panel .filter-actions {
+  display: flex;
+  gap: 6px;
+}
+.mapa-antenas-filter-panel .filter-actions button {
+  flex: 1;
+  background: #f1f5f9;
+  border: 1px solid var(--antenna-border);
+  border-radius: 4px;
+  font-size: 0.7rem;
+  padding: 4px 6px;
+  cursor: pointer;
+  color: var(--antenna-text);
+  transition: background 0.15s;
+}
+.mapa-antenas-filter-panel .filter-actions button:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+.mapa-antenas-filter-panel .filter-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mapa-antenas-filter-panel .filter-search {
+  width: 100%;
+  border: 1px solid var(--antenna-border);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 0.75rem;
+}
+
+.mapa-antenas-filter-panel .filter-list {
+  overflow-y: auto;
+  max-height: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid var(--antenna-border);
+  border-radius: 4px;
+  padding: 6px;
+  background: #f8fafc;
+}
+
+.mapa-antenas-filter-panel .filter-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--antenna-text);
+  cursor: pointer;
+  user-select: none;
+}
+.mapa-antenas-filter-panel .filter-item input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.mapa-antenas-filter-panel .filter-empty {
+  font-size: 0.7rem;
+  color: var(--antenna-text-secondary);
+  text-align: center;
+  padding: 8px 0;
+}
+
+.mapa-antenas-filter-panel .filter-footer {
+  margin-top: 2px;
+  font-size: 0.65rem;
+  color: var(--antenna-text-secondary);
+  text-align: right;
+}
+
 .mapa-antenas-btn {
   background: var(--antenna-primary);
   color: white;
@@ -114,8 +234,9 @@
 /* Legend */
 .mapa-antenas-legend {
   position: absolute;
-  top: 80px;
   left: 16px;
+  bottom: 16px; /* moved to bottom-left */
+  top: auto;
   background: var(--antenna-bg);
   border: 1px solid var(--antenna-border);
   border-radius: 8px;
@@ -182,6 +303,43 @@
   width: 100%;
   height: 100%;
   min-height: 600px;
+}
+
+/* Ensure the Google Map content is clipped to the card and respects border-radius */
+.mapa-antenas-canvas {
+  box-sizing: border-box;
+  border-radius: 0 0 12px 12px; /* round bottom corners to match wrapper */
+  overflow: hidden; /* clip map tiles, controls and any inner elements */
+  position: relative;
+  max-width: 100%;
+}
+
+/* GM internal styles: force them to inherit the rounded corners and avoid overflow */
+.mapa-antenas-canvas .gm-style,
+.mapa-antenas-canvas .gm-style > div,
+.mapa-antenas-canvas canvas,
+.mapa-antenas-canvas iframe {
+  border-radius: inherit !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Make common Google Maps UI controls and buttons render above the map and
+   remain interactive. Broad selectors cover variations in internal GM classnames. */
+.mapa-antenas-canvas .gm-style button,
+.mapa-antenas-canvas .gm-style input,
+.mapa-antenas-canvas .gm-style .gm-bundled-control,
+.mapa-antenas-canvas .gm-style .gm-fullscreen-control,
+.mapa-antenas-canvas .gm-style .gmnoprint,
+.mapa-antenas-canvas .gm-style .gm-control-active {
+  z-index: 1002 !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+}
+
+/* Raise legend above default GM UI but keep it below custom overlays when needed */
+.mapa-antenas-legend {
+  z-index: 10005;
 }
 
 /* Círculo real sobre el mapa con rank */
@@ -268,7 +426,9 @@
 /* Responsive design */
 @media (max-width: 768px) {
   .mapa-antenas-wrapper {
-    height: 600px;
+    /* On smaller screens let content dictate height; keep a lower min-height */
+    height: 100%;
+    min-height: 400px;
   }
 
   .mapa-antenas-header {
@@ -311,7 +471,8 @@
 
 @media (max-width: 480px) {
   .mapa-antenas-wrapper {
-    height: 500px;
+    height: 100%;
+    min-height: 380px;
     border-radius: 8px;
   }
 
