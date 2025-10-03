@@ -114,8 +114,9 @@
 /* Legend */
 .mapa-antenas-legend {
   position: absolute;
-  top: 80px;
   left: 16px;
+  bottom: 16px; /* moved to bottom-left */
+  top: auto;
   background: var(--antenna-bg);
   border: 1px solid var(--antenna-border);
   border-radius: 8px;
@@ -182,6 +183,25 @@
   width: 100%;
   height: 100%;
   min-height: 600px;
+}
+
+/* Ensure the Google Map content is clipped to the card and respects border-radius */
+.mapa-antenas-canvas {
+  box-sizing: border-box;
+  border-radius: 0 0 12px 12px; /* round bottom corners to match wrapper */
+  overflow: hidden; /* clip map tiles, controls and any inner elements */
+  position: relative;
+  max-width: 100%;
+}
+
+/* GM internal styles: force them to inherit the rounded corners and avoid overflow */
+.mapa-antenas-canvas .gm-style,
+.mapa-antenas-canvas .gm-style > div,
+.mapa-antenas-canvas canvas,
+.mapa-antenas-canvas iframe {
+  border-radius: inherit !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* Círculo real sobre el mapa con rank */

@@ -205,7 +205,25 @@ const MapAntenas = ({ idSabana, apiBase = "" }) => {
   }, [antenas, isLoaded, circleOptionsBase, sectorOptionsBase]);
 
   // Controles
-  const onMapLoad = useCallback((map) => setMapRef(map), []);
+  const onMapLoad = useCallback((map) => {
+    setMapRef(map);
+    // Mover controles para que no queden pegados al borde inferior (evita desbordes visibles)
+    try {
+      if (window.google && window.google.maps) {
+        map.setOptions({
+          zoomControlOptions: {
+            position: window.google.maps.ControlPosition.RIGHT_CENTER,
+          },
+          mapTypeControlOptions: {
+            position: window.google.maps.ControlPosition.TOP_LEFT,
+          },
+        });
+      }
+    } catch (e) {
+      // Silenciar si algo falla (ambiente SSR o google undefined temporalmente)
+      // console.warn('No se pudo reubicar controles del mapa', e);
+    }
+  }, []);
   const fitBounds = useCallback(() => {
     if (!mapRef || antenas.length === 0) return;
     if (antenas.length === 1) {
