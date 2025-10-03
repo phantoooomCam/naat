@@ -267,7 +267,7 @@ const MapAntenas = ({ idSabana, apiBase = "", height = "100%" }) => {
       mapRef.fitBounds(bounds);
     }
   }, [mapRef, filteredAntenas]);
-  const recalculateSectors = useCallback(() => setAntenas((prev) => prev), []);
+  // recalculateSectors removed — se maneja automáticamente mediante filtros y re-render
 
   // Ranks únicos ordenados para dropdown (mover arriba de returns para respetar orden de hooks)
   const uniqueRanksSorted = useMemo(() => {
@@ -368,13 +368,7 @@ const MapAntenas = ({ idSabana, apiBase = "", height = "100%" }) => {
           >
             Ajustar vista
           </button>
-          <button
-            className="mapa-antenas-btn"
-            onClick={recalculateSectors}
-            title="Recalcular sectores"
-          >
-            Recalcular sectores
-          </button>
+          {/* botón "Recalcular sectores" eliminado */}
           <div className="mapa-antenas-filter-wrapper">
             <button
               type="button"
