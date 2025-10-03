@@ -28,9 +28,9 @@ const VinculosRedes = ({ activeView }) => {
 
   return (
     <div
-      className={`redes-info-wrapper ${isSidebarCollapsed ? "collapsed" : ""}`}
+      className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}
     >
-      <div className="container">{views[activeView] || views.redes}</div>
+      <div className="content-wrapper">{views[activeView] || views.redes}</div>
     </div>
   );
 };

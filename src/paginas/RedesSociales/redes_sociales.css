@@ -386,12 +386,24 @@
   color: #a9a9a9;
 }
 
-.details-red {
+/* .details-red {
   background-color: #fff;
   margin: 0 0 1vh 0;
   padding: 1vh;
   border-radius: 5px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+} */
+
+.details-red{
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: start;
+  align-items:flex-start;
+  padding: 1rem 1.25rem;
+  border-radius: 5px;
+  margin: 0 0 1vh 0;
+
 }
 @keyframes spin {
   0% {
@@ -419,4 +431,14 @@
   justify-content: center;
   color: #de1304;
   font-size: 1.1vh;
+}
+
+
+@media(max-width :480px){
+  .details-red{
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
 }
