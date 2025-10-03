@@ -250,29 +250,38 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   }, []);
 
   const processFiles = (newFiles) => {
-    // bloquear si ya existe 1 archivo
-    if (files.length >= 1) {
-      setProcessingStatus("error");
-      setStatusMessage("Solo puedes adjuntar 1 archivo.");
-      setTimeout(() => setProcessingStatus(null), 2500);
-      return;
-    }
-
-    const [file0] = Array.from(newFiles);
-    if (!file0) return;
-
-    const processedFile = {
-      id: Date.now() + Math.random(),
-      name: file0.name,
-      type: file0.type,
-      size: file0.size,
+    const incoming = Array.from(newFiles).map((f) => ({
+      id: crypto?.randomUUID?.() ?? Date.now() + Math.random(),
+      name: f.name,
+      type: f.type,
+      size: f.size,
       uploadDate: new Date().toLocaleDateString(),
-      rawFile: file0,
-    };
+      rawFile: f,
+    }));
 
-    setFiles([processedFile]);
-    setFileProgress({ [processedFile.id]: 0 });
-    setFileStatus({ [processedFile.id]: "pendiente" });
+    setFiles((prev) => {
+      const existingKeys = new Set(prev.map((f) => `${f.name}::${f.size}`));
+      const deduped = incoming.filter(
+        (f) => !existingKeys.has(`${f.name}::${f.size}`)
+      );
+      return [...prev, ...deduped];
+    });
+
+    setFileProgress((prev) => {
+      const next = { ...prev };
+      incoming.forEach((f) => {
+        next[f.id] = 0;
+      });
+      return next;
+    });
+
+    setFileStatus((prev) => {
+      const next = { ...prev };
+      incoming.forEach((f) => {
+        next[f.id] = "pendiente";
+      });
+      return next;
+    });
   };
 
   const handleDrag = (e) => {
@@ -286,13 +295,13 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     e.stopPropagation();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      processFiles([e.dataTransfer.files[0]]);
+      processFiles(e.dataTransfer.files);
     }
   };
 
   const handleFileInput = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      processFiles([e.target.files[0]]);
+      processFiles(e.target.files);
     }
   };
 
@@ -510,9 +519,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   };
 
   return (
-    <div
-      className={`dashh-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}
-    >
+    <div className={`dashh-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
       {processingStatus && (
         <div className={`status-message ${processingStatus}`}>
           <div className="status-icon">
@@ -530,7 +537,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         <div className="header-content">
           <h2>Procesamiento de Sabanas</h2>
         </div>
-        
+
         {/* <div>
           <h2>
             Estado de WebSocket: {isConnected ? "Conectado" : "Desconectado"}
@@ -560,6 +567,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           <input
             ref={inputRef}
             type="file"
+            multiple
             onChange={handleFileInput}
             style={{ display: "none" }}
             aria-label="Seleccionar archivo"
@@ -570,7 +578,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
             <button
               onClick={() => inputRef.current.click()}
               className="upload-button"
-              disabled={isProcessing || files.length >= 1}
+              disabled={isProcessing}
             >
               Selecciona Archivo
             </button>
