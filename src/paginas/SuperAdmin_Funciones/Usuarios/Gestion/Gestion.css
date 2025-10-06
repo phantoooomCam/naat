@@ -1,6 +1,6 @@
 /* Estilos base */
 .content-wrapper {
-  width: 95%;
+  width: 85%;
   margin: 120px auto;
   padding: 20px;
   background: rgb(255, 255, 255);
@@ -36,7 +36,7 @@ table {
 .content-wrapper.editing-mode {
   max-width: 800px;
   width: 90%;
-  margin: 120px auto;
+  margin: 110px auto;
   padding: 30px;
   background: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -265,8 +265,8 @@ tr:hover {
 
 /* Ajustar el contenido para que se alinee correctamente con el sidebar */
 .content-wrapper {
-  width: 95%;
-  margin: 120px auto;
+  width: 90%;
+  margin: 100px auto;
   padding: 20px;
   background: rgb(255, 255, 255);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);

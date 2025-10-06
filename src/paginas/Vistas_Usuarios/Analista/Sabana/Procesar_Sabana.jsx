@@ -475,6 +475,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       });
 
       const data = await response.json();
+      console.log("Datos enviados: ",data)
 
       setIsProcessing(false);
 
@@ -482,7 +483,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         const idSabana = data.ids_sabanas[0];
         setIdSabana(idSabana);
 
-        // 🔧 CAMBIO 8: Mapeo mejorado con logging
         if (Array.isArray(data.ids_sabanas)) {
           const newMapping = {};
           files.forEach((file, idx) => {

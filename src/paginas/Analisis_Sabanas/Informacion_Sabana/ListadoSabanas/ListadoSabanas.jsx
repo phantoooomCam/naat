@@ -39,9 +39,9 @@ const ListadoSabanas = ({ activeView, idCaso: idCasoProp }) => {
 
   return (
     <div
-      className={`redes-info-wrapper ${isSidebarCollapsed ? "collapsed" : ""}`}
+      className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}
     >
-      <div className="container">{views[activeView] || views.listados}</div>
+      <div className="content-wrapper">{views[activeView] || views.listados}</div>
     </div>
   );
 };

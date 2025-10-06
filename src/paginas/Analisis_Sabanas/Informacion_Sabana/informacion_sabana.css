@@ -186,7 +186,7 @@
   padding: 12px 16px;
   border: none;
   border-radius: 8px;
-  background: #33608d;
+  background: var(--primary-color);
   color: white;
   font-size: 0.9rem;
   font-weight: 500;
@@ -197,14 +197,14 @@
 }
 
 .info-action-btn:hover {
-  background: #264a6e; /* Darker shade on hover */
+  background: var(--sidebar-active); /* Darker shade on hover */
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 8px rgba(96, 162, 255, 0.3);
 }
 
 .info-action-btn.active {
-  background: #264a6e; /* Active state matches hover */
-  box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
+  background: var(--sidebar-active); /* Active state matches hover */
+  box-shadow: 0 2px 4px rgba(99, 184, 241, 0.3);
 }
 
 .info-action-btn svg {

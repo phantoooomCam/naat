@@ -414,11 +414,11 @@ body {
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color var(--transition-fast), transform var(--transition-fast);
+  transition: background-color var(--primary-color), transform var(--primary-color);
 }
 
 .crear-button {
-  background-color: #94a3b8;
+  background-color: var(--primary-color);
   color: white;
   padding: 0.75rem 1rem;
   width: 100%;
@@ -430,7 +430,7 @@ body {
 }
 
 .crear-button:hover:not(:disabled) {
-  background-color: #64748b;
+  background-color: var(--sidebar-active);
 }
 
 .crear-button:disabled {
@@ -650,7 +650,7 @@ body {
 
 .reactivate-button,
 .activate-button {
-  background-color: #94a3b8;
+  background-color:var(--primary-color);
   color: white;
   border: none;
   padding: 0.625rem 1rem;

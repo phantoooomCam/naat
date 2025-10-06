@@ -506,8 +506,8 @@ const DetalleCompleto = () => {
   }, []);
 
   return (
-    <div className={`dash-home ${isSidebarCollapsed ? "collapsed" : ""}`}>
-      <div className="container">
+    <div className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
+      <div className="content-wrapper">
         <DetalleView isSidebarCollapsed={isSidebarCollapsed} casoId={id} />
       </div>
     </div>
