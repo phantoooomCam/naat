@@ -33,8 +33,8 @@ const Informacion3_Sabana = ({ activeView }) => {
   }
 
   return (
-    <div className={`sabana-info-wrapper ${isSidebarCollapsed ? "collapsed" : ""}`}>
-      <div className="container">{views[activeView] || views.gestion}</div>
+    <div className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
+      <div className="content-wrapper">{views[activeView] || views.gestion}</div>
     </div>
   )
 }
