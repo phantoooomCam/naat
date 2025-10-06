@@ -58,6 +58,20 @@ const GestionSabanaView = () => {
     horaFin: "",
   })
 
+  const [filtrosMapaAntenas, setFiltrosMapaAntenas] = useState({
+    fechaInicio: "",
+    fechaFin: "",
+    horaInicio: "",
+    horaFin: "",
+  })
+
+  const [filtrosMapaAplicados, setFiltrosMapaAplicados] = useState({
+    fechaInicio: "",
+    fechaFin: "",
+    horaInicio: "",
+    horaFin: "",
+  })
+
   const [filtrosRedVinculos, setFiltrosRedVinculos] = useState({
     0: true, // Datos
     1: true, // MensajeriaMultimedia
@@ -84,6 +98,17 @@ const GestionSabanaView = () => {
       ...prev,
       [filterName]: value,
     }))
+  }
+
+  const handleMapFilterChange = (filterName, value) => {
+    setFiltrosMapaAntenas((prev) => ({
+      ...prev,
+      [filterName]: value,
+    }))
+  }
+
+  const aplicarFiltrosMapa = () => {
+    setFiltrosMapaAplicados({ ...filtrosMapaAntenas })
   }
 
   const handleFiltroRedChange = (tipoId, checked) => {
@@ -336,7 +361,7 @@ const GestionSabanaView = () => {
         return <RedVinculos idSabana={idSabana} filtrosActivos={filtrosRedVinculos} />
 
       case "map":
-        return <MapAntenas idSabana={idSabana} />
+        return <MapAntenas idSabana={idSabana} filtros={filtrosMapaAplicados} />
 
       default:
         return (
@@ -377,7 +402,78 @@ const GestionSabanaView = () => {
               </h4>
             </div>
             <div className="filtros-body">
-              {activeButton === "network" ? (
+              {activeButton === "map" ? (
+                <div className="filtros-panel-mapa">
+                  <h5>
+                    <FontAwesomeIcon icon={faMapMarkerAlt} style={{ marginRight: "8px" }} />
+                    Filtrar por Fecha y Hora
+                  </h5>
+                  <div className="datetime-section">
+                    <div className="date-row">
+                      <div className="input-field">
+                        <label htmlFor="mapa-fecha-inicio">Fecha Inicio:</label>
+                        <input
+                          id="mapa-fecha-inicio"
+                          type="date"
+                          value={filtrosMapaAntenas.fechaInicio}
+                          onChange={(e) => handleMapFilterChange("fechaInicio", e.target.value)}
+                          className="date-field"
+                        />
+                      </div>
+
+                      <div className="input-field">
+                        <label htmlFor="mapa-fecha-fin">Fecha Fin:</label>
+                        <input
+                          id="mapa-fecha-fin"
+                          type="date"
+                          value={filtrosMapaAntenas.fechaFin}
+                          onChange={(e) => handleMapFilterChange("fechaFin", e.target.value)}
+                          className="date-field"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="time-row">
+                      <div className="input-field">
+                        <label htmlFor="mapa-hora-inicio">Hora Inicio:</label>
+                        <input
+                          id="mapa-hora-inicio"
+                          type="time"
+                          value={filtrosMapaAntenas.horaInicio}
+                          onChange={(e) => handleMapFilterChange("horaInicio", e.target.value)}
+                          className="time-field"
+                        />
+                      </div>
+
+                      <div className="input-field">
+                        <label htmlFor="mapa-hora-fin">Hora Fin:</label>
+                        <input
+                          id="mapa-hora-fin"
+                          type="time"
+                          value={filtrosMapaAntenas.horaFin}
+                          onChange={(e) => handleMapFilterChange("horaFin", e.target.value)}
+                          className="time-field"
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: "16px" }}>
+                      <button
+                        className="info-action-btn"
+                        onClick={aplicarFiltrosMapa}
+                        style={{
+                          width: "100%",
+                          backgroundColor: "#10b981",
+                          padding: "10px",
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faFilter} style={{ marginRight: "8px" }} />
+                        Aplicar Filtros
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : activeButton === "network" ? (
                 <div className="checkbox-section">
                   <h5 className="mb-4" style={{ fontSize: "0.95rem", fontWeight: "600", color: "#374151" }}>
                     Filtrar por tipo de comunicación:

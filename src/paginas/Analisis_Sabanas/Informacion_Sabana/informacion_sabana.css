@@ -193,7 +193,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   width: 100%;
-  margin:px;
+  margin: px;
 }
 
 .info-action-btn:hover {
@@ -618,4 +618,116 @@
 
 .search-input::placeholder {
   color: #9ca3af;
+}
+
+/* Added special styling for map filter panel (similar to RedVinculos) */
+.filtros-panel-mapa {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.filtros-panel-mapa::before {
+  display: none;
+}
+
+.filtros-panel-mapa > * {
+  position: relative;
+  z-index: 1;
+}
+
+.filtros-panel-mapa h5 {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filtros-panel-mapa h5::before {
+  display: none;
+}
+
+/* Enhanced datetime section for map filters */
+.filtros-panel-mapa .datetime-section {
+  margin-bottom: 0;
+}
+
+.filtros-panel-mapa .date-row,
+.filtros-panel-mapa .time-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.filtros-panel-mapa .input-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.filtros-panel-mapa .input-field label {
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+.filtros-panel-mapa .date-field,
+.filtros-panel-mapa .time-field {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: white;
+}
+
+.filtros-panel-mapa .date-field:focus,
+.filtros-panel-mapa .time-field:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+  transform: translateY(-1px);
+}
+
+.filtros-panel-mapa .date-field:hover,
+.filtros-panel-mapa .time-field:hover {
+  border-color: #3498db;
+}
+
+/* Responsive styles for map filter panel */
+@media (max-width: 768px) {
+  .filtros-panel-mapa {
+    padding: 20px 16px;
+    margin-bottom: 16px;
+  }
+
+  .filtros-panel-mapa h5 {
+    font-size: 16px;
+    margin-bottom: 16px;
+  }
+
+  .filtros-panel-mapa .date-row,
+  .filtros-panel-mapa .time-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .filtros-panel-mapa .input-field label {
+    font-size: 0.85rem;
+  }
+
+  .filtros-panel-mapa .date-field,
+  .filtros-panel-mapa .time-field {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+  }
 }
