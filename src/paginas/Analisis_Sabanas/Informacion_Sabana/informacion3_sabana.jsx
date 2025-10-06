@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import PropTypes from "prop-types"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faFilter, faInfoCircle, faProjectDiagram, faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons"
@@ -40,12 +40,12 @@ const Informacion3_Sabana = ({ activeView }) => {
 }
 
 const GestionSabanaView = () => {
-  // nuevo estado para server-side pagination
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [sort, setSort] = useState("fecha_hora:desc")
-  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
+
+  const [todosLosRegistros, setTodosLosRegistros] = useState([])
 
   const [filters, setFilters] = useState({
     ubicacion: false,
@@ -77,7 +77,6 @@ const GestionSabanaView = () => {
 
   const location = useLocation()
   const idSabana = location.state?.idSabana || null
-  const [registros, setRegistros] = useState([])
   const [error, setError] = useState("")
 
   const handleFilterChange = (filterName, value) => {
@@ -206,15 +205,13 @@ const GestionSabanaView = () => {
       telefono: r.telefono ?? r.Telefono,
     })
 
-    const fetchPage = async () => {
+    const fetchAllData = async () => {
       try {
         setLoading(true)
         setError("")
 
-        const API_URL = "/api" // o tu config
-        const url = `${API_URL}/sabanas/${idSabana}/registros?page=${page}&pageSize=${pageSize}&sort=${encodeURIComponent(
-          sort,
-        )}`
+        const API_URL = "/api"
+        const url = `${API_URL}/sabanas/${idSabana}/registros?page=1&pageSize=0&sort=${encodeURIComponent(sort)}`
 
         const res = await fetchWithAuth(url, {
           method: "GET",
@@ -222,30 +219,78 @@ const GestionSabanaView = () => {
           headers: { "Content-Type": "application/json" },
         })
 
-        // Si tu helper devuelve Response, deja este check:
-        if (!res) return // nada que hacer si no hubo respuesta
+        if (!res) return
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
         const data = await res.json()
         const items = Array.isArray(data.items) ? data.items : (data.Items ?? [])
-        setRegistros(items.map(mapToSnake))
-        setTotal(data.total ?? data.Total ?? 0)
-      } catch (err) {
-        // 👇 ignorar cancelaciones normales del AbortController
-        if (err?.name === "AbortError") return
+        const mappedItems = items.map(mapToSnake)
 
-        // cualquier otro error sí lo mostramos
+        setTodosLosRegistros(mappedItems)
+      } catch (err) {
+        if (err?.name === "AbortError") return
         console.error("Error al cargar registros:", err)
         setError(err?.message || "Error desconocido")
       } finally {
-        // evita setState si ya fue abortado
         if (!controller.signal.aborted) setLoading(false)
       }
     }
 
-    fetchPage()
+    fetchAllData()
     return () => controller.abort()
-  }, [idSabana, page, pageSize, sort])
+  }, [idSabana, sort])
+
+  const registrosFiltrados = useMemo(() => {
+    let filtered = [...todosLosRegistros]
+
+    // Filtrar por rango de fechas
+    if (filters.fechaInicio || filters.fechaFin) {
+      filtered = filtered.filter((registro) => {
+        if (!registro.fecha_hora) return false
+
+        // Extraer solo la fecha (YYYY-MM-DD) del campo fecha_hora
+        const fechaRegistro = registro.fecha_hora.split(" ")[0]
+
+        // Comparar con fecha inicio
+        if (filters.fechaInicio && fechaRegistro < filters.fechaInicio) {
+          return false
+        }
+
+        // Comparar con fecha fin
+        if (filters.fechaFin && fechaRegistro > filters.fechaFin) {
+          return false
+        }
+
+        return true
+      })
+    }
+
+    // Filtrar por rango de horas
+    if (filters.horaInicio || filters.horaFin) {
+      filtered = filtered.filter((registro) => {
+        if (!registro.fecha_hora) return false
+
+        // Extraer solo la hora (HH:MM:SS) del campo fecha_hora
+        const horaRegistro = registro.fecha_hora.split(" ")[1]?.substring(0, 5) // HH:MM
+
+        if (!horaRegistro) return false
+
+        // Comparar con hora inicio
+        if (filters.horaInicio && horaRegistro < filters.horaInicio) {
+          return false
+        }
+
+        // Comparar con hora fin
+        if (filters.horaFin && horaRegistro > filters.horaFin) {
+          return false
+        }
+
+        return true
+      })
+    }
+
+    return filtered
+  }, [todosLosRegistros, filters.fechaInicio, filters.fechaFin, filters.horaInicio, filters.horaFin])
 
   const handleButtonClick = (buttonType) => {
     setActiveButton(buttonType)
@@ -261,7 +306,7 @@ const GestionSabanaView = () => {
       )
     }
 
-    if (registros.length === 0) {
+    if (registrosFiltrados.length === 0 && !loading) {
       return (
         <div className="placeholder-text">
           <p>No hay registros disponibles</p>
@@ -274,8 +319,8 @@ const GestionSabanaView = () => {
       case "info":
         return (
           <TablaRegistros
-            registros={registros}
-            total={total}
+            registros={registrosFiltrados}
+            total={registrosFiltrados.length}
             page={page}
             pageSize={pageSize}
             setPage={setPage}
@@ -296,8 +341,8 @@ const GestionSabanaView = () => {
       default:
         return (
           <TablaRegistros
-            registros={registros}
-            total={total}
+            registros={registrosFiltrados}
+            total={registrosFiltrados.length}
             page={page}
             pageSize={pageSize}
             setPage={setPage}
@@ -365,21 +410,19 @@ const GestionSabanaView = () => {
                     </button>
                   </div>
                   <div className="checkbox-section">
-                    {Object.entries(filtrosRedVinculos)
-                      // .filter(([tipoId, activo]) => activo) // Solo mostrar filtros seleccionados
-                      .map(([tipoId, activo]) => (
-                        <label key={tipoId} className="filter-checkbox-label">
-                          <input
-                            type="checkbox"
-                            checked={activo}
-                            onChange={(e) => handleFiltroRedChange(tipoId, e.target.checked)}
-                          />
-                          <span style={{ marginRight: "6px", display: "inline-flex", alignItems: "center" }}>
-                            {getTypeIcon(Number(tipoId))}
-                          </span>
-                          <span>{getTypeText(Number(tipoId))}</span>
-                        </label>
-                      ))}
+                    {Object.entries(filtrosRedVinculos).map(([tipoId, activo]) => (
+                      <label key={tipoId} className="filter-checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={activo}
+                          onChange={(e) => handleFiltroRedChange(tipoId, e.target.checked)}
+                        />
+                        <span style={{ marginRight: "6px", display: "inline-flex", alignItems: "center" }}>
+                          {getTypeIcon(Number(tipoId))}
+                        </span>
+                        <span>{getTypeText(Number(tipoId))}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
               ) : (

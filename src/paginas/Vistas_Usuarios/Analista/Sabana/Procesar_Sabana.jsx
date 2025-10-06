@@ -87,7 +87,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const canGuardar =  !isProcessed && !isProcessing;
 
   // Procesar Archivos: hay archivo y SÍ está procesado
-  const canProcesar = hasSingleFile && isProcessed && !isProcessing;
+  const canProcesar =  isProcessed && !isProcessing;
 
   // 🔧 CAMBIO 1: Usar refs para mantener los valores actualizados
   const fileIdByServerIdRef = useRef({});
