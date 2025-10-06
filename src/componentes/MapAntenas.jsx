@@ -305,11 +305,6 @@ const MapAntenas = ({ idSabana, apiBase = "", height = "100%" }) => {
   });
 
   const visibleCount = filteredAntenas.length;
-  const totalCount = antenas.length;
-
-  // Resumen Top #1
-  const top = antenas.find((a) => a.rank === 1);
-  const topText = top ? `Top #1: ${top.frecuencia} apariciones` : null;
 
   // Estados de carga/errores (después de todos los hooks)
   if (loadError) {
@@ -351,15 +346,7 @@ const MapAntenas = ({ idSabana, apiBase = "", height = "100%" }) => {
     <div className="mapa-antenas-wrapper" style={{ height }}>
       {/* Header + controles */}
       <div className="mapa-antenas-header">
-        <h4>
-          Mapa de Antenas — {visibleCount} / {totalCount} visibles
-          {totalCount !== 1 ? " ubicaciones" : " ubicación"}
-          {topText ? (
-            <span style={{ marginLeft: 10, color: "#6b7280", fontWeight: 500 }}>
-              ({topText})
-            </span>
-          ) : null}
-        </h4>
+        <h4>Mapa de Antenas</h4>
         <div className="mapa-antenas-toolbar">
           <button
             className="mapa-antenas-btn"
@@ -435,12 +422,15 @@ const MapAntenas = ({ idSabana, apiBase = "", height = "100%" }) => {
       {/* Mapa */}
       <GoogleMap
         mapContainerClassName="mapa-antenas-canvas"
+        // Si no hay antenas filtradas, centrar en la primera antena del dataset
         center={
           filteredAntenas[0]
             ? {
                 lat: filteredAntenas[0].latitudDecimal,
                 lng: filteredAntenas[0].longitudDecimal,
               }
+            : antenas[0]
+            ? { lat: antenas[0].latitudDecimal, lng: antenas[0].longitudDecimal }
             : { lat: 0, lng: 0 }
         }
         zoom={15}
@@ -450,6 +440,9 @@ const MapAntenas = ({ idSabana, apiBase = "", height = "100%" }) => {
           streetViewControl: false,
           mapTypeControl: true,
           fullscreenControl: true,
+          // Permitir zoom con rueda del ratón sin necesidad de Ctrl
+          gestureHandling: "greedy",
+          scrollwheel: true,
         }}
       >
         {/* Círculo con número de rank */}
@@ -542,11 +535,7 @@ const MapAntenas = ({ idSabana, apiBase = "", height = "100%" }) => {
           </InfoWindow>
         )}
       </GoogleMap>
-      {filteredAntenas.length === 0 && (
-        <div className="mapa-antenas-status" style={{ position: "absolute", inset: 0 }}>
-          Ninguna antena coincide con el filtro.
-        </div>
-      )}
+      {/* Si no hay antenas filtradas, mostramos el mapa vacío sin overlay intrusivo. */}
     </div>
   );
 };

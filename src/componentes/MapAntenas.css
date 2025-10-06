@@ -100,7 +100,8 @@
   position: absolute;
   top: 110%;
   right: 0;
-  width: 240px;
+  /* más compacto */
+  width: 200px;
   max-height: 360px;
   background: #ffffff;
   border: 1px solid var(--antenna-border);
@@ -175,21 +176,40 @@
   gap: 4px;
   border: 1px solid var(--antenna-border);
   border-radius: 4px;
-  padding: 6px;
+  /* menos padding para que la lista sea más compacta */
+  padding: 4px;
   background: #f8fafc;
 }
 
 .mapa-antenas-filter-panel .filter-item {
-  display: flex;
+  /* inline-flex evita que el label ocupe todo el ancho y evita el push del número a la derecha */
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 0.75rem;
   color: var(--antenna-text);
   cursor: pointer;
   user-select: none;
+  padding: 2px 6px;
+  white-space: nowrap;
 }
 .mapa-antenas-filter-panel .filter-item input[type="checkbox"] {
   cursor: pointer;
+}
+
+/* Evitar que el span ocupe todo el ancho y empuje el texto a la derecha */
+.mapa-antenas-filter-panel .filter-item span {
+  /* número centrado en caja pequeña, pegado al checkbox */
+  margin-left: 6px;
+  display: inline-block;
+  width: 26px;
+  text-align: center;
+  flex: 0 0 auto;
+}
+
+.mapa-antenas-filter-panel .filter-list {
+  /* asegurar que items no se estiren en ancho */
+  align-items: flex-start;
 }
 
 .mapa-antenas-filter-panel .filter-empty {
