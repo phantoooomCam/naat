@@ -106,7 +106,7 @@
   background: #ffffff;
   border: 1px solid var(--antenna-border);
   border-radius: 8px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
   padding: 10px 10px 8px;
   display: flex;
   flex-direction: column;
@@ -169,29 +169,24 @@
 }
 
 .mapa-antenas-filter-panel .filter-list {
-  overflow-y: auto;
-  max-height: 180px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  height: 180px; /* Usamos height en lugar de max-height */
   border: 1px solid var(--antenna-border);
   border-radius: 4px;
-  /* menos padding para que la lista sea más compacta */
-  padding: 4px;
   background: #f8fafc;
 }
 
 .mapa-antenas-filter-panel .filter-item {
-  /* inline-flex evita que el label ocupe todo el ancho y evita el push del número a la derecha */
-  display: inline-flex;
+  display: flex; /* Cambiado a flex para alinear correctamente */
   align-items: center;
   gap: 6px;
   font-size: 0.75rem;
   color: var(--antenna-text);
   cursor: pointer;
   user-select: none;
-  padding: 2px 6px;
+  padding: 2px 6px; /* Este padding ya está en el item, ¡perfecto! */
   white-space: nowrap;
+  /* La propiedad 'style' de react-window controlará la altura total */
+  box-sizing: border-box; /* Buena práctica para incluir padding en el tamaño */
 }
 .mapa-antenas-filter-panel .filter-item input[type="checkbox"] {
   cursor: pointer;
@@ -297,7 +292,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 0 0 1px #ffffff, 0 2px 4px rgba(0,0,0,0.3);
+  box-shadow: 0 0 0 1px #ffffff, 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .legend-color {
@@ -374,13 +369,13 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   padding: 0;
 }
 .antenna-rank-circle:hover {
   transform: translate(-50%, -50%) scale(1.08);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.45);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
 }
 .antenna-rank-circle:active {
   transform: translate(-50%, -50%) scale(0.95);
