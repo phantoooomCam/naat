@@ -477,6 +477,72 @@
   font-size: 0.85rem;
 }
 
+/* ... al final de MapAntenas.css ... */
+
+/* Estilos para el modal del selector de fecha */
+.date-picker-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 15000;
+}
+
+.date-picker-modal {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.date-picker-modal h4 {
+  margin: 0;
+  text-align: center;
+}
+
+.date-picker-modal input[type="date"] {
+  border: 1px solid var(--antenna-border);
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.date-picker-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.date-picker-actions button {
+  border: 1px solid var(--antenna-border);
+  background: #f1f5f9;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.date-picker-actions button:last-child {
+  background: var(--antenna-primary);
+  color: white;
+  border-color: var(--antenna-primary);
+}
+.date-picker-actions button:last-child:disabled {
+  background: #ccc;
+  border-color: #ccc;
+  cursor: not-allowed;
+}
+
+.ruta-marker--satelite {
+  transform: translate(-50%, -100%);
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .mapa-antenas-wrapper {

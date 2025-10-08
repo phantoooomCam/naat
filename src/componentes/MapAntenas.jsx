@@ -23,6 +23,13 @@ const MapAntenas = ({
   height = "100%",
   filtros = {},
 }) => {
+  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: "google-map-script",
+    googleMapsApiKey: apiKey,
+    libraries,
+  });
+
   const [antenas, setAntenas] = useState([]);
   const [error, setError] = useState("");
   const [selectedAntenna, setSelectedAntenna] = useState(null);
@@ -39,7 +46,53 @@ const MapAntenas = ({
   const [rutaTrazada, setRutaTrazada] = useState([]); // Almacenará los polilíneas de la ruta final
   const [puntosCronologicos, setPuntosCronologicos] = useState([]); // Para los marcadores 1, 2, 3...
   const [solicitudesRuta, setSolicitudesRuta] = useState([]); // Cola de tramos a calcular
+
+  const [enModoRuta, setEnModoRuta] = useState(false); // El interruptor principal
+  const [mostrandoSelectorFecha, setMostrandoSelectorFecha] = useState(false); // Para mostrar/ocultar el calendario
+  const [antenasParaRuta, setAntenasParaRuta] = useState([]); // Datos exclusivos para la ruta del día
+  const [fechaTemporal, setFechaTemporal] = useState("");
+  const [lineasSpider, setLineasSpider] = useState([]);
+
   const [indiceSolicitudActual, setIndiceSolicitudActual] = useState(0);
+
+  const trazarRutaParaFecha = async (fecha) => {
+    if (!fecha) return;
+
+    setMostrandoSelectorFecha(false); // Ocultamos el calendario
+    // Aquí podrías poner un estado de carga si quieres
+
+    // 1. Construir el rango de tiempo para el día completo
+    const from = `${fecha}T00:00:00`;
+    const to = `${fecha}T23:59:59`;
+    const params = new URLSearchParams({
+      from,
+      to,
+      bucket: "hour",
+      includeRaw: "false",
+    });
+
+    try {
+      const url = `${apiBase}/api/sabanas/${idSabana}/registros/coordenadas-decimales?${params.toString()}`;
+      const response = await fetchWithAuth(url);
+
+      if (!response || !response.ok) {
+        throw new Error("No se pudieron obtener los datos para la ruta.");
+      }
+
+      const data = await response.json();
+      const items = Array.isArray(data) ? data : data.items || [];
+
+      // 2. Guardar los datos específicos del día en su propio estado
+      setAntenasParaRuta(items);
+
+      // 3. Activar el "Modo Ruta"
+      setEnModoRuta(true);
+    } catch (err) {
+      console.error("Error al trazar la ruta:", err);
+      // Aquí podrías notificar al usuario del error con un toast o un estado
+      setError("No se encontraron datos de ruta para el día seleccionado.");
+    }
+  };
 
   const generarColorContrastante = (seed) => {
     const h = (seed * 137.5) % 360; // Usa el ángulo dorado para distribuir los matices
@@ -78,36 +131,85 @@ const MapAntenas = ({
   );
 
   useEffect(() => {
-    // Si no hay al menos 2 antenas para formar un tramo, limpiamos todo.
-    if (filteredAntenas.length < 2) {
+    // Esperamos a que la API de Google Maps esté cargada para usar la librería de geometría
+    if (!isLoaded || !window.google) return;
+
+    if (antenasParaRuta.length < 2) {
       setRutaTrazada([]);
       setPuntosCronologicos([]);
       setSolicitudesRuta([]);
       setIndiceSolicitudActual(0);
+      setLineasSpider([]); // Limpia las líneas
       return;
     }
 
-    // 1. Ordenar antenas por fecha de "primerUso" para establecer la secuencia.
-    const antenasOrdenadas = [...filteredAntenas].sort(
+    const antenasOrdenadas = [...antenasParaRuta].sort(
       (a, b) => new Date(a.primerUso) - new Date(b.primerUso)
     );
 
-    // 2. Crear los marcadores numerados cronológicos (1, 2, 3...)
-    const marcadores = antenasOrdenadas.map((antena, index) => ({
-      position: {
-        lat: antena.latitudDecimal,
-        lng: antena.longitudDecimal,
-      },
-      numero: index + 1,
-    }));
-    setPuntosCronologicos(marcadores);
+    // --- NUEVA LÓGICA DE AGRUPACIÓN Y SPIDERFY ---
 
-    // 3. Preparar la cola de solicitudes para el DirectionsService
+    // 1. Agrupar marcadores por coordenada
+    const marcadoresPorCoordenada = new Map();
+    antenasOrdenadas.forEach((antena, index) => {
+      const key = `${antena.latitudDecimal},${antena.longitudDecimal}`;
+      if (!marcadoresPorCoordenada.has(key)) {
+        marcadoresPorCoordenada.set(key, []);
+      }
+      marcadoresPorCoordenada.get(key).push({
+        position: { lat: antena.latitudDecimal, lng: antena.longitudDecimal },
+        numero: index + 1,
+      });
+    });
+
+    const nuevosPuntosCronologicos = [];
+    const nuevasLineasSpider = [];
+    const SPIDER_RADIUS_METERS = 25; // Distancia del centro a los satélites
+
+    // 2. Calcular nuevas posiciones para los grupos
+    marcadoresPorCoordenada.forEach((grupo) => {
+      if (grupo.length <= 1) {
+        // A este marcador no le pasa nada, no es satélite
+        nuevosPuntosCronologicos.push({ ...grupo[0], esSatelite: false });
+      } else {
+        const centro = grupo[0].position;
+        // El primero se queda en el centro, tampoco es satélite
+        nuevosPuntosCronologicos.push({ ...grupo[0], esSatelite: false });
+
+        grupo.slice(1).forEach((marcador, index) => {
+          const angulo = (index / (grupo.length - 1)) * 270;
+          const nuevaPosicion =
+            window.google.maps.geometry.spherical.computeOffset(
+              new window.google.maps.LatLng(centro.lat, centro.lng),
+              SPIDER_RADIUS_METERS,
+              angulo
+            );
+
+          // --> MODIFICACIÓN: Añadimos la etiqueta esSatelite: true
+          nuevosPuntosCronologicos.push({
+            ...marcador,
+            position: { lat: nuevaPosicion.lat(), lng: nuevaPosicion.lng() },
+            esSatelite: true, // ¡Etiqueta añadida!
+          });
+
+          nuevasLineasSpider.push({
+            path: [
+              centro,
+              { lat: nuevaPosicion.lat(), lng: nuevaPosicion.lng() },
+            ],
+          });
+        });
+      }
+    });
+
+    setPuntosCronologicos(nuevosPuntosCronologicos);
+    setLineasSpider(nuevasLineasSpider);
+
+    // La lógica para preparar las solicitudes de ruta no cambia
     const nuevasSolicitudes = [];
     for (let i = 0; i < antenasOrdenadas.length - 1; i++) {
       const puntoA = antenasOrdenadas[i];
       const puntoB = antenasOrdenadas[i + 1];
-
       nuevasSolicitudes.push({
         origin: { lat: puntoA.latitudDecimal, lng: puntoA.longitudDecimal },
         destination: {
@@ -118,20 +220,30 @@ const MapAntenas = ({
       });
     }
 
-    // 4. Reiniciar el estado para procesar las nuevas rutas
-    setRutaTrazada([]); // Limpia las rutas anteriores
-    setSolicitudesRuta(nuevasSolicitudes); // Carga la nueva cola de solicitudes
-    setIndiceSolicitudActual(0); // Empieza a procesar desde el primer tramo
-  }, [filteredAntenas]);
+    setRutaTrazada([]);
+    setSolicitudesRuta(nuevasSolicitudes);
+    setIndiceSolicitudActual(0);
+  }, [antenasParaRuta, isLoaded]);
+
+  // AÑADE ESTA FUNCIÓN DE LIMPIEZA
+  const limpiarRuta = () => {
+    setEnModoRuta(false);
+    setAntenasParaRuta([]);
+    setRutaTrazada([]);
+    setPuntosCronologicos([]);
+    setLineasSpider([]);
+    setSolicitudesRuta([]);
+    setIndiceSolicitudActual(0);
+  };
 
   // API Key únicamente desde variable de entorno (Vite)
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+  // const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-  const { isLoaded, loadError } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: apiKey,
-    libraries,
-  });
+  // const { isLoaded, loadError } = useJsApiLoader({
+  //   id: "google-map-script",
+  //   googleMapsApiKey: apiKey,
+  //   libraries,
+  // });
 
   // Opciones base memoizadas
   const circleOptionsBase = useMemo(
@@ -483,106 +595,150 @@ const MapAntenas = ({
       <div className="mapa-antenas-header">
         <h4>Mapa de Antenas</h4>
         <div className="mapa-antenas-toolbar">
-          <button
-            className="mapa-antenas-btn"
-            onClick={fitBounds}
-            title="Ajustar vista"
-          >
-            Ajustar vista
-          </button>
-          {/* botón "Recalcular sectores" eliminado */}
-          <div className="mapa-antenas-filter-wrapper">
-            <button
-              type="button"
-              className="mapa-antenas-btn"
-              onClick={() => setFilterOpen((o) => !o)}
-              title="Filtrar por rank"
-            >
-              Filtrar antenas
+          {/* --> MODIFICADO: Botones condicionales según el modo */}
+          {enModoRuta ? (
+            <button className="mapa-antenas-btn" onClick={limpiarRuta}>
+              Modo Azimuth
             </button>
-            {filterOpen && (
-              <div
-                className="mapa-antenas-filter-panel"
-                role="dialog"
-                aria-label="Filtro de ranks"
+          ) : (
+            <>
+              <button
+                className="mapa-antenas-btn"
+                onClick={() => setMostrandoSelectorFecha(true)}
               >
-                <div className="filter-header">
-                  <strong>Filtrar ranks</strong>
-                  <button
-                    type="button"
-                    className="close-btn"
-                    onClick={() => setFilterOpen(false)}
-                    aria-label="Cerrar"
+                Trazar Ruta Diaria
+              </button>
+              <button
+                className="mapa-antenas-btn"
+                onClick={fitBounds}
+                title="Ajustar vista"
+              >
+                Ajustar vista
+              </button>
+              <div className="mapa-antenas-filter-wrapper">
+                <button
+                  type="button"
+                  className="mapa-antenas-btn"
+                  onClick={() => setFilterOpen((o) => !o)}
+                  title="Filtrar por rank"
+                >
+                  Filtrar antenas
+                </button>
+                {filterOpen && (
+                  <div
+                    className="mapa-antenas-filter-panel"
+                    role="dialog"
+                    aria-label="Filtro de ranks"
                   >
-                    ×
-                  </button>
-                </div>
-                <div className="filter-actions">
-                  <button
-                    type="button"
-                    onClick={selectAll}
-                    disabled={allSelected}
-                  >
-                    Seleccionar todo
-                  </button>
-                  <button
-                    type="button"
-                    onClick={clearAll}
-                    disabled={selectedRanks.size === 0}
-                  >
-                    Limpiar
-                  </button>
-                </div>
-                <input
-                  type="text"
-                  className="filter-search"
-                  placeholder="Buscar rank..."
-                  value={rankSearch}
-                  onChange={(e) => setRankSearch(e.target.value)}
-                />
-                <div className="filter-list">
-                  {filteredRankList.length === 0 ? (
-                    <div className="filter-empty">Sin coincidencias</div>
-                  ) : (
-                    <FixedSizeList
-                      height={180} // Altura total del contenedor de la lista (de tu CSS)
-                      itemCount={filteredRankList.length} // Número total de elementos
-                      itemSize={28} // Altura estimada de cada fila en píxeles. ¡Ajústala si es necesario!
-                      width={"100%"} // Ancho del contenedor
-                    >
-                      {({ index, style }) => {
-                        // Obtenemos el rank para este índice
-                        const rk = filteredRankList[index];
-                        const checked = selectedRanks.has(rk);
-                        const label = rk === "__SIN_RANK__" ? "Sin rank" : rk;
-
-                        return (
-                          // El 'style' es crucial para que react-window posicione la fila
-                          <label style={style} key={rk} className="filter-item">
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => toggleRank(rk)}
-                            />
-                            <span>{label}</span>
-                          </label>
-                        );
-                      }}
-                    </FixedSizeList>
-                  )}
-                </div>
-                <div className="filter-footer">
-                  <span>{visibleCount} visibles</span>
-                </div>
+                    {/* ... Contenido del panel de filtro (sin cambios) ... */}
+                    <div className="filter-header">
+                      <strong>Filtrar ranks</strong>
+                      <button
+                        type="button"
+                        className="close-btn"
+                        onClick={() => setFilterOpen(false)}
+                        aria-label="Cerrar"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="filter-actions">
+                      <button
+                        type="button"
+                        onClick={selectAll}
+                        disabled={allSelected}
+                      >
+                        Seleccionar todo
+                      </button>
+                      <button
+                        type="button"
+                        onClick={clearAll}
+                        disabled={selectedRanks.size === 0}
+                      >
+                        Limpiar
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      className="filter-search"
+                      placeholder="Buscar rank..."
+                      value={rankSearch}
+                      onChange={(e) => setRankSearch(e.target.value)}
+                    />
+                    <div className="filter-list">
+                      {filteredRankList.length === 0 ? (
+                        <div className="filter-empty">Sin coincidencias</div>
+                      ) : (
+                        <FixedSizeList
+                          height={180}
+                          itemCount={filteredRankList.length}
+                          itemSize={28}
+                          width={"100%"}
+                        >
+                          {({ index, style }) => {
+                            const rk = filteredRankList[index];
+                            const checked = selectedRanks.has(rk);
+                            const label =
+                              rk === "__SIN_RANK__" ? "Sin rank" : rk;
+                            return (
+                              <label
+                                style={style}
+                                key={rk}
+                                className="filter-item"
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() => toggleRank(rk)}
+                                />
+                                <span>{label}</span>
+                              </label>
+                            );
+                          }}
+                        </FixedSizeList>
+                      )}
+                    </div>
+                    <div className="filter-footer">
+                      <span>{visibleCount} visibles</span>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </>
+          )}
         </div>
       </div>
+
+      {/* --> NUEVO: Modal para seleccionar la fecha de la ruta */}
+      {mostrandoSelectorFecha && (
+        <div className="date-picker-modal-overlay">
+          <div className="date-picker-modal">
+            <h4>Selecciona un día para la ruta</h4>
+            <input
+              type="date"
+              // 1. El input ahora solo guarda la fecha temporalmente
+              onChange={(e) => setFechaTemporal(e.target.value)}
+            />
+            <div className="date-picker-actions">
+              <button onClick={() => setMostrandoSelectorFecha(false)}>
+                Cancelar
+              </button>
+              {/* 2. El botón "Aceptar" ahora es el que llama a la función */}
+              <button
+                onClick={() => trazarRutaParaFecha(fechaTemporal)}
+                // 3. Deshabilitamos el botón si no se ha elegido fecha
+                disabled={!fechaTemporal}
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Mapa */}
       <GoogleMap
         mapContainerClassName="mapa-antenas-canvas"
-        // 1. Lógica de centrado corregida para usar solo el estado.
         center={mapCenter}
         zoom={15}
         onLoad={onMapLoad}
@@ -596,7 +752,6 @@ const MapAntenas = ({
         }}
       >
         {/* --- LÓGICA DE CÁLCULO DE RUTA (INVISIBLE) --- */}
-        {/* 2. Este componente es NUEVO y ESENCIAL. Llama a la API de Google para calcular cada tramo. */}
         {solicitudesRuta.length > 0 &&
           indiceSolicitudActual < solicitudesRuta.length && (
             <DirectionsService
@@ -605,89 +760,100 @@ const MapAntenas = ({
             />
           )}
 
-        {/* --- RENDERIZADO DE ELEMENTOS VISUALES --- */}
+        {/* --- RENDERIZADO CONDICIONAL DE ELEMENTOS VISUALES --- */}
 
-        {/* Círculo original con el número de RANK (sin cambios) */}
-        {filteredAntenas.map((antena, index) => {
-          const rankVal = antena.rank ?? null;
-          const sizePx = circleSizeForRank(rankVal || 9999);
-          const displayNumber = rankVal; // Mostramos solo el RANK aquí
-          return (
-            // Este OverlayView muestra el RANK, no la secuencia
-            <OverlayView
-              key={`antenna-rank-${index}`}
-              position={{
-                lat: antena.latitudDecimal,
-                lng: antena.longitudDecimal,
-              }}
-              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-            >
-              <button
-                type="button"
-                onClick={() => setSelectedAntenna({ ...antena, index })}
-                className="antenna-rank-circle"
-                title={`Antena Rank #${displayNumber}`}
-                style={{
-                  width: sizePx,
-                  height: sizePx,
-                  transform: "translate(-50%, -50%)",
-                  zIndex: 100000 - (rankVal || 9999),
-                  fontSize: Math.max(10, Math.round(sizePx * 0.45)),
+        {!enModoRuta ? (
+          <>
+            {/* MODO GENERAL: Muestra Ranks y Cobertura */}
+            {filteredAntenas.map((antena, index) => {
+              const rankVal = antena.rank ?? null;
+              const sizePx = circleSizeForRank(rankVal || 9999);
+              return (
+                <OverlayView
+                  key={`antenna-rank-${index}`}
+                  position={{
+                    lat: antena.latitudDecimal,
+                    lng: antena.longitudDecimal,
+                  }}
+                  mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setSelectedAntenna({ ...antena, index })}
+                    className="antenna-rank-circle"
+                    title={`Antena Rank #${rankVal}`}
+                    style={{
+                      width: sizePx,
+                      height: sizePx,
+                      transform: "translate(-50%, -50%)",
+                      zIndex: 100000 - (rankVal || 9999),
+                      fontSize: Math.max(10, Math.round(sizePx * 0.45)),
+                    }}
+                  >
+                    {rankVal}
+                  </button>
+                </OverlayView>
+              );
+            })}
+            {coverageShapes.map((shape) =>
+              shape.type === "circle" ? (
+                <Circle key={shape.key} {...shape} />
+              ) : (
+                <Polygon key={shape.key} {...shape} />
+              )
+            )}
+          </>
+        ) : (
+          <>
+            {/* MODO RUTA: Muestra la Ruta y los Marcadores de Secuencia */}
+            {rutaTrazada.map((tramo, index) => (
+              <Polyline
+                key={`ruta-conduccion-${index}`}
+                path={tramo.path}
+                options={{
+                  strokeColor: tramo.color,
+                  strokeOpacity: 0.8,
+                  strokeWeight: 6,
+                  zIndex: 50,
                 }}
+              />
+            ))}
+
+            {lineasSpider.map((linea, index) => (
+              <Polyline
+                key={`spider-line-${index}`}
+                path={linea.path}
+                options={{
+                  strokeColor: "#333333", // Un color oscuro y neutro
+                  strokeOpacity: 0.7,
+                  strokeWeight: 1,
+                  zIndex: 999, // Alto para que se vea, pero debajo de los marcadores
+                }}
+              />
+            ))}
+
+            {puntosCronologicos.map((marcador) => (
+              <OverlayView
+                key={`marcador-cronologico-${marcador.numero}`}
+                position={marcador.position}
+                mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
               >
-                {displayNumber}
-              </button>
-            </OverlayView>
-          );
-        })}
-
-        {/* 3. Dibuja cada TRAMO DE CONDUCCIÓN (usando Polyline) */}
-        {rutaTrazada.map((tramo, index) => (
-          <Polyline
-            key={`ruta-conduccion-${index}`}
-            path={tramo.path}
-            options={{
-              strokeColor: tramo.color,
-              strokeOpacity: 0.8,
-              strokeWeight: 6,
-              zIndex: 50, // Z-index bajo para que esté debajo de los marcadores
-            }}
-          />
-        ))}
-
-        {/* 4. Dibuja los MARCADORES CRONOLÓGICOS (1, 2, 3...) */}
-        {puntosCronologicos.map((marcador) => (
-          <OverlayView
-            key={`marcador-cronologico-${marcador.numero}`}
-            position={marcador.position}
-            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-          >
-            <div className="ruta-marker" title={`Paso #${marcador.numero}`}>
-              {marcador.numero}
-            </div>
-          </OverlayView>
-        ))}
-
-        {/* Cobertura (sin cambios) */}
-        {coverageShapes.map((shape) =>
-          shape.type === "circle" ? (
-            <Circle
-              key={shape.key}
-              center={shape.center}
-              radius={shape.radius}
-              options={shape.options}
-            />
-          ) : (
-            <Polygon
-              key={shape.key}
-              paths={shape.paths}
-              options={shape.options}
-            />
-          )
+                <div
+                  className={`ruta-marker ${
+                    marcador.esSatelite ? "ruta-marker--satelite" : ""
+                  }`}
+                  title={`Paso #${marcador.numero}`}
+                >
+                  {marcador.numero}
+                </div>
+              </OverlayView>
+            ))}
+          </>
         )}
 
-        {/* InfoWindow (sin cambios) */}
+        {/* InfoWindow (funciona en ambos modos) */}
         {selectedAntenna && (
+          // ... tu código de InfoWindow no necesita cambios ...
           <InfoWindow
             position={{
               lat: selectedAntenna.latitudDecimal,
@@ -695,20 +861,80 @@ const MapAntenas = ({
             }}
             onCloseClick={() => setSelectedAntenna(null)}
           >
-            {/* ... contenido del InfoWindow ... */}
+            <div className="antenna-info">
+              <h5>
+                Antena{" "}
+                {selectedAntenna.rank
+                  ? `#${selectedAntenna.rank}`
+                  : `#${selectedAntenna.index + 1}`}
+              </h5>
+              <p>
+                <strong>Latitud:</strong>{" "}
+                {selectedAntenna.latitudDecimal.toFixed(6)}
+              </p>
+              <p>
+                <strong>Longitud:</strong>{" "}
+                {selectedAntenna.longitudDecimal.toFixed(6)}
+              </p>
+              <p>
+                <strong>Azimuth:</strong>{" "}
+                {selectedAntenna.azimuth === 360
+                  ? "360° (Cobertura omnidireccional)"
+                  : `${selectedAntenna.azimuth}°`}
+              </p>
+              {typeof selectedAntenna.frecuencia === "number" && (
+                <p>
+                  <strong>Frecuencia:</strong> {selectedAntenna.frecuencia}
+                </p>
+              )}
+              {selectedAntenna.primerUso && (
+                <p>
+                  <strong>Primer uso:</strong>{" "}
+                  {new Date(selectedAntenna.primerUso).toLocaleString("es-MX")}
+                </p>
+              )}
+              {selectedAntenna.ultimoUso && (
+                <p>
+                  <strong>Último uso:</strong>{" "}
+                  {new Date(selectedAntenna.ultimoUso).toLocaleString("es-MX")}
+                </p>
+              )}
+              {selectedAntenna.serie && selectedAntenna.serie.length > 0 && (
+                <div>
+                  <strong>Actividad por hora:</strong>
+                  <div
+                    style={{
+                      maxHeight: "100px",
+                      overflowY: "auto",
+                      fontSize: "0.85em",
+                      marginTop: "4px",
+                    }}
+                  >
+                    {selectedAntenna.serie.map((bucket, idx) => (
+                      <div key={idx}>
+                        {new Date(bucket.bucket).toLocaleString("es-MX", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                        : {bucket.count} registros
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </InfoWindow>
         )}
       </GoogleMap>
-      {puntosCronologicos.length > 0 && (
+
+      {/* --> MODIFICADO: La leyenda ahora solo aparece en Modo Ruta */}
+      {enModoRuta && puntosCronologicos.length > 0 && (
         <div className="mapa-antenas-legend-ruta">
           <h5>Leyenda de Seguimiento</h5>
           <div className="legend-item">
-            <div className="antenna-legend-circle">R</div>
-            <span>
-              Círculo principal indica el <strong>RANK</strong> (importancia).
-            </span>
-          </div>
-          <div className="legend-item">
+            {/* Leyenda simplificada para el modo ruta */}
             <div
               className="ruta-marker"
               style={{ position: "relative", transform: "none" }}
