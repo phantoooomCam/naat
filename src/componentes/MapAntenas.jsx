@@ -15,20 +15,6 @@ import "./MapAntenas.css";
 
 const libraries = ["geometry"];
 
-// Ya no se muestran markers ni clustering: cada antena se dibuja como un círculo con su rank usando OverlayView.
-
-/**
- * Mapa de Antenas — cookies + fetchWithAuth + .env API key:
- * - Backend devuelve: { latitudDecimal, longitudDecimal, azimuth, frecuencia, rank }
- * - Marker con label = rank; tamaño/visibilidad según rank
- * - Sectores: triángulo (centro, azimuth-5°, azimuth+5°) a 400 m
- * - Google key: SOLO desde .env (VITE_GOOGLE_MAPS_API_KEY)
- * - Auth: SOLO cookie (manejado por fetchWithAuth)
- * - URL: relativa por defecto (útil con proxy Vite). Puedes pasar apiBase para forzar host.
- */
-// height: permite ajustar el alto desde el padre (por ejemplo "100%" para ocupar todo el content-display-area,
-// o valores como "600px", "70vh", etc.). Por defecto 100% para que se adapte.
-// Filtro: Se añade un dropdown estilo Excel para seleccionar qué ranks de antenas mostrar.
 const MapAntenas = ({
   idSabana,
   apiBase = "",
@@ -45,6 +31,8 @@ const MapAntenas = ({
   const [filterOpen, setFilterOpen] = useState(false);
   const [selectedRanks, setSelectedRanks] = useState(new Set());
   const [rankSearch, setRankSearch] = useState("");
+
+  const [mapCenter, setMapCenter] = useState({ lat: 23.6345, lng: -102.5528 });
 
   // API Key únicamente desde variable de entorno (Vite)
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
@@ -137,8 +125,6 @@ const MapAntenas = ({
           queryString ? `?${queryString}` : ""
         }`;
 
-        console.log("[v0] Fetching antenas from:", url); // Debug log
-
         const response = await fetchWithAuth(url, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -186,6 +172,12 @@ const MapAntenas = ({
         });
 
         setAntenas(normalized);
+        if (normalized.length > 0 && antenas.length === 0) {
+          setMapCenter({
+            lat: normalized[0].latitudDecimal,
+            lng: normalized[0].longitudDecimal,
+          });
+        }
       } catch (err) {
         // Si el error es una cancelación, simplemente detenemos la ejecución en silencio.
         // Esto es normal durante el modo estricto de React o si el usuario navega rápido.
@@ -306,8 +298,6 @@ const MapAntenas = ({
         });
       }
     } catch (e) {
-      // Silenciar si algo falla (ambiente SSR o google undefined temporalmente)
-      // console.warn('No se pudo reubicar controles del mapa', e);
     }
   }, []);
   const fitBounds = useCallback(() => {
@@ -508,20 +498,7 @@ const MapAntenas = ({
       {/* Mapa */}
       <GoogleMap
         mapContainerClassName="mapa-antenas-canvas"
-        // Si no hay antenas filtradas, centrar en la primera antena del dataset
-        center={
-          filteredAntenas[0]
-            ? {
-                lat: filteredAntenas[0].latitudDecimal,
-                lng: filteredAntenas[0].longitudDecimal,
-              }
-            : antenas[0]
-            ? {
-                lat: antenas[0].latitudDecimal,
-                lng: antenas[0].longitudDecimal,
-              }
-            : { lat: 0, lng: 0 }
-        }
+        center={mapCenter}
         zoom={15}
         onLoad={onMapLoad}
         options={{
