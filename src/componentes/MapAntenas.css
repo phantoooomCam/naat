@@ -438,6 +438,45 @@
   font-weight: 600;
 }
 
+/* AÑADE ESTAS CLASES A MapAntenas.css */
+
+/* Estilo para los marcadores numerados de la ruta */
+.ruta-marker {
+  width: 28px;
+  height: 28px;
+  background-color: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 50%;
+  color: #000000;
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  cursor: help;
+  z-index: 1000; /* Asegura que esté sobre las líneas de la ruta */
+}
+
+/* Estilo para la leyenda de la ruta */
+.mapa-antenas-legend-ruta {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--antenna-border);
+  box-shadow: 0 2px 8px var(--antenna-shadow);
+  z-index: 1000;
+  font-size: 0.8rem;
+}
+.mapa-antenas-legend-ruta h5 {
+  margin: 0 0 4px 0;
+  font-size: 0.85rem;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .mapa-antenas-wrapper {
