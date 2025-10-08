@@ -249,9 +249,7 @@ const GestionSabanaView = () => {
         setError("");
 
         const API_URL = "/api";
-        const url = `${API_URL}/sabanas/${idSabana}/registros?page=1&pageSize=0&sort=${encodeURIComponent(
-          sort
-        )}`;
+        const url = `${API_URL}/sabanas/${idSabana}/registros`; // ya no se envían page/pageSize
 
         const res = await fetchWithAuth(url, {
           method: "GET",
@@ -263,13 +261,18 @@ const GestionSabanaView = () => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const data = await res.json();
-        const items = Array.isArray(data.items) ? data.items : data.Items ?? [];
+
+        // data ahora debería ser un array. Conservamos fallback por seguridad.
+        const items = Array.isArray(data)
+          ? data
+          : Array.isArray(data.items)
+          ? data.items
+          : data.Items ?? [];
+
         const mappedItems = items.map(mapToSnake);
 
         setTodosLosRegistros(mappedItems);
       } catch (err) {
-        // Si el error es una cancelación, lo ignoramos en silencio.
-        // Es un comportamiento esperado en el modo de desarrollo de React.
         if (err.name === "AbortError") {
           console.log("Fetch de registros abortado (normal en desarrollo).");
           return;
@@ -277,6 +280,8 @@ const GestionSabanaView = () => {
 
         console.error("Error al cargar registros:", err);
         setError(err?.message || "Error desconocido");
+      } finally {
+        setLoading(false);
       }
     };
 
