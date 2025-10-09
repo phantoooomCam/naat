@@ -34,7 +34,10 @@ const MapAntenas = ({
   const [error, setError] = useState("");
   const [selectedAntenna, setSelectedAntenna] = useState(null);
   const [mapRef, setMapRef] = useState(null);
-  // Antenas visibles actualmente en el viewport (optimización rendimiento)
+
+  const polylineRefs = useRef([]);
+  const spiderlineRefs = useRef([]);
+
   const debounceTimerRef = useRef(null);
   // Filtro por rank
   const [filterOpen, setFilterOpen] = useState(false);
@@ -43,17 +46,37 @@ const MapAntenas = ({
 
   const [mapCenter, setMapCenter] = useState(null);
 
-  const [rutaTrazada, setRutaTrazada] = useState([]); // Almacenará los polilíneas de la ruta final
-  const [puntosCronologicos, setPuntosCronologicos] = useState([]); // Para los marcadores 1, 2, 3...
-  const [solicitudesRuta, setSolicitudesRuta] = useState([]); // Cola de tramos a calcular
+  const [rutaTrazada, setRutaTrazada] = useState([]); // polylíneas de la ruta
+  const [puntosCronologicos, setPuntosCronologicos] = useState([]);
+  const [solicitudesRuta, setSolicitudesRuta] = useState([]); // cola de tramos
+  const [lineasSpider, setLineasSpider] = useState([]); // “spiderfy”
 
-  const [enModoRuta, setEnModoRuta] = useState(false); // El interruptor principal
-  const [mostrandoSelectorFecha, setMostrandoSelectorFecha] = useState(false); // Para mostrar/ocultar el calendario
-  const [antenasParaRuta, setAntenasParaRuta] = useState([]); // Datos exclusivos para la ruta del día
-  const [fechaTemporal, setFechaTemporal] = useState("");
-  const [lineasSpider, setLineasSpider] = useState([]);
-
+  const [enModoRuta, setEnModoRuta] = useState(false); // interruptor principal
   const [indiceSolicitudActual, setIndiceSolicitudActual] = useState(0);
+
+  const [antenasParaRuta, setAntenasParaRuta] = useState([]); // datos para la ruta del día
+  const [mostrandoSelectorFecha, setMostrandoSelectorFecha] = useState(false);
+  const [fechaTemporal, setFechaTemporal] = useState("");
+
+  const detachPolylines = () => {
+    try {
+      polylineRefs.current.forEach((p) => p && p.setMap(null));
+      spiderlineRefs.current.forEach((p) => p && p.setMap(null));
+    } catch (_) {}
+    polylineRefs.current = [];
+    spiderlineRefs.current = [];
+  };
+
+  useEffect(() => {
+    if (!enModoRuta) {
+      detachPolylines();
+      setRutaTrazada([]);
+      setLineasSpider([]);
+      setPuntosCronologicos([]);
+      setSolicitudesRuta([]);
+      setIndiceSolicitudActual(0);
+    }
+  }, [enModoRuta]);
 
   const trazarRutaParaFecha = async (fecha) => {
     if (!fecha) return;
@@ -110,6 +133,7 @@ const MapAntenas = ({
 
   const directionsCallback = useCallback(
     (response, status) => {
+      if (!enModoRuta) return;
       if (status === "OK") {
         // Si la ruta se calculó correctamente, la guardamos en el estado
         setRutaTrazada((prevRutas) => [
@@ -127,7 +151,7 @@ const MapAntenas = ({
         setIndiceSolicitudActual((prevIndex) => prevIndex + 1);
       }
     },
-    [indiceSolicitudActual]
+    [indiceSolicitudActual, enModoRuta]
   );
 
   useEffect(() => {
@@ -216,7 +240,7 @@ const MapAntenas = ({
           lat: puntoB.latitudDecimal,
           lng: puntoB.longitudDecimal,
         },
-        travelMode: "DRIVING",
+        travelMode: window.google.maps.TravelMode.DRIVING,
       });
     }
 
@@ -225,15 +249,25 @@ const MapAntenas = ({
     setIndiceSolicitudActual(0);
   }, [antenasParaRuta, isLoaded]);
 
-  // AÑADE ESTA FUNCIÓN DE LIMPIEZA
   const limpiarRuta = () => {
-    setEnModoRuta(false);
+    // Quitar del mapa cualquier polyline residual
+    try {
+      polylineRefs.current.forEach((p) => p && p.setMap(null));
+      spiderlineRefs.current.forEach((p) => p && p.setMap(null));
+    } catch (_) {}
+    polylineRefs.current = [];
+    spiderlineRefs.current = [];
+
+    // Limpiar estados
     setAntenasParaRuta([]);
     setRutaTrazada([]);
     setPuntosCronologicos([]);
     setLineasSpider([]);
     setSolicitudesRuta([]);
     setIndiceSolicitudActual(0);
+
+    // Salir de modo ruta
+    setEnModoRuta(false);
   };
 
   // API Key únicamente desde variable de entorno (Vite)
@@ -751,17 +785,7 @@ const MapAntenas = ({
           scrollwheel: true,
         }}
       >
-        {/* --- LÓGICA DE CÁLCULO DE RUTA (INVISIBLE) --- */}
-        {solicitudesRuta.length > 0 &&
-          indiceSolicitudActual < solicitudesRuta.length && (
-            <DirectionsService
-              options={solicitudesRuta[indiceSolicitudActual]}
-              callback={directionsCallback}
-            />
-          )}
-
         {/* --- RENDERIZADO CONDICIONAL DE ELEMENTOS VISUALES --- */}
-
         {!enModoRuta ? (
           <>
             {/* MODO GENERAL: Muestra Ranks y Cobertura */}
@@ -795,6 +819,7 @@ const MapAntenas = ({
                 </OverlayView>
               );
             })}
+
             {coverageShapes.map((shape) =>
               shape.type === "circle" ? (
                 <Circle key={shape.key} {...shape} />
@@ -805,6 +830,15 @@ const MapAntenas = ({
           </>
         ) : (
           <>
+            {/* --- LÓGICA DE CÁLCULO DE RUTA (INVISIBLE) --- */}
+            {solicitudesRuta.length > 0 &&
+              indiceSolicitudActual < solicitudesRuta.length && (
+                <DirectionsService
+                  options={solicitudesRuta[indiceSolicitudActual]}
+                  callback={directionsCallback}
+                />
+              )}
+
             {/* MODO RUTA: Muestra la Ruta y los Marcadores de Secuencia */}
             {rutaTrazada.map((tramo, index) => (
               <Polyline
@@ -816,6 +850,12 @@ const MapAntenas = ({
                   strokeWeight: 6,
                   zIndex: 50,
                 }}
+                onLoad={(poly) => {
+                  if (poly) polylineRefs.current.push(poly);
+                }}
+                onUnmount={(poly) => {
+                  if (poly) poly.setMap(null);
+                }}
               />
             ))}
 
@@ -824,10 +864,16 @@ const MapAntenas = ({
                 key={`spider-line-${index}`}
                 path={linea.path}
                 options={{
-                  strokeColor: "#333333", // Un color oscuro y neutro
+                  strokeColor: "#333333",
                   strokeOpacity: 0.7,
                   strokeWeight: 1,
-                  zIndex: 999, // Alto para que se vea, pero debajo de los marcadores
+                  zIndex: 10, // más bajo que la ruta para no taparla
+                }}
+                onLoad={(poly) => {
+                  if (poly) spiderlineRefs.current.push(poly);
+                }}
+                onUnmount={(poly) => {
+                  if (poly) poly.setMap(null);
                 }}
               />
             ))}
@@ -853,7 +899,6 @@ const MapAntenas = ({
 
         {/* InfoWindow (funciona en ambos modos) */}
         {selectedAntenna && (
-          // ... tu código de InfoWindow no necesita cambios ...
           <InfoWindow
             position={{
               lat: selectedAntenna.latitudDecimal,
