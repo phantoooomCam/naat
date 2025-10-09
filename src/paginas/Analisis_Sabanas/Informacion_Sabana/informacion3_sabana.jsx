@@ -249,7 +249,34 @@ const GestionSabanaView = () => {
         setError("");
 
         const API_URL = "/api";
-        const url = `${API_URL}/sabanas/${idSabana}/registros`; // ya no se envían page/pageSize
+
+        // Normaliza: permite 1 o varios ids (e.g., 1, "1", [1], ["1", "2"])
+        const ids = (Array.isArray(idSabana) ? idSabana : [idSabana])
+          .filter((v) => v !== null && v !== undefined)
+          .map((v) => Number(v))
+          .filter((n) => Number.isFinite(n));
+
+        if (ids.length === 0) {
+          setTodosLosRegistros([]);
+          return;
+        }
+
+        let url;
+        if (ids.length > 1) {
+          // Endpoint batch
+          const qs = new URLSearchParams();
+          ids.forEach((id) => qs.append("ids", String(id)));
+          if (sort) qs.set("sort", String(sort));
+          url = `${API_URL}/sabanas/registros/batch?${qs.toString()}`;
+        } else {
+          // Endpoint single
+          const qs = new URLSearchParams();
+          if (sort) qs.set("sort", String(sort));
+          const tail = qs.toString();
+          url = `${API_URL}/sabanas/${ids[0]}/registros${
+            tail ? `?${tail}` : ""
+          }`;
+        }
 
         const res = await fetchWithAuth(url, {
           method: "GET",
@@ -262,7 +289,6 @@ const GestionSabanaView = () => {
 
         const data = await res.json();
 
-        // data ahora debería ser un array. Conservamos fallback por seguridad.
         const items = Array.isArray(data)
           ? data
           : Array.isArray(data.items)
@@ -270,14 +296,12 @@ const GestionSabanaView = () => {
           : data.Items ?? [];
 
         const mappedItems = items.map(mapToSnake);
-
         setTodosLosRegistros(mappedItems);
       } catch (err) {
         if (err.name === "AbortError") {
           console.log("Fetch de registros abortado (normal en desarrollo).");
           return;
         }
-
         console.error("Error al cargar registros:", err);
         setError(err?.message || "Error desconocido");
       } finally {

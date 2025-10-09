@@ -704,11 +704,7 @@
 }
 
 .file-item-enhanced.selected {
-  background: linear-gradient(
-    135deg,
-    rgba(51, 96, 141, 0.1) 0%,
-    rgba(51, 96, 141, 0.05) 100%
-  );
+  background: linear-gradient(135deg, rgba(51, 96, 141, 0.1) 0%, rgba(51, 96, 141, 0.05) 100%);
   border-color: #33608d;
   box-shadow: 0 0 0 2px rgba(51, 96, 141, 0.2);
 }

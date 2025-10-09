@@ -1,259 +1,215 @@
-"use client";
-import { useState, useEffect, useRef } from "react";
-import PropTypes from "prop-types";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faUpload,
-  faFile,
-  faTrash,
-  faCheck,
-  faSpinner,
-  faExclamationTriangle,
-} from "@fortawesome/free-solid-svg-icons";
-import "./Sabana.css";
-import fetchWithAuth from "../../../../utils/fetchWithAuth";
-import { useNavigate } from "react-router-dom";
+"use client"
+import { useState, useEffect, useRef } from "react"
+import PropTypes from "prop-types"
+import { useNavigate } from "react-router-dom" // Restored react-router-dom navigation
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faUpload, faFile, faTrash, faCheck, faSpinner, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons"
+import "./Sabana.css"
+import fetchWithAuth from "../../../../utils/fetchWithAuth"
 
 const Procesar_Sabana = ({ activeView }) => {
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
-      const sidebar = document.querySelector(".sidebar");
+      const sidebar = document.querySelector(".sidebar")
       if (sidebar) {
-        setIsSidebarCollapsed(sidebar.classList.contains("closed"));
+        setIsSidebarCollapsed(sidebar.classList.contains("closed"))
       }
-    });
+    })
 
-    observer.observe(document.body, { attributes: true, subtree: true });
+    observer.observe(document.body, { attributes: true, subtree: true })
 
-    return () => observer.disconnect();
-  }, []);
+    return () => observer.disconnect()
+  }, [])
 
   const views = {
-    procesamiento: (
-      <ProcesamientoView isSidebarCollapsed={isSidebarCollapsed} />
-    ),
-  };
+    procesamiento: <ProcesamientoView isSidebarCollapsed={isSidebarCollapsed} />,
+  }
 
   return (
     <div className={`dash-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
-      <div className="content-wrapper">
-        {views[activeView] || views.procesamiento}
-      </div>
+      <div className="content-wrapper">{views[activeView] || views.procesamiento}</div>
     </div>
-  );
-};
+  )
+}
 
 const ProcesamientoView = ({ isSidebarCollapsed }) => {
-  const [files, setFiles] = useState([]);
-  const [dragActive, setDragActive] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [telco, setTelco] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [processingStatus, setProcessingStatus] = useState(null);
-  const [statusMessage, setStatusMessage] = useState("");
-  const [casos, setCasos] = useState([]);
-  const [casoSeleccionado, setCasoSeleccionado] = useState("");
-  const [companias, setCompanias] = useState([]);
-  const [codigoPais, setCodigoPais] = useState("+52");
+  const [files, setFiles] = useState([])
+  const [dragActive, setDragActive] = useState(false)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [telcos, setTelcos] = useState({}) // { fileId: "telco" }
+  const [phoneNumbers, setPhoneNumbers] = useState({}) // { fileId: "phoneNumber" }
+  const [codigosPais, setCodigosPais] = useState({}) // { fileId: "+52" }
+  const [casoSeleccionado, setCasoSeleccionado] = useState("")
+  const [companias, setCompanias] = useState([])
+  const [idSabana, setIdSabana] = useState([])
+  const navigate = useNavigate() // Using proper React Router navigation
+  const [messages, setMessages] = useState([])
+  const [isConnected, setIsConnected] = useState(false)
+  const [socket, setSocket] = useState(null)
+  const [progress, setProgress] = useState(0)
+  const [fileProgress, setFileProgress] = useState({})
+  const [fileStatus, setFileStatus] = useState({})
+  const [filters, setFilters] = useState({})
+  const [currentProcessingIndex, setCurrentProcessingIndex] = useState(0)
+  const [pendingMessages, setPendingMessages] = useState([])
 
-  const [idSabana, setIdSabana] = useState(null);
-  const navigate = useNavigate();
-
-  const [messages, setMessages] = useState([]);
-  const [isConnected, setIsConnected] = useState(false);
-  const [socket, setSocket] = useState(null);
-  const [progress, setProgress] = useState(0);
-  const [fileProgress, setFileProgress] = useState({});
-  const [fileStatus, setFileStatus] = useState({});
-  const [filters, setFilters] = useState({});
-  const [currentProcessingIndex, setCurrentProcessingIndex] = useState(0);
-  const [pendingMessages, setPendingMessages] = useState([]); // 🔧 NUEVO: Mensajes pendientes
-
-  // ---- Estado derivado para 1 o VARIOS archivos ----
-  const hasSingleFile = files.length === 1;
-  const onlyFileId = hasSingleFile ? files[0].id : null;
-  const onlyFileStatus = hasSingleFile ? fileStatus[onlyFileId] : null;
-  const onlyFileProgress = hasSingleFile ? fileProgress[onlyFileId] || 0 : 0;
-
-  // ¿ya está procesado? (solo para el caso de 1 archivo)
-  const isProcessed =
-    onlyFileStatus === "procesado" || onlyFileProgress === 100;
-
-  // NUEVO: contar cuántos archivos van procesados
-  const processedCount = files.reduce((acc, f) => {
-    const st = fileStatus[f.id];
-    const pr = fileProgress[f.id] || 0;
-    return acc + (st === "procesado" || pr === 100 ? 1 : 0);
-  }, 0);
-
-  // Guardar en BD: hay archivos y NO estamos en “isProcessing”
-  const canGuardar = files.length > 0 && !isProcessing;
-
-  // Analizar Archivos: al menos 1 procesado + existe idSabana + NO isProcessing
-  const canProcesar = processedCount > 0 && !!idSabana && !isProcessing;
-
-  // 🔧 CAMBIO 1: Usar refs para mantener los valores actualizados
-  const fileIdByServerIdRef = useRef({});
-  const [fileIdByServerId, setFileIdByServerId] = useState({});
+  const fileIdByServerIdRef = useRef({})
+  const [fileIdByServerId, setFileIdByServerId] = useState({})
+  const [processingStatus, setProcessingStatus] = useState(null)
+  const [statusMessage, setStatusMessage] = useState("")
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [casos, setCasos] = useState([])
 
   const stateToProgress = {
     en_cola: 33,
     procesando: 66,
     procesado: 100,
-  };
+  }
 
   const getStatusText = (status) => {
     const statusMap = {
       en_cola: "En cola",
       procesando: "Procesando",
       procesado: "Procesado",
-    };
-    return statusMap[status] || "Pendiente";
-  };
-  // 🔧 FUNCIÓN PARA PROCESAR UN MENSAJE
+    }
+    return statusMap[status] || "Pendiente"
+  }
+
   const processMessage = (message) => {
-    const stateMatch = message.match(/estado:\s*(\w+)/);
-    const fileMatch = message.match(/archivo\s+(\d+)/);
+    const stateMatch = message.match(/estado:\s*(\w+)/)
+    const fileMatch = message.match(/archivo\s+(\d+)/)
 
     if (!stateMatch || !fileMatch) {
-      return false; // No se pudo procesar
+      return false
     }
 
-    const state = stateMatch[1].toLowerCase();
-    const serverId = fileMatch[1];
+    const state = stateMatch[1].toLowerCase()
+    const serverId = fileMatch[1]
 
     if (!stateToProgress.hasOwnProperty(state)) {
-      return false;
+      return false
     }
 
-    const fileId = fileIdByServerIdRef.current[serverId];
+    const fileId = fileIdByServerIdRef.current[serverId]
     if (!fileId) {
-      return false; // No se pudo procesar, pero el mensaje es válido
+      return false
     }
 
-    const progressValue = stateToProgress[state];
+    const progressValue = stateToProgress[state]
 
     setFileProgress((prev) => {
-      const updated = { ...prev, [fileId]: progressValue };
-      return updated;
-    });
+      const updated = { ...prev, [fileId]: progressValue }
+      return updated
+    })
 
     setFileStatus((prev) => {
-      const updated = { ...prev, [fileId]: state };
-      return updated;
-    });
+      const updated = { ...prev, [fileId]: state }
+      return updated
+    })
 
-    return true; // Procesado exitosamente
-  };
-  // 🔧 FUNCIÓN PARA PROCESAR MENSAJES PENDIENTES
+    return true
+  }
+
   const processPendingMessages = () => {
     setPendingMessages((currentPending) => {
-      const stillPending = [];
+      const stillPending = []
 
       currentPending.forEach((message) => {
-        const processed = processMessage(message);
+        const processed = processMessage(message)
         if (!processed) {
-          // Si no se pudo procesar, mantenerlo en pending
-          stillPending.push(message);
+          stillPending.push(message)
         }
-      });
+      })
 
-      return stillPending;
-    });
-  };
+      return stillPending
+    })
+  }
 
-  // 🔧 CAMBIO 2: Actualizar ref cuando cambie el estado
   useEffect(() => {
-    fileIdByServerIdRef.current = fileIdByServerId;
-  }, [fileIdByServerId]);
+    fileIdByServerIdRef.current = fileIdByServerId
+  }, [fileIdByServerId])
 
-  // 🔧 CAMBIO 3: WebSocket mejorado
   useEffect(() => {
-    const ws = new WebSocket("ws://192.168.100.89:44444");
+    const ws = new WebSocket("ws://192.168.100.89:44444")
 
     ws.onopen = () => {
-      setIsConnected(true);
-    };
+      setIsConnected(true)
+    }
 
     ws.onmessage = (event) => {
-      const message = event.data;
+      const message = event.data
 
-      // Siempre agregar a la lista de mensajes para mostrar
-      setMessages((prevMessages) => [...prevMessages, message]);
+      setMessages((prevMessages) => [...prevMessages, message])
 
-      // Intentar procesar el mensaje inmediatamente
-      const processed = processMessage(message);
+      const processed = processMessage(message)
 
       if (!processed) {
-        setPendingMessages((prev) => [...prev, message]);
+        setPendingMessages((prev) => [...prev, message])
       }
-    };
+    }
 
     ws.onerror = (error) => {
-      console.error("Error en WebSocket:", error);
-    };
+      console.error("Error en WebSocket:", error)
+    }
 
     ws.onclose = () => {
-      setIsConnected(false);
-    };
+      setIsConnected(false)
+    }
 
-    setSocket(ws);
+    setSocket(ws)
 
     return () => {
-      ws.close();
-      setIsConnected(false);
-    };
-  }, []);
-  //Proceso de sabanas
-
-  // 🔧 PROCESAR MENSAJES PENDIENTES CUANDO CAMBIE EL MAPEO
-  useEffect(() => {
-    fileIdByServerIdRef.current = fileIdByServerId;
-
-    // Si hay mapeo y mensajes pendientes, procesarlos
-    if (
-      Object.keys(fileIdByServerId).length > 0 &&
-      pendingMessages.length > 0
-    ) {
-      processPendingMessages();
+      ws.close()
+      setIsConnected(false)
     }
-  }, [fileIdByServerId, pendingMessages.length]);
+  }, [])
+
+  useEffect(() => {
+    fileIdByServerIdRef.current = fileIdByServerId
+
+    if (Object.keys(fileIdByServerId).length > 0 && pendingMessages.length > 0) {
+      processPendingMessages()
+    }
+  }, [fileIdByServerId, pendingMessages.length])
 
   useEffect(() => {
     const fetchCompanias = async () => {
       try {
-        const response = await fetchWithAuth("/api/sabanas/companias");
+        const response = await fetchWithAuth("/api/sabanas/companias")
         if (!response.ok) {
-          throw new Error("Error al obtener las compañías");
+          throw new Error("Error al obtener las compañías")
         }
-        const data = await response.json();
-        setCompanias(data);
-      } catch (error) {}
-    };
+        const data = await response.json()
+        setCompanias(data)
+      } catch (error) {
+        console.error("Error fetching companias:", error)
+      }
+    }
 
-    fetchCompanias();
-  }, []);
+    fetchCompanias()
+  }, [])
 
   useEffect(() => {
     const fetchCasos = async () => {
       try {
-        const response = await fetchWithAuth("/api/casos");
+        const response = await fetchWithAuth("/api/casos")
         if (!response.ok) {
-          throw new Error("Error al obtener los casos");
+          throw new Error("Error al obtener los casos")
         }
-        const data = await response.json();
+        const data = await response.json()
         const casosTrasnformados = data.map((caso) => ({
           id: caso.idCaso,
           titulo: caso.nombre,
-        }));
-        setCasos(casosTrasnformados);
-      } catch (error) {}
-    };
-    fetchCasos();
-  }, []);
+        }))
+        setCasos(casosTrasnformados)
+      } catch (error) {
+        console.error("Error fetching casos:", error)
+      }
+    }
+    fetchCasos()
+  }, [])
 
   const processFiles = (newFiles) => {
     const incoming = Array.from(newFiles).map((f) => ({
@@ -263,266 +219,291 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       size: f.size,
       uploadDate: new Date().toLocaleDateString(),
       rawFile: f,
-    }));
+    }))
 
     setFiles((prev) => {
-      const existingKeys = new Set(prev.map((f) => `${f.name}::${f.size}`));
-      const deduped = incoming.filter(
-        (f) => !existingKeys.has(`${f.name}::${f.size}`)
-      );
-      return [...prev, ...deduped];
-    });
+      const existingKeys = new Set(prev.map((f) => `${f.name}::${f.size}`))
+      const deduped = incoming.filter((f) => !existingKeys.has(`${f.name}::${f.size}`))
+
+      const newTelcos = {}
+      const newPhones = {}
+      const newCodigos = {}
+      deduped.forEach((f) => {
+        newTelcos[f.id] = ""
+        newPhones[f.id] = ""
+        newCodigos[f.id] = "+52"
+      })
+
+      setTelcos((prev) => ({ ...prev, ...newTelcos }))
+      setPhoneNumbers((prev) => ({ ...prev, ...newPhones }))
+      setCodigosPais((prev) => ({ ...prev, ...newCodigos }))
+
+      return [...prev, ...deduped]
+    })
 
     setFileProgress((prev) => {
-      const next = { ...prev };
+      const next = { ...prev }
       incoming.forEach((f) => {
-        next[f.id] = 0;
-      });
-      return next;
-    });
+        next[f.id] = 0
+      })
+      return next
+    })
 
     setFileStatus((prev) => {
-      const next = { ...prev };
+      const next = { ...prev }
       incoming.forEach((f) => {
-        next[f.id] = "pendiente";
-      });
-      return next;
-    });
-  };
+        next[f.id] = "pendiente"
+      })
+      return next
+    })
+  }
 
   const handleDrag = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(e.type === "dragenter" || e.type === "dragover");
-  };
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(e.type === "dragenter" || e.type === "dragover")
+  }
 
   const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      processFiles(e.dataTransfer.files);
+      processFiles(e.dataTransfer.files)
     }
-  };
+  }
 
   const handleFileInput = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      processFiles(e.target.files);
+      processFiles(e.target.files)
     }
-  };
+  }
 
   const handleFileDelete = (fileId) => {
     setFiles((prevFiles) => {
-      const updatedFiles = prevFiles.filter((file) => file.id !== fileId);
+      const updatedFiles = prevFiles.filter((file) => file.id !== fileId)
       if (selectedFile && selectedFile.id === fileId) {
-        setSelectedFile(null);
+        setSelectedFile(null)
       }
-      return updatedFiles;
-    });
+      return updatedFiles
+    })
 
-    // Limpiar el progreso del archivo eliminado
+    setTelcos((prev) => {
+      const updated = { ...prev }
+      delete updated[fileId]
+      return updated
+    })
+
+    setPhoneNumbers((prev) => {
+      const updated = { ...prev }
+      delete updated[fileId]
+      return updated
+    })
+
+    setCodigosPais((prev) => {
+      const updated = { ...prev }
+      delete updated[fileId]
+      return updated
+    })
+
     setFileProgress((prev) => {
-      const updated = { ...prev };
-      delete updated[fileId];
-      return updated;
-    });
+      const updated = { ...prev }
+      delete updated[fileId]
+      return updated
+    })
 
     setFileStatus((prev) => {
-      const updated = { ...prev };
-      delete updated[fileId];
-      return updated;
-    });
-  };
+      const updated = { ...prev }
+      delete updated[fileId]
+      return updated
+    })
+  }
 
   const handleClearAllFiles = () => {
-    setFiles([]);
-    setSelectedFile(null);
-    setFileProgress({});
-    setFileStatus({});
-    setCurrentProcessingIndex(0); // Reiniciar el índice
-  };
+    setFiles([])
+    setSelectedFile(null)
+    setFileProgress({})
+    setFileStatus({})
+    setCurrentProcessingIndex(0)
+    setTelcos({})
+    setPhoneNumbers({})
+    setCodigosPais({})
+  }
 
   const handleFilterChange = (filterName, value) => {
     setFilters((prev) => ({
       ...prev,
       [filterName]: value,
-    }));
-  };
+    }))
+  }
 
-  const inputRef = useRef(null);
-  const filteredFiles = files.filter((file) => true);
+  const inputRef = useRef(null)
+  const filteredFiles = files.filter((file) => true)
 
   const handleProcessFiles = () => {
     if (files.length === 0) {
-      setProcessingStatus("error");
-      setStatusMessage("No hay archivos para procesar");
-      setTimeout(() => setProcessingStatus(null), 3000);
-      return;
+      setProcessingStatus("error")
+      setStatusMessage("No hay archivos para procesar")
+      setTimeout(() => setProcessingStatus(null), 3000)
+      return
     }
 
-    if (!idSabana) {
-      setProcessingStatus("error");
-      setStatusMessage("Primero guarda en BD para obtener el id_sabana.");
-      setTimeout(() => setProcessingStatus(null), 3000);
-      return;
+    if (idSabana.length === 0) {
+      setProcessingStatus("error")
+      setStatusMessage("Primero guarda en BD para obtener el id_sabana.")
+      setTimeout(() => setProcessingStatus(null), 3000)
+      return
     }
 
-    navigate("/procesamiento_sabana", { state: { idSabana } });
-  };
+    navigate("/procesamiento_sabana", { state: { idSabana } })
+    console.log("Navegando a /procesamiento_sabana con idSabana:", idSabana)
+  }
 
   const handleGuardarEnBD = async () => {
-    const companiaSeleccionada = companias.find(
-      (compania) => compania.nombre === telco
-    );
-    const idCompania = companiaSeleccionada ? companiaSeleccionada.id : null;
-
     if (files.length === 0) {
-      setProcessingStatus("error");
-      setStatusMessage("No hay archivos para guardar");
-      setTimeout(() => setProcessingStatus(null), 3000);
-      return;
+      setProcessingStatus("error")
+      setStatusMessage("No hay archivos para guardar")
+      setTimeout(() => setProcessingStatus(null), 3000)
+      return
     }
 
     if (!casoSeleccionado) {
-      setProcessingStatus("error");
-      setStatusMessage("Debe seleccionar un caso");
-      setTimeout(() => setProcessingStatus(null), 3000);
-      return;
+      setProcessingStatus("error")
+      setStatusMessage("Debe seleccionar un caso")
+      setTimeout(() => setProcessingStatus(null), 3000)
+      return
     }
 
-    if (!idCompania) {
-      setProcessingStatus("error");
-      setStatusMessage("Debe seleccionar una compañía válida");
-      setTimeout(() => setProcessingStatus(null), 3000);
-      return;
+    for (const file of files) {
+      const telco = telcos[file.id]
+      const phoneNumber = phoneNumbers[file.id]
+
+      if (!telco) {
+        setProcessingStatus("error")
+        setStatusMessage(`Debe seleccionar una compañía para el archivo: ${file.name}`)
+        setTimeout(() => setProcessingStatus(null), 3000)
+        return
+      }
+
+      if (!phoneNumber) {
+        setProcessingStatus("error")
+        setStatusMessage(`Debe ingresar un número telefónico para el archivo: ${file.name}`)
+        setTimeout(() => setProcessingStatus(null), 3000)
+        return
+      }
     }
 
-    setIsProcessing(true);
-    setProcessingStatus(null);
+    setIsProcessing(true)
+    setProcessingStatus(null)
 
-    // 🔧 CAMBIO 7: Inicializar todos los archivos en "pendiente"
-    const initialProgress = {};
-    const initialStatus = {};
+    const initialProgress = {}
+    const initialStatus = {}
     files.forEach((file) => {
-      initialProgress[file.id] = 0;
-      initialStatus[file.id] = "pendiente";
-    });
-    setFileProgress(initialProgress);
-    setFileStatus(initialStatus);
-    setCurrentProcessingIndex(0);
+      initialProgress[file.id] = 0
+      initialStatus[file.id] = "pendiente"
+    })
+    setFileProgress(initialProgress)
+    setFileStatus(initialStatus)
+    setCurrentProcessingIndex(0)
 
     try {
-      const numeroPayload = {
-        numero: phoneNumber,
-        codigoArea: codigoPais,
-      };
+      const uploadPromises = files.map(async (file) => {
+        const telco = telcos[file.id]
+        const phoneNumber = phoneNumbers[file.id]
+        const codigoPais = codigosPais[file.id]
 
-      const numeroResponse = await fetchWithAuth("/api/sabanas/numeros", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(numeroPayload),
-      });
+        const companiaSeleccionada = companias.find((compania) => compania.nombre === telco)
+        const idCompania = companiaSeleccionada ? companiaSeleccionada.id : null
 
-      if (!numeroResponse.ok) {
-        const errorData = await numeroResponse.json();
-        throw new Error(errorData?.mensaje || "Error al guardar el número");
-      }
-
-      const numeroData = await numeroResponse.json();
-      const idNumeroTelefonico = numeroData.id;
-
-      const unionCaso = {
-        idNumeroTelefonico: idNumeroTelefonico,
-      };
-
-      console.log("ID Caso Seleccionado:", casoSeleccionado);
-      console.log("Payload de Unión:", unionCaso);
-      try {
-        const casoUnion = await fetchWithAuth(
-          `/api/sabanas/numeros-telefonicos-casos/${casoSeleccionado}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(unionCaso),
-          }
-        );
-
-        if (!casoUnion) {
-          throw new Error("No se recibió respuesta del servidor.");
+        const numeroPayload = {
+          numero: phoneNumber,
+          codigoArea: codigoPais,
         }
+
+        const numeroResponse = await fetchWithAuth("/api/sabanas/numeros", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(numeroPayload),
+        })
+
+        if (!numeroResponse.ok) {
+          const errorData = await numeroResponse.json()
+          throw new Error(errorData?.mensaje || "Error al guardar el número")
+        }
+
+        const numeroData = await numeroResponse.json()
+        const idNumeroTelefonico = numeroData.id
+
+        const unionCaso = {
+          idNumeroTelefonico: idNumeroTelefonico,
+        }
+
+        const casoUnion = await fetchWithAuth(`/api/sabanas/numeros-telefonicos-casos/${casoSeleccionado}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(unionCaso),
+        })
 
         if (!casoUnion.ok) {
-          const errorData = await casoUnion.json();
-          throw new Error(
-            errorData?.mensaje || "Error al unir el número con el dato"
-          );
+          const errorData = await casoUnion.json()
+          throw new Error(errorData?.mensaje || "Error al unir el número con el caso")
         }
 
-        const unionData = await casoUnion.json();
-        console.log("Relación creada correctamente:", unionData);
-      } catch (error) {
-        console.error("Error al guardar en la BD:", error.message);
-      }
+        const formData = new FormData()
+        formData.append("archivos", file.rawFile)
+        formData.append("idCaso", casoSeleccionado.toString())
+        formData.append("idNumeroTelefonico", idNumeroTelefonico.toString())
+        formData.append("idCompaniaTelefonica", idCompania.toString())
 
-      const formData = new FormData();
-      for (let i = 0; i < files.length; i++) {
-        if (files[i].rawFile) {
-          formData.append("archivos", files[i].rawFile);
-        }
-      }
+        const response = await fetchWithAuth("/api/sabanas/archivos/subir", {
+          method: "POST",
+          body: formData,
+        })
 
-      formData.append("idCaso", casoSeleccionado.toString());
-      formData.append("idNumeroTelefonico", idNumeroTelefonico.toString());
-      formData.append("idCompaniaTelefonica", idCompania.toString());
+        const data = await response.json()
 
-      const response = await fetchWithAuth("/api/sabanas/archivos/subir", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-      console.log("Datos enviados: ", data);
-
-      setIsProcessing(false);
-
-      if (response.ok) {
-        const idSabana = data.ids_sabanas[0];
-        setIdSabana(idSabana);
-
-        if (Array.isArray(data.ids_sabanas)) {
-          const newMapping = {};
-          files.forEach((file, idx) => {
-            const serverId = data.ids_sabanas[idx];
-            if (serverId != null) {
-              newMapping[serverId] = file.id;
-            }
-          });
-
-          setFileIdByServerId(newMapping);
-          fileIdByServerIdRef.current = newMapping;
+        if (!response.ok) {
+          throw new Error(data.message || "Error al guardar el archivo")
         }
 
-        setProcessingStatus("success");
-        setStatusMessage("Archivos guardados correctamente");
-      } else {
-        setProcessingStatus("error");
-        setStatusMessage(data.message || "Error al guardar los archivos");
-      }
+        return { fileId: file.id, serverId: data.ids_sabanas }
+      })
 
-      setTimeout(() => setProcessingStatus(null), 3000);
+      const results = await Promise.all(uploadPromises)
+
+      const newMapping = {}
+      const allServerIds = []
+
+      results.forEach((result) => {
+        const serverId = Array.isArray(result.serverId) ? result.serverId[0] : result.serverId
+        if (serverId != null) {
+          newMapping[serverId] = result.fileId
+          allServerIds.push(serverId)
+        }
+      })
+
+      setIdSabana(allServerIds)
+      setFileIdByServerId(newMapping)
+      fileIdByServerIdRef.current = newMapping
+
+      setIsProcessing(false)
+      setProcessingStatus("success")
+      setStatusMessage("Archivos guardados correctamente")
+      setTimeout(() => setProcessingStatus(null), 3000)
     } catch (error) {
-      console.error("❌ Error al guardar en BD:", error);
-      setIsProcessing(false);
-      setProcessingStatus("error");
-      setStatusMessage(error.message || "Error de conexión al servidor");
-      setTimeout(() => setProcessingStatus(null), 3000);
+      console.error("❌ Error al guardar en BD:", error)
+      setIsProcessing(false)
+      setProcessingStatus("error")
+      setStatusMessage(error.message || "Error de conexión al servidor")
+      setTimeout(() => setProcessingStatus(null), 3000)
     }
-  };
+  }
+
   const formatFileSize = (bytes) => {
-    if (bytes < 1024) return bytes + " B";
-    else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + " KB";
-    else return (bytes / 1048576).toFixed(2) + " MB";
-  };
+    if (bytes < 1024) return bytes + " B"
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + " KB"
+    else return (bytes / 1048576).toFixed(2) + " MB"
+  }
 
   return (
     <div className={`dashh-gestion ${isSidebarCollapsed ? "collapsed" : ""}`}>
@@ -543,22 +524,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         <div className="header-content">
           <h2>Procesamiento de Sabanas</h2>
         </div>
-
-        {/* <div>
-          <h2>
-            Estado de WebSocket: {isConnected ? "Conectado" : "Desconectado"}
-          </h2>
-
-          <div>
-            <h3>Mensajes Recibidos:</h3>
-            <ul>
-              {messages.map((message, index) => (
-                <li key={index}>{message}</li>
-              ))}
-            </ul>
-          </div>
-        </div> */}
-
         <p>Sube y procesa archivos de sabana para análisis</p>
       </div>
 
@@ -581,11 +546,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           <div className="upload-content">
             <FontAwesomeIcon icon={faUpload} className="upload-icon" />
             <p>Arrastra y suelta archivos aquí o</p>
-            <button
-              onClick={() => inputRef.current.click()}
-              className="upload-button"
-              disabled={isProcessing}
-            >
+            <button onClick={() => inputRef.current.click()} className="upload-button" disabled={isProcessing}>
               Selecciona Archivo
             </button>
           </div>
@@ -597,51 +558,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           </div>
           <div className="filters-content">
             <div className="filter-group">
-              <label htmlFor="telco-select">
-                Selecciona una compañía:
-                <select
-                  id="telco-select"
-                  className="phone-select"
-                  value={telco}
-                  onChange={(e) => setTelco(e.target.value)}
-                  disabled={isProcessing}
-                >
-                  <option value="">Selecciona una compañía</option>
-                  {companias.map((compania) => (
-                    <option key={compania.id} value={compania.nombre}>
-                      {compania.nombre}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label htmlFor="phone-input">
-                Número telefónico:
-                <div style={{ display: "flex", gap: "8px" }}>
-                  <select
-                    className="phone-select"
-                    value={codigoPais}
-                    onChange={(e) => setCodigoPais(e.target.value)}
-                    disabled={isProcessing}
-                  >
-                    <option value="+52">🇲🇽 +52</option>
-                    <option value="+1">🇺🇸 +1</option>
-                  </select>
-
-                  <input
-                    id="phone-input"
-                    type="text"
-                    className="phone-input"
-                    placeholder="Número"
-                    value={phoneNumber}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, "");
-                      if (value.length <= 10) setPhoneNumber(value);
-                    }}
-                    disabled={isProcessing}
-                  />
-                </div>
-              </label>
-
               <label htmlFor="caso-select">
                 Caso relacionado:
                 <select
@@ -659,6 +575,124 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                   ))}
                 </select>
               </label>
+
+              {files.length === 1 ? (
+                <>
+                  <label htmlFor="telco-select">
+                    Selecciona una compañía:
+                    <select
+                      id="telco-select"
+                      className="phone-select"
+                      value={telcos[files[0].id] || ""}
+                      onChange={(e) => setTelcos({ [files[0].id]: e.target.value })}
+                      disabled={isProcessing}
+                    >
+                      <option value="">Selecciona una compañía</option>
+                      {companias.map((compania) => (
+                        <option key={compania.id} value={compania.nombre}>
+                          {compania.nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label htmlFor="phone-input">
+                    Número telefónico:
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <select
+                        className="phone-select"
+                        value={codigosPais[files[0].id] || "+52"}
+                        onChange={(e) => setCodigosPais({ [files[0].id]: e.target.value })}
+                        disabled={isProcessing}
+                      >
+                        <option value="+52">🇲🇽 +52</option>
+                        <option value="+1">🇺🇸 +1</option>
+                      </select>
+
+                      <input
+                        id="phone-input"
+                        type="text"
+                        className="phone-input"
+                        placeholder="Número"
+                        value={phoneNumbers[files[0].id] || ""}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, "")
+                          if (value.length <= 10) setPhoneNumbers({ [files[0].id]: value })
+                        }}
+                        disabled={isProcessing}
+                      />
+                    </div>
+                  </label>
+                </>
+              ) : files.length > 1 ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                  {files.map((file, index) => (
+                    <div
+                      key={file.id}
+                      style={{
+                        padding: "15px",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "8px",
+                        backgroundColor: "#f7fafc",
+                      }}
+                    >
+                      <h4 style={{ fontSize: "0.9rem", marginBottom: "12px", color: "#2d3748", fontWeight: "600" }}>
+                        Archivo {index + 1}: {file.name}
+                      </h4>
+
+                      <label htmlFor={`telco-select-${file.id}`}>
+                        Compañía:
+                        <select
+                          id={`telco-select-${file.id}`}
+                          className="phone-select"
+                          value={telcos[file.id] || ""}
+                          onChange={(e) => setTelcos((prev) => ({ ...prev, [file.id]: e.target.value }))}
+                          disabled={isProcessing}
+                        >
+                          <option value="">Selecciona una compañía</option>
+                          {companias.map((compania) => (
+                            <option key={compania.id} value={compania.nombre}>
+                              {compania.nombre}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label htmlFor={`phone-input-${file.id}`} style={{ marginTop: "10px" }}>
+                        Número telefónico:
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <select
+                            className="phone-select"
+                            value={codigosPais[file.id] || "+52"}
+                            onChange={(e) => setCodigosPais((prev) => ({ ...prev, [file.id]: e.target.value }))}
+                            disabled={isProcessing}
+                          >
+                            <option value="+52">🇲🇽 +52</option>
+                            <option value="+1">🇺🇸 +1</option>
+                          </select>
+
+                          <input
+                            id={`phone-input-${file.id}`}
+                            type="text"
+                            className="phone-input"
+                            placeholder="Número"
+                            value={phoneNumbers[file.id] || ""}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(/\D/g, "")
+                              if (value.length <= 10) setPhoneNumbers((prev) => ({ ...prev, [file.id]: value }))
+                            }}
+                            disabled={isProcessing}
+                          />
+                        </div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ padding: "20px", textAlign: "center", color: "#718096", fontSize: "0.9rem" }}>
+                  Sube archivos para configurar compañías y números telefónicos
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -676,11 +710,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
               {filteredFiles.map((file) => (
                 <div
                   key={file.id}
-                  className={`file-item-enhanced ${
-                    selectedFile && selectedFile.id === file.id
-                      ? "selected"
-                      : ""
-                  }`}
+                  className={`file-item-enhanced ${selectedFile && selectedFile.id === file.id ? "selected" : ""}`}
                   onClick={() => setSelectedFile(file)}
                 >
                   <div className="file-main-info">
@@ -697,8 +727,8 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                       <button
                         className="delete-file-btn"
                         onClick={(e) => {
-                          e.stopPropagation();
-                          handleFileDelete(file.id);
+                          e.stopPropagation()
+                          handleFileDelete(file.id)
                         }}
                         disabled={isProcessing}
                         aria-label={`Eliminar archivo ${file.name}`}
@@ -712,14 +742,10 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
                     <div className="circular-progress-container">
                       {fileStatus[file.id] === "procesado" ? (
                         <div className="completion-indicator">
-                          <FontAwesomeIcon
-                            icon={faCheck}
-                            className="completion-icon"
-                          />
+                          <FontAwesomeIcon icon={faCheck} className="completion-icon" />
                           <span className="completion-text">Completado</span>
                         </div>
-                      ) : fileStatus[file.id] === "procesando" ||
-                        fileStatus[file.id] === "en_cola" ? (
+                      ) : fileStatus[file.id] === "procesando" || fileStatus[file.id] === "en_cola" ? (
                         <div className="spinner-container">
                           <div className="spinner"></div>
                           <span className="spinner-text">Procesando...</span>
@@ -743,7 +769,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
             <button
               className="process-button"
               onClick={handleProcessFiles}
-              disabled={!canProcesar}
+              disabled={!(files.length > 0 && idSabana.length > 0 && !isProcessing)}
             >
               {isProcessing ? (
                 <>
@@ -755,11 +781,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
               )}
             </button>
 
-            <button
-              className="save-button"
-              onClick={handleGuardarEnBD}
-              disabled={!canGuardar}
-            >
+            <button className="save-button" onClick={handleGuardarEnBD} disabled={!(files.length > 0 && !isProcessing)}>
               {isProcessing ? (
                 <>
                   <FontAwesomeIcon icon={faSpinner} spin />
@@ -781,15 +803,15 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
 Procesar_Sabana.propTypes = {
   activeView: PropTypes.string.isRequired,
-};
+}
 
 ProcesamientoView.propTypes = {
   isSidebarCollapsed: PropTypes.bool,
-};
+}
 
-export default Procesar_Sabana;
+export default Procesar_Sabana
