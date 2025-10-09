@@ -72,22 +72,28 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
   const [currentProcessingIndex, setCurrentProcessingIndex] = useState(0);
   const [pendingMessages, setPendingMessages] = useState([]); // 🔧 NUEVO: Mensajes pendientes
 
-  // ---- Estado derivado para 1 solo archivo ----
+  // ---- Estado derivado para 1 o VARIOS archivos ----
   const hasSingleFile = files.length === 1;
   const onlyFileId = hasSingleFile ? files[0].id : null;
   const onlyFileStatus = hasSingleFile ? fileStatus[onlyFileId] : null;
   const onlyFileProgress = hasSingleFile ? fileProgress[onlyFileId] || 0 : 0;
 
-  // ¿ya está procesado? (por estado o por 100%)
+  // ¿ya está procesado? (solo para el caso de 1 archivo)
   const isProcessed =
     onlyFileStatus === "procesado" || onlyFileProgress === 100;
 
-  // REGLAS:
-  // Guardar en BD: hay archivo y NO está procesado
-  const canGuardar =  !isProcessed && !isProcessing;
+  // NUEVO: contar cuántos archivos van procesados
+  const processedCount = files.reduce((acc, f) => {
+    const st = fileStatus[f.id];
+    const pr = fileProgress[f.id] || 0;
+    return acc + (st === "procesado" || pr === 100 ? 1 : 0);
+  }, 0);
 
-  // Procesar Archivos: hay archivo y SÍ está procesado
-  const canProcesar =   !isProcessing;
+  // Guardar en BD: hay archivos y NO estamos en “isProcessing”
+  const canGuardar = files.length > 0 && !isProcessing;
+
+  // Analizar Archivos: al menos 1 procesado + existe idSabana + NO isProcessing
+  const canProcesar = processedCount > 0 && !!idSabana && !isProcessing;
 
   // 🔧 CAMBIO 1: Usar refs para mantener los valores actualizados
   const fileIdByServerIdRef = useRef({});
@@ -475,7 +481,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
       });
 
       const data = await response.json();
-      console.log("Datos enviados: ",data)
+      console.log("Datos enviados: ", data);
 
       setIsProcessing(false);
 
@@ -493,7 +499,7 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
           });
 
           setFileIdByServerId(newMapping);
-          fileIdByServerIdRef.current = newMapping; 
+          fileIdByServerIdRef.current = newMapping;
         }
 
         setProcessingStatus("success");
