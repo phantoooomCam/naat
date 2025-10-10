@@ -58,6 +58,12 @@ const MapAntenas = ({
   const [mostrandoSelectorFecha, setMostrandoSelectorFecha] = useState(false);
   const [fechaTemporal, setFechaTemporal] = useState("");
 
+  // Centro país (México) para primer render
+  const DEFAULT_CENTER = { lat: 23.6345, lng: -102.5528 };
+  const DEFAULT_ZOOM = 5; // país
+
+  const [zoomLevel, setZoomLevel] = useState(DEFAULT_ZOOM);
+
   const detachPolylines = () => {
     try {
       polylineRefs.current.forEach((p) => p && p.setMap(null));
@@ -69,7 +75,9 @@ const MapAntenas = ({
 
   useEffect(() => {
     if (!enModoRuta) {
+      // Saliste de Modo Ruta → quitar del mapa cualquier overlay residual
       detachPolylines();
+      // Limpiar estados que dibujan rutas/spider
       setRutaTrazada([]);
       setLineasSpider([]);
       setPuntosCronologicos([]);
@@ -125,6 +133,9 @@ const MapAntenas = ({
   };
 
   const filteredAntenas = useMemo(() => {
+    // Semántica corregida:
+    //  - set vacío  => mostrar NINGUNA (para que "Limpiar" oculte todo)
+    //  - set no vacío => mostrar sólo los ranks seleccionados
     if (selectedRanks.size === 0) return [];
     return antenas.filter((a) =>
       selectedRanks.has(a.rank == null ? "__SIN_RANK__" : String(a.rank))
@@ -134,7 +145,7 @@ const MapAntenas = ({
   const directionsCallback = useCallback(
     (response, status) => {
       if (!enModoRuta) return;
-      if (status === "OK") {
+      if (status === "OK" && response) {
         // Si la ruta se calculó correctamente, la guardamos en el estado
         setRutaTrazada((prevRutas) => [
           ...prevRutas,
@@ -151,11 +162,10 @@ const MapAntenas = ({
         setIndiceSolicitudActual((prevIndex) => prevIndex + 1);
       }
     },
-    [indiceSolicitudActual, enModoRuta]
+    [enModoRuta, indiceSolicitudActual]
   );
 
   useEffect(() => {
-    // Esperamos a que la API de Google Maps esté cargada para usar la librería de geometría
     if (!isLoaded || !window.google) return;
 
     if (antenasParaRuta.length < 2) {
@@ -417,6 +427,8 @@ const MapAntenas = ({
                 lng: normalized[0].longitudDecimal,
               }
           );
+          // Puedes dar un zoom urbano inicial si quieres
+          setZoomLevel((z) => (z === DEFAULT_ZOOM ? 12 : z));
         }
       } catch (err) {
         // Si el error es una cancelación, simplemente detenemos la ejecución en silencio.
@@ -518,7 +530,6 @@ const MapAntenas = ({
   // Controles
   const onMapLoad = useCallback((map) => {
     setMapRef(map);
-    // Mover controles para que no queden pegados al borde inferior (evita desbordes visibles)
     try {
       if (window.google && window.google.maps) {
         map.setOptions({
@@ -531,7 +542,18 @@ const MapAntenas = ({
         });
       }
     } catch (e) {}
+
+    // <-- NUEVO: sincronizar el estado con el zoom real del mapa
+    try {
+      const z = map.getZoom?.();
+      if (typeof z === "number") setZoomLevel(z);
+      map.addListener("zoom_changed", () => {
+        const current = map.getZoom?.();
+        if (typeof current === "number") setZoomLevel(current);
+      });
+    } catch (_) {}
   }, []);
+
   const fitBounds = useCallback(() => {
     if (!mapRef || filteredAntenas.length === 0) return;
     if (filteredAntenas.length === 1) {
@@ -613,15 +635,15 @@ const MapAntenas = ({
       </div>
     );
   }
-  if (antenas.length === 0) {
-    return (
-      <div className="mapa-antenas-wrapper">
-        <div className="mapa-antenas-status">
-          No hay ubicaciones de antenas para mostrar.
-        </div>
-      </div>
-    );
-  }
+  // if (antenas.length === 0) {
+  //   return (
+  //     <div className="mapa-antenas-wrapper">
+  //       <div className="mapa-antenas-status">
+  //         No hay ubicaciones de antenas para mostrar.
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="mapa-antenas-wrapper" style={{ height }}>
@@ -772,9 +794,9 @@ const MapAntenas = ({
 
       {/* Mapa */}
       <GoogleMap
+        center={mapCenter || DEFAULT_CENTER}
+        zoom={zoomLevel}
         mapContainerClassName="mapa-antenas-canvas"
-        center={mapCenter}
-        zoom={15}
         onLoad={onMapLoad}
         options={{
           zoomControl: true,
@@ -973,6 +995,13 @@ const MapAntenas = ({
           </InfoWindow>
         )}
       </GoogleMap>
+
+      {(!antenas || antenas.length === 0) && (
+        <div className="map-empty-hint">
+          No hay ubicaciones para mostrar todavía. Usa “Filtrar antenas” o
+          selecciona un día.
+        </div>
+      )}
 
       {/* --> MODIFICADO: La leyenda ahora solo aparece en Modo Ruta */}
       {enModoRuta && puntosCronologicos.length > 0 && (
