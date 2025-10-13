@@ -1,17 +1,16 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import PropTypes from "prop-types"
-import fetchWithAuth from "../utils/fetchWithAuth"
-
+import { useEffect, useRef, useState } from "react";
+import PropTypes from "prop-types";
+import fetchWithAuth from "../utils/fetchWithAuth";
 const RedVinculos = ({ idSabana, filtrosActivos }) => {
-  const cyRef = useRef(null)
-  const tooltipRef = useRef(null)
-  const mouseMoveHandlerRef = useRef(null)
-  const [cy, setCy] = useState(null)
-  const [stats, setStats] = useState({ nodes: 0, edges: 0 })
-  const [relaciones, setRelaciones] = useState([])
-  const [error, setError] = useState(null)
+  const cyRef = useRef(null);
+  const tooltipRef = useRef(null);
+  const mouseMoveHandlerRef = useRef(null);
+  const [cy, setCy] = useState(null);
+  const [stats, setStats] = useState({ nodes: 0, edges: 0 });
+  const [relaciones, setRelaciones] = useState([]);
+  const [error, setError] = useState(null);
 
   const getTypeText = (typeId) => {
     const typeMap = {
@@ -27,83 +26,95 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
       9: "Wifi",
       10: "ReenvioSal",
       11: "ReenvioEnt",
-    }
-    return typeMap?.[typeId] ?? `Tipo ${typeId}`
-  }
+    };
+    return typeMap?.[typeId] ?? `Tipo ${typeId}`;
+  };
 
   const getTypeIcon = (typeId) => {
     const iconMap = {
-      0: ( // Datos
+      // Datos
+      0: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M3 3h18v18H3V3zm16 16V5H5v14h14zM7 7h2v2H7V7zm4 0h2v2h-2V7zm4 0h2v2h-2V7zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2z" />
         </svg>
       ),
-      1: ( // MensajeriaMultimedia
+      // MensajeriaMultimedia
+      1: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M20 2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h4l4 4 4-4h4c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
         </svg>
       ),
-      2: ( // Mensaje2ViasEnt
+      // Mensaje2ViasEnt
+      2: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
         </svg>
       ),
-      3: ( // Mensaje2ViasSal
+      // Mensaje2ViasSal
+      3: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M19 12h2c0-4.97-4.03-9-9-9v2c3.87 0 7 3.13 7 7z" />
           <path d="M15 12h2c0-2.76-2.24-5-5-5v2c1.66 0 3 1.34 3 3z" />
         </svg>
       ),
-      4: ( // VozEntrante
+      // VozEntrante
+      4: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
         </svg>
       ),
-      5: ( // VozSaliente
+      // VozSaliente
+      5: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
         </svg>
       ),
-      6: ( // VozTransfer
+      // VozTransfer
+      6: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
           <path d="M16 1H8C6.34 1 2 2.34 2 4v16c0 1.66 1.34 3 3 3h8c1.66 0 3-1.34 3-3V4c0-1.66-1.34-3-3-3z" />
         </svg>
       ),
-      7: ( // VozTransito
+      // VozTransito
+      7: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2l3 3 3-3L18 10l-6 6-6-6 1.41-1.41z" />
         </svg>
       ),
-      8: ( // Ninguno
+      // Ninguno
+      8: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
         </svg>
       ),
-      9: ( // Wifi
+      // Wifi
+      9: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.07 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z" />
         </svg>
       ),
-      10: ( // ReenvioSal
+      // ReenvioSal
+      10: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
         </svg>
       ),
-      11: ( // ReenvioEnt
+      // ReenvioEnt
+      11: (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
         </svg>
       ),
-    }
+    };
     return (
       iconMap?.[typeId] ?? (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
         </svg>
       )
-    )
-  }
+    );
+  };
 
   const getTypeColor = (typeId) => {
     const colorMap = {
@@ -119,133 +130,182 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
       9: "#A0E7E5", // Turquesa pastel (antes #1abc9c)
       10: "#C8A2C8", // Lavanda pastel (antes #8e44ad)
       11: "#B0C4DE", // Azul grisáceo pastel (antes #2c3e50)
-    }
-    return colorMap?.[typeId] ?? "#E6E6FA"
-  }
+    };
+    return colorMap?.[typeId] ?? "#E6E6FA";
+  };
 
   useEffect(() => {
-    if (!idSabana) return
-    const controller = new AbortController()
+    if (!idSabana) return;
+    const controller = new AbortController();
 
     const fetchRelaciones = async () => {
       try {
-        setError(null)
-        const API_URL = "/api"
-        const url = `${API_URL}/sabanas/${idSabana}/registros/relaciones-unicas`
+        setError(null);
 
-        const res = await fetchWithAuth(`/api/sabanas/${idSabana}/registros/relaciones-unicas`, {
+        // Normaliza: 1 ó varios IDs (e.g., 1, "1", [1], ["1","2"])
+        const ids = (Array.isArray(idSabana) ? idSabana : [idSabana])
+          .filter((v) => v !== null && v !== undefined)
+          .map((v) => Number(v))
+          .filter((n) => Number.isFinite(n));
+
+        if (ids.length === 0) {
+          setRelaciones([]);
+          return;
+        }
+
+        let url;
+        if (ids.length > 1) {
+          // Batch: /api/sabanas/registros/relaciones-unicas/batch?ids=1&ids=2
+          const qs = new URLSearchParams();
+          ids.forEach((id) => qs.append("ids", String(id)));
+          // (Opcional) limitar resultados por B: qs.set("limitB", "100")
+          url = `/api/sabanas/registros/relaciones-unicas/batch?${qs.toString()}`;
+        } else {
+          // Single: /api/sabanas/:id/registros/relaciones-unicas
+          url = `/api/sabanas/${ids[0]}/registros/relaciones-unicas`;
+        }
+
+        const res = await fetchWithAuth(url, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-        })
-        console.log("raw fetch status:", res?.status)
+          signal: controller.signal,
+        });
 
+        console.log("raw fetch status:", res?.status);
+
+        // Si se aborta, fetchWithAuth puede devolver null
         if (!res) {
-          setError("Sin respuesta del servidor (res = null). Revisa autenticación o el helper fetchWithAuth.")
-          setRelaciones([])
-          return
+          setError("Sin respuesta del servidor (res = null).");
+          setRelaciones([]);
+          return;
         }
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-        let data = null
+        let data = null;
         try {
-          data = await res.json()
+          data = await res.json();
         } catch {
-          data = null
+          data = null;
         }
 
         const items = Array.isArray(data)
           ? data
           : Array.isArray(data?.items)
-            ? data.items
-            : Array.isArray(data?.Items)
-              ? data.Items
-              : data
-                ? [data]
-                : []
+          ? data.items
+          : Array.isArray(data?.Items)
+          ? data.Items
+          : data
+          ? [data]
+          : [];
 
-        setRelaciones(items)
+        setRelaciones(items);
       } catch (err) {
-        if (err.name !== "AbortError") setError(err.message || "Error desconocido")
-        setRelaciones([])
+        if (err.name !== "AbortError")
+          setError(err.message || "Error desconocido");
+        setRelaciones([]);
       }
-    }
+    };
+    
 
-    fetchRelaciones()
-    return () => controller.abort()
-  }, [idSabana])
+    fetchRelaciones();
+    return () => controller.abort();
+  }, [idSabana]);
 
   useEffect(() => {
     const loadCytoscape = async () => {
       if (window.cytoscape) {
-        initializeNetwork()
-        return
+        initializeNetwork();
+        return;
       }
-      const script = document.createElement("script")
-      script.src = "https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"
-      script.onload = () => initializeNetwork()
-      document.head.appendChild(script)
-    }
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js";
+      script.onload = () => initializeNetwork();
+      document.head.appendChild(script);
+    };
 
     const initializeNetwork = () => {
-      if (!cyRef.current || !window.cytoscape) return
+      if (!cyRef.current || !window.cytoscape) return;
 
-      const numerosA = new Set()
-      const numerosB = new Set()
-      const edges = []
+      const numerosA = new Set();
+      const numerosB = new Set();
+      const edges = [];
 
       const relacionesFiltradas = relaciones.filter((r) => {
-        const tipoId = Number(r.id_tipo_registro ?? r.IdTipoRegistro ?? r.idTipoRegistro ?? r.tipo ?? 8)
-        return filtrosActivos[tipoId]
-      })
+        const tipoId = Number(
+          r.id_tipo_registro ??
+            r.IdTipoRegistro ??
+            r.idTipoRegistro ??
+            r.tipo ??
+            8
+        );
+        return filtrosActivos[tipoId];
+      });
 
       relacionesFiltradas.forEach((r, index) => {
-        const numeroA = (r.numero_a ?? r.NumeroA ?? r.numeroA ?? r.origen ?? "").toString().trim()
-        const numeroB = (r.numero_b ?? r.NumeroB ?? r.numeroB ?? r.destino ?? "").toString().trim()
+        const numeroA = (r.numero_a ?? r.NumeroA ?? r.numeroA ?? r.origen ?? "")
+          .toString()
+          .trim();
+        const numeroB = (
+          r.numero_b ??
+          r.NumeroB ??
+          r.numeroB ??
+          r.destino ??
+          ""
+        )
+          .toString()
+          .trim();
 
-        const tipoId = Number(r.id_tipo_registro ?? r.IdTipoRegistro ?? r.idTipoRegistro ?? r.tipo ?? 8)
+        const tipoId = Number(
+          r.id_tipo_registro ??
+            r.IdTipoRegistro ??
+            r.idTipoRegistro ??
+            r.tipo ??
+            8
+        );
 
-        const fecha = r.fecha_hora ?? r.FechaHora ?? r.fechaHora ?? r.fecha ?? null
-        const duracion = Number(r.duracion ?? r.Duracion ?? 0)
+        const fecha =
+          r.fecha_hora ?? r.FechaHora ?? r.fechaHora ?? r.fecha ?? null;
+        const duracion = Number(r.duracion ?? r.Duracion ?? 0);
 
-        if (!numeroA || !numeroB) return
+        if (!numeroA || !numeroB) return;
 
-        numerosA.add(numeroA)
-        numerosB.add(numeroB)
+        numerosA.add(numeroA);
+        numerosB.add(numeroB);
 
-        let source, target, arrowDirection
+        let source, target, arrowDirection;
 
         switch (tipoId) {
           case 4: // VozEntrante - flecha de B hacia A
-            source = numeroB
-            target = numeroA
-            arrowDirection = "entrante"
-            break
+            source = numeroB;
+            target = numeroA;
+            arrowDirection = "entrante";
+            break;
           case 5: // VozSaliente - flecha de A hacia B
-            source = numeroA
-            target = numeroB
-            arrowDirection = "saliente"
-            break
+            source = numeroA;
+            target = numeroB;
+            arrowDirection = "saliente";
+            break;
           case 2: // Mensaje2ViasEnt - flecha de B hacia A
-            source = numeroB
-            target = numeroA
-            arrowDirection = "entrante"
-            break
+            source = numeroB;
+            target = numeroA;
+            arrowDirection = "entrante";
+            break;
           case 3: // Mensaje2ViasSal - flecha de A hacia B
-            source = numeroA
-            target = numeroB
-            arrowDirection = "saliente"
-            break
+            source = numeroA;
+            target = numeroB;
+            arrowDirection = "saliente";
+            break;
           case 0: // Datos - flecha del número hacia el número B
-            source = numeroA
-            target = numeroB
-            arrowDirection = "datos"
-            break
+            source = numeroA;
+            target = numeroB;
+            arrowDirection = "datos";
+            break;
           default: // Otros tipos - flecha de A hacia B por defecto
-            source = numeroA
-            target = numeroB
-            arrowDirection = "saliente"
+            source = numeroA;
+            target = numeroB;
+            arrowDirection = "saliente";
         }
 
         edges.push({
@@ -262,10 +322,10 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
             numeroA: numeroA,
             numeroB: numeroB,
           },
-        })
-      })
+        });
+      });
 
-      const bidirectionalEdges = []
+      const bidirectionalEdges = [];
       edges.forEach((edge, i) => {
         if (edge.data.typeId === 2 || edge.data.typeId === 3) {
           const reverseEdge = edges.find(
@@ -273,15 +333,17 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
               j !== i &&
               e.data.numeroA === edge.data.numeroB &&
               e.data.numeroB === edge.data.numeroA &&
-              (e.data.typeId === 2 || e.data.typeId === 3),
-          )
+              (e.data.typeId === 2 || e.data.typeId === 3)
+          );
 
           if (
             reverseEdge &&
             !bidirectionalEdges.some(
               (be) =>
-                (be.data.numeroA === edge.data.numeroA && be.data.numeroB === edge.data.numeroB) ||
-                (be.data.numeroA === edge.data.numeroB && be.data.numeroB === edge.data.numeroA),
+                (be.data.numeroA === edge.data.numeroA &&
+                  be.data.numeroB === edge.data.numeroB) ||
+                (be.data.numeroA === edge.data.numeroB &&
+                  be.data.numeroB === edge.data.numeroA)
             )
           ) {
             bidirectionalEdges.push({
@@ -296,37 +358,39 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
                 numeroA: edge.data.numeroA,
                 numeroB: edge.data.numeroB,
               },
-            })
+            });
           }
         }
-      })
+      });
 
       const filteredEdges = edges.filter((edge) => {
         if (edge.data.typeId === 2 || edge.data.typeId === 3) {
           return !bidirectionalEdges.some(
             (be) =>
-              (be.data.numeroA === edge.data.numeroA && be.data.numeroB === edge.data.numeroB) ||
-              (be.data.numeroA === edge.data.numeroB && be.data.numeroB === edge.data.numeroA),
-          )
+              (be.data.numeroA === edge.data.numeroA &&
+                be.data.numeroB === edge.data.numeroB) ||
+              (be.data.numeroA === edge.data.numeroB &&
+                be.data.numeroB === edge.data.numeroA)
+          );
         }
-        return true
-      })
+        return true;
+      });
 
-      const allEdges = [...filteredEdges, ...bidirectionalEdges]
+      const allEdges = [...filteredEdges, ...bidirectionalEdges];
 
-      const nodeElements = []
+      const nodeElements = [];
       Array.from(numerosA).forEach((a) => {
         nodeElements.push({
           data: { id: a, label: a, type: "central", isNumeroA: true },
-        })
-      })
+        });
+      });
       Array.from(numerosB).forEach((b) => {
         if (!numerosA.has(b)) {
           nodeElements.push({
             data: { id: b, label: b, type: "peripheral", isNumeroA: false },
-          })
+          });
         }
-      })
+      });
 
       const cytoscapeInstance = window.cytoscape({
         container: cyRef.current,
@@ -457,13 +521,13 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
           minNodeSpacing: 100,
           padding: 60,
         },
-      })
+      });
 
       // cytoscapeInstance.on("mouseover", "edge", (evt) => {
       //   const edge = evt.target
       //   const d = edge.data()
       //   const tooltip = document.createElement("div")
-      //   tooltip.id = "cytoscape-tooltip" 
+      //   tooltip.id = "cytoscape-tooltip"
       //   tooltip.style.position = "absolute"
       //   tooltip.style.background = "rgba(0,0,0,0.9)"
       //   tooltip.style.color = "white"
@@ -521,34 +585,34 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
       //   }
       // })
 
-      setCy(cytoscapeInstance)
-      setStats({ nodes: nodeElements.length, edges: allEdges.length })
-    }
+      setCy(cytoscapeInstance);
+      setStats({ nodes: nodeElements.length, edges: allEdges.length });
+    };
 
-    loadCytoscape()
+    loadCytoscape();
 
     return () => {
-      cleanupTooltip()
-      if (cy) cy.destroy()
-    }
-  }, [relaciones, filtrosActivos])
+      cleanupTooltip();
+      if (cy) cy.destroy();
+    };
+  }, [relaciones, filtrosActivos]);
 
   useEffect(() => {
     return () => {
-      cleanupTooltip()
-    }
-  }, [])
+      cleanupTooltip();
+    };
+  }, []);
 
   const cleanupTooltip = () => {
     if (tooltipRef.current) {
-      tooltipRef.current.remove()
-      tooltipRef.current = null
+      tooltipRef.current.remove();
+      tooltipRef.current = null;
     }
     if (mouseMoveHandlerRef.current) {
-      document.removeEventListener("mousemove", mouseMoveHandlerRef.current)
-      mouseMoveHandlerRef.current = null
+      document.removeEventListener("mousemove", mouseMoveHandlerRef.current);
+      mouseMoveHandlerRef.current = null;
     }
-  }
+  };
 
   const resetLayout = () => {
     if (cy) {
@@ -560,13 +624,13 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
         levelWidth: () => 1,
         minNodeSpacing: 80,
         padding: 50,
-      }).run()
+      }).run();
     }
-  }
+  };
 
   const fitToScreen = () => {
-    if (cy) cy.fit(null, 50)
-  }
+    if (cy) cy.fit(null, 50);
+  };
 
   if (error) {
     return (
@@ -575,7 +639,7 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
           <p>Error: {error}</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!idSabana || relaciones.length === 0) {
@@ -585,7 +649,7 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
           <p>No hay relaciones únicas para mostrar la red de vínculos</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -608,27 +672,45 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
 
       <div className="network-legend">
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: "#FFB3BA" }}></div>
+          <div
+            className="legend-color"
+            style={{ backgroundColor: "#FFB3BA" }}
+          ></div>
           <span>Número Central (A)</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: "#A8D8EA" }}></div>
+          <div
+            className="legend-color"
+            style={{ backgroundColor: "#A8D8EA" }}
+          ></div>
           <span>Número Contactado (B)</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: "#FFCCCB" }}></div>
+          <div
+            className="legend-color"
+            style={{ backgroundColor: "#FFCCCB" }}
+          ></div>
           <span>Voz Saliente (A→B)</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: "#FFB3BA" }}></div>
+          <div
+            className="legend-color"
+            style={{ backgroundColor: "#FFB3BA" }}
+          ></div>
           <span>Voz Entrante (B→A)</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: "#A8E6CF" }}></div>
+          <div
+            className="legend-color"
+            style={{ backgroundColor: "#A8E6CF" }}
+          ></div>
           <span>Mensajes 2 Vías (↔)</span>
         </div>
         <div className="legend-item">
-          <div className="legend-color" style={{ backgroundColor: "#A8D8EA" }}></div>
+          <div
+            className="legend-color"
+            style={{ backgroundColor: "#A8D8EA" }}
+          ></div>
           <span>Datos (A→B)</span>
         </div>
       </div>
@@ -645,12 +727,17 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
         }}
       />
     </div>
-  )
-}
+  );
+};
 
 RedVinculos.propTypes = {
-  idSabana: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  filtrosActivos: PropTypes.object.isRequired,
-}
+  idSabana: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.number,
+    PropTypes.arrayOf(
+      PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    ),
+  ]).isRequired,
+};
 
-export default RedVinculos
+export default RedVinculos;
