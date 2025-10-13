@@ -191,11 +191,6 @@ const Listado = ({ idCaso: idCasoProp }) => {
 
     const stateToSend = { idSabana: idsToSend, numeroTelefonico: numeros };
 
-    // Log para depuración: qué se enviará
-    console.log("handleVerSabana -> navigate state:", stateToSend);
-    // Log opcional con los objetos fuente completos
-    console.log("handleVerSabana -> source items:", source);
-
     navigate("/procesamiento_sabana", {
       state: stateToSend,
     });

@@ -149,7 +149,6 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
     if (!formState.platform || !formState.username || !formState.url) return;
     setLoading(true);
     setDataResult(null);
-    console.log(formState.username);
     try {
       const relatedData = await fetchProfileData(
         formState.platform,

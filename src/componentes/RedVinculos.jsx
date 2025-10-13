@@ -135,98 +135,94 @@ const RedVinculos = ({ idSabana, filtrosActivos }) => {
   };
 
   useEffect(() => {
-    const controller = new AbortController();
-    let isMounted = true;
+  const controller = new AbortController();
+  let isMounted = true;
 
-    const fetchRelaciones = async (attempt = 0) => {
-      try {
+  const fetchRelaciones = async (attempt = 0) => {
+    try {
+      if (!isMounted || controller.signal.aborted) return;
+      setError(null);
+
+      // Normaliza: 1 ó varios IDs (e.g., 1, "1", [1], ["1","2"])
+      const ids = (Array.isArray(idSabana) ? idSabana : [idSabana])
+        .filter((v) => v !== null && v !== undefined)
+        .map((v) => Number(v))
+        .filter((n) => Number.isFinite(n));
+
+      // Si no hay ids válidos devolvemos lista vacía (no llamamos al backend)
+      if (ids.length === 0) {
         if (!isMounted || controller.signal.aborted) return;
-        setError(null);
-
-        // Normaliza: 1 ó varios IDs (e.g., 1, "1", [1], ["1","2"])
-        const ids = (Array.isArray(idSabana) ? idSabana : [idSabana])
-          .filter((v) => v !== null && v !== undefined)
-          .map((v) => Number(v))
-          .filter((n) => Number.isFinite(n));
-
-        // Si no hay ids válidos devolvemos lista vacía (no llamamos al backend)
-        if (ids.length === 0) {
-          if (!isMounted || controller.signal.aborted) return;
-          setRelaciones([]);
-          return;
-        }
-
-        let url;
-        if (ids.length > 1) {
-          const qs = new URLSearchParams();
-          ids.forEach((id) => qs.append("ids", String(id)));
-          url = `/api/sabanas/registros/relaciones-unicas/batch?${qs.toString()}`;
-        } else {
-          url = `/api/sabanas/${encodeURIComponent(
-            ids[0]
-          )}/registros/relaciones-unicas`;
-        }
-
-        const res = await fetchWithAuth(url, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          signal: controller.signal,
-        });
-
-        console.log("raw fetch status:", res?.status, "attempt:", attempt);
-
-        // Si fetchWithAuth devuelve null por condiciones transitorias, reintentar
-        if (!res) {
-          if (controller.signal.aborted || !isMounted) return;
-          const MAX_ATTEMPTS = 3;
-          if (attempt < MAX_ATTEMPTS) {
-            const delay = 300 * Math.pow(2, attempt);
-            setTimeout(() => fetchRelaciones(attempt + 1), delay);
-            return;
-          }
-          if (!isMounted || controller.signal.aborted) return;
-          setError("Sin respuesta del servidor (res = null).");
-          setRelaciones([]);
-          return;
-        }
-
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        let data = null;
-        try {
-          data = await res.json();
-        } catch {
-          data = null;
-        }
-
-        const items = Array.isArray(data)
-          ? data
-          : Array.isArray(data?.items)
-          ? data.items
-          : Array.isArray(data?.Items)
-          ? data.Items
-          : data
-          ? [data]
-          : [];
-
-        if (!isMounted || controller.signal.aborted) return;
-        setRelaciones(items);
-      } catch (err) {
-        if (err.name !== "AbortError" && isMounted) {
-          setError(err.message || "Error desconocido");
-          setRelaciones([]);
-        }
+        setRelaciones([]);
+        return;
       }
-    };
 
-    // Lanzamos la carga (no hay early return aquí; la fn gestiona ids vacíos)
-    fetchRelaciones();
-    return () => {
-      isMounted = false;
-      controller.abort();
-    };
-  }, [idSabana]); // añade otras dependencias si corresponde (por ejemplo: sort, limitB)
+      let url;
+      if (ids.length > 1) {
+        const qs = new URLSearchParams();
+        ids.forEach((id) => qs.append("ids", String(id)));
+        url = `/api/sabanas/registros/relaciones-unicas/batch?${qs.toString()}`;
+      } else {
+        url = `/api/sabanas/${encodeURIComponent(ids[0])}/registros/relaciones-unicas`;
+      }
+
+      const res = await fetchWithAuth(url, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        signal: controller.signal,
+      });
+
+
+      if (!res) {
+        if (controller.signal.aborted || !isMounted) return;
+        const MAX_ATTEMPTS = 3;
+        if (attempt < MAX_ATTEMPTS) {
+          const delay = 300 * Math.pow(2, attempt);
+          setTimeout(() => fetchRelaciones(attempt + 1), delay);
+          return;
+        }
+        if (!isMounted || controller.signal.aborted) return;
+        setError("Sin respuesta del servidor (res = null).");
+        setRelaciones([]);
+        return;
+      }
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      const items = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.items)
+        ? data.items
+        : Array.isArray(data?.Items)
+        ? data.Items
+        : data
+        ? [data]
+        : [];
+
+      if (!isMounted || controller.signal.aborted) return;
+      setRelaciones(items);
+    } catch (err) {
+      if (err.name !== "AbortError" && isMounted) {
+        setError(err.message || "Error desconocido");
+        setRelaciones([]);
+      }
+    }
+  };
+
+  // Lanzamos la carga (no hay early return aquí; la fn gestiona ids vacíos)
+  fetchRelaciones();
+  return () => {
+    isMounted = false;
+    controller.abort();
+  };
+}, [idSabana]); // añade otras dependencias si corresponde (por ejemplo: sort, limitB)
 
   useEffect(() => {
     const loadCytoscape = async () => {
