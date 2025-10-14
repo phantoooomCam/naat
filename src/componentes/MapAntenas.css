@@ -1,11 +1,15 @@
-/* Variables CSS esenciales */
+/* Variables CSS */
 :root {
   --antenna-bg: #ffffff;
   --antenna-border: #e2e8f0;
+  --antenna-text-primary: #1f2937;
   --antenna-text-secondary: #6b7280;
   --antenna-primary: #2563eb;
+  --antenna-primary-dark: #1d4ed8;
   --antenna-error: #ef4444;
   --antenna-shadow: rgba(0, 0, 0, 0.1);
+  --rank-bg: #eab308; /* Amarillo para destacar */
+  --rank-text: #ffffff;
 }
 
 /* Contenedor principal del mapa */
@@ -22,41 +26,169 @@
   position: relative;
 }
 
-/* Lienzo donde se renderiza el mapa */
+/* Lienzo del mapa */
 .mapa-antenas-canvas {
   flex: 1;
   width: 100%;
   height: 100%;
 }
 
-/* Mensajes de estado (Cargando / Error) */
-.mapa-antenas-status {
+/* Marcador de antena personalizado */
+.antenna-marker {
+  position: absolute;
+  transform: translate(-50%, -100%); /* Centra el marcador sobre el punto */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+.antenna-marker:hover {
+    transform: translate(-50%, -100%) scale(1.1);
+    z-index: 9999;
+}
+.antenna-icon {
+  font-size: 28px;
+  color: var(--antenna-text-primary);
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+}
+.rank-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: var(--rank-bg);
+  color: var(--rank-text);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  font-size: 1rem;
-  color: var(--antenna-text-secondary);
+  font-size: 11px;
+  font-weight: bold;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
+/* Leyenda del mapa */
+.map-legend {
+  position: absolute;
+  bottom: 20px;
+  right: 15px;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  font-size: 13px;
+  max-width: 200px;
+}
+.map-legend h4 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  border-bottom: 1px solid var(--antenna-border);
+  padding-bottom: 5px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.legend-item:last-child {
+  margin-bottom: 0;
+}
+.legend-icon {
+  font-size: 18px;
+  margin-right: 8px;
+  color: var(--antenna-text-primary);
+}
+.legend-polygon {
+  width: 16px;
+  height: 16px;
+  background-color: var(--antenna-primary);
+  opacity: 0.5;
+  border: 1px solid var(--antenna-primary-dark);
+  margin-right: 8px;
+}
+.legend-rank {
+    background-color: var(--rank-bg);
+    color: var(--rank-text);
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+
+/* Controles del mapa (ej. botón de ajustar) */
+.map-controls {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 1000;
+}
+.map-controls button {
+    background-color: #fff;
+    border: 1px solid var(--antenna-border);
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.map-controls button:hover {
+    background-color: #f9fafb;
+}
+.map-controls button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* Superposición para mensajes de estado */
+.map-overlay-status {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+.mapa-antenas-status {
+  padding: 20px;
+  border-radius: 8px;
+  background-color: var(--antenna-bg);
+  box-shadow: 0 4px 12px var(--antenna-shadow);
+}
 .mapa-antenas-status.loading {
   color: var(--antenna-primary);
 }
-
 .mapa-antenas-status.error {
   color: var(--antenna-error);
   background: #fef2f2;
 }
 
-/* Diseño responsivo para la altura del contenedor */
+/* Diseño responsivo */
 @media (max-width: 768px) {
   .mapa-antenas-wrapper {
     height: 600px;
   }
 }
-
 @media (max-width: 480px) {
   .mapa-antenas-wrapper {
     height: 500px;
+  }
+  .map-legend {
+    bottom: 10px;
+    right: 10px;
+    font-size: 11px;
   }
 }
