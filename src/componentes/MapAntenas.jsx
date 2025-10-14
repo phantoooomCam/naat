@@ -54,42 +54,59 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
         (id) => ({ id: Number(id) })
       );
 
-      const apiBody = {
+      const baseApiBody = {
         sabanas: sabanaIds,
         from: fromDate,
         to: toDate,
-        tz: "America/Mexico_City", // AÑADIDO: Zona horaria fija
+        tz: "America/Mexico_City",
         minFreq: 1,
         perSabana: false,
       };
 
       try {
-        const [sitesRes, sectorsRes] = await Promise.all([
-          fetchWithAuth("/api/sabanas/registros/batch/antennas/summary", {
-            method: "POST",
-            signal: controller.signal,
-            body: JSON.stringify({ ...apiBody, topN: 200 }),
-          }),
-          fetchWithAuth("/api/sabanas/registros/batch/sectors/summary", {
-            method: "POST",
-            signal: controller.signal,
-            body: JSON.stringify({ ...apiBody, topN: 1000 }),
-          }),
-        ]);
+        // --- PASO 1: Obtener los sitios más importantes ---
+        const sitesRes = await fetchWithAuth("/api/sabanas/registros/batch/antennas/summary", {
+          method: "POST",
+          signal: controller.signal,
+          body: JSON.stringify({ ...baseApiBody, topN: 200 }),
+        });
 
         if (!sitesRes.ok) {
-            const errorData = await sitesRes.text();
-            throw new Error(`Fallo al obtener sitios: ${sitesRes.status} ${errorData}`);
-        }
-        if (!sectorsRes.ok) {
-            const errorData = await sectorsRes.text();
-            throw new Error(`Fallo al obtener sectores: ${sectorsRes.status} ${errorData}`);
+          const errorData = await sitesRes.text();
+          throw new Error(`Fallo al obtener sitios: ${sitesRes.status} ${errorData}`);
         }
 
         const sitesData = await sitesRes.json();
-        const sectorsData = await sectorsRes.json();
+        const fetchedSites = sitesData.items || [];
+        setSites(fetchedSites);
 
-        setSites(sitesData.items || []);
+        // Si no se encontraron sitios, no necesitamos buscar sectores
+        if (fetchedSites.length === 0) {
+          setSectors([]);
+          return;
+        }
+
+        // --- PASO 2: Extraer los IDs de los sitios obtenidos ---
+        const siteIds = fetchedSites.map(site => site.siteId);
+
+        // --- PASO 3: Obtener TODOS los sectores para ESOS sitios ---
+        const sectorsApiBody = {
+          ...baseApiBody,
+          siteIds: siteIds,
+        };
+
+        const sectorsRes = await fetchWithAuth("/api/sabanas/registros/batch/sectors/summary", {
+          method: "POST",
+          signal: controller.signal,
+          body: JSON.stringify(sectorsApiBody),
+        });
+
+        if (!sectorsRes.ok) {
+          const errorData = await sectorsRes.text();
+          throw new Error(`Fallo al obtener sectores: ${sectorsRes.status} ${errorData}`);
+        }
+        
+        const sectorsData = await sectorsRes.json();
         setSectors(sectorsData.items || []);
 
       } catch (err) {
@@ -121,11 +138,12 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
     }
   }, [mapRef, sites]);
 
+  // MODIFICADO: Este useEffect ahora se encarga de ajustar la vista inicial automáticamente
   useEffect(() => {
-    if (sites.length > 0) {
-        fitBoundsToSites();
+    if (mapRef && sites.length > 0) {
+      fitBoundsToSites();
     }
-  }, [sites, fitBoundsToSites]);
+  }, [sites, mapRef, fitBoundsToSites]);
 
   const onMapLoad = useCallback((map) => {
     setMapRef(map);
@@ -199,9 +217,8 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
 
       <GoogleMap
         mapContainerClassName="mapa-antenas-canvas"
-        center={{ lat: 19.4326, lng: -99.1332 }}
-        zoom={5}
         onLoad={onMapLoad}
+        // MODIFICADO: Se eliminan 'center' y 'zoom' para permitir que fitBounds controle la vista
         options={{
           zoomControl: true,
           streetViewControl: false,
@@ -260,3 +277,4 @@ MapAntenas.propTypes = {
 };
 
 export default MapAntenas;
+
