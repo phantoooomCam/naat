@@ -356,7 +356,6 @@ const ProcesamientoView = ({ isSidebarCollapsed }) => {
     }
 
     navigate("/procesamiento_sabana", { state: { idSabana } })
-    console.log("Navegando a /procesamiento_sabana con idSabana:", idSabana)
   }
 
   const handleGuardarEnBD = async () => {

@@ -14,7 +14,7 @@ import {
 import "./ListadoSabanas.css";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import fetchWithAuth from "../../../../utils/fetchWithAuth"; // Declared fetchWithAuth
+import fetchWithAuth from "../../../../utils/fetchWithAuth"
 
 const ListadoSabanas = ({ activeView, idCaso: idCasoProp }) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -165,19 +165,34 @@ const Listado = ({ idCaso: idCasoProp }) => {
   };
 
   const handleVerSabana = (sabana) => {
-    // If there are selected sabanas, use those IDs
-    // Otherwise, use the single sabana passed as parameter
-    const idsToSend =
-      selectedSabanas.length > 0
-        ? selectedSabanas.map((s) => s.idArchivo)
-        : sabana?.idArchivo
-        ? [sabana.idArchivo]
-        : [];
+    // Fuente: selección múltiple si existe, sino el parámetro sabana
+    const source =
+      selectedSabanas.length > 0 ? selectedSabanas : sabana ? [sabana] : [];
 
+    if (source.length === 0) return;
+
+    const idsToSend = source.map((s) => s.idArchivo).filter(Boolean);
     if (idsToSend.length === 0) return;
 
+    // Extrae dígitos del nombreArchivo; devuelve string de dígitos si tiene entre 7 y 15 dígitos
+    const extractTelefonoFromNombre = (nombre) => {
+      if (!nombre) return null;
+      const digits = (nombre || "").replace(/\D/g, "");
+      return digits.length >= 7 && digits.length <= 15 ? digits : null;
+    };
+
+    const numeros = Array.from(
+      new Set(
+        source
+          .map((s) => extractTelefonoFromNombre(s.nombreArchivo))
+          .filter(Boolean)
+      )
+    );
+
+    const stateToSend = { idSabana: idsToSend, numeroTelefonico: numeros };
+
     navigate("/procesamiento_sabana", {
-      state: { idSabana: idsToSend },
+      state: stateToSend,
     });
   };
 

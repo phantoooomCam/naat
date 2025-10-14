@@ -299,7 +299,6 @@ const GestionSabanaView = () => {
         setTodosLosRegistros(mappedItems);
       } catch (err) {
         if (err.name === "AbortError") {
-          console.log("Fetch de registros abortado (normal en desarrollo).");
           return;
         }
         console.error("Error al cargar registros:", err);
@@ -373,7 +372,6 @@ const GestionSabanaView = () => {
 
   const handleButtonClick = (buttonType) => {
     setActiveButton(buttonType);
-    console.log(`Botón clickeado: ${buttonType}`);
   };
 
   const renderContent = () => {
