@@ -18,6 +18,7 @@ import "../../../componentes/RedVinculos.css";
 import fetchWithAuth from "../../../utils/fetchWithAuth.js";
 
 const Informacion3_Sabana = ({ activeView }) => {
+  // ... (código sin cambios)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
@@ -46,7 +47,9 @@ const Informacion3_Sabana = ({ activeView }) => {
   );
 };
 
+
 const GestionSabanaView = () => {
+  // ... (estados de page, pageSize, sort, loading, etc. sin cambios)
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [sort, setSort] = useState("fecha_hora:desc");
@@ -65,6 +68,8 @@ const GestionSabanaView = () => {
     horaFin: "",
   });
 
+
+  // MODIFICADO: Estado para los inputs del filtro del mapa
   const [filtrosMapaAntenas, setFiltrosMapaAntenas] = useState({
     fechaInicio: "",
     fechaFin: "",
@@ -72,13 +77,13 @@ const GestionSabanaView = () => {
     horaFin: "",
   });
 
+  // MODIFICADO: Estado para los filtros que se pasarán al mapa (en formato ISO)
   const [filtrosMapaAplicados, setFiltrosMapaAplicados] = useState({
-    fechaInicio: "",
-    fechaFin: "",
-    horaInicio: "",
-    horaFin: "",
+    fromDate: null,
+    toDate: null,
   });
-
+  
+  // ... (código de filtros de Red de Vínculos sin cambios)
   const [filtrosRedVinculos, setFiltrosRedVinculos] = useState({
     0: true, // Datos
     1: true, // MensajeriaMultimedia
@@ -100,6 +105,8 @@ const GestionSabanaView = () => {
   const idSabana = location.state?.idSabana || null;
   const [error, setError] = useState("");
 
+  console.log("Valor de idSabana al cargar:", idSabana);
+
   const handleFilterChange = (filterName, value) => {
     setFilters((prev) => ({
       ...prev,
@@ -113,11 +120,19 @@ const GestionSabanaView = () => {
       [filterName]: value,
     }));
   };
-
+  
+  // MODIFICADO: Combina fecha y hora y actualiza los filtros aplicados
   const aplicarFiltrosMapa = () => {
-    setFiltrosMapaAplicados({ ...filtrosMapaAntenas });
+    const { fechaInicio, horaInicio, fechaFin, horaFin } = filtrosMapaAntenas;
+    
+    // Si la fecha existe pero la hora no, se usa el inicio/fin del día
+    const from = fechaInicio ? `${fechaInicio}T${horaInicio || '00:00:00'}Z` : null;
+    const to = fechaFin ? `${fechaFin}T${horaFin || '23:59:59'}Z` : null;
+    
+    setFiltrosMapaAplicados({ fromDate: from, toDate: to });
   };
 
+  // ... (código de filtros de Red de Vínculos sin cambios)
   const handleFiltroRedChange = (tipoId, checked) => {
     setFiltrosRedVinculos((prev) => ({
       ...prev,
@@ -218,6 +233,47 @@ const GestionSabanaView = () => {
     };
     return colorMap?.[typeId] ?? "#7f8c8d";
   };
+
+
+  // NUEVO: useEffect para obtener el rango de fechas inicial
+  useEffect(() => {
+    if (!idSabana) return;
+
+    const fetchDateRange = async () => {
+        const ids = (Array.isArray(idSabana) ? idSabana : [idSabana])
+          .map(id => ({ id: Number(id) }));
+
+        try {
+            const res = await fetchWithAuth('/api/sabanas/registros/batch/catalogs/antennas', {
+                method: 'POST',
+                body: JSON.stringify({ sabanas: ids })
+            });
+            if (!res.ok) throw new Error('Failed to fetch date range');
+            
+            const data = await res.json();
+            const { min, max } = data.fechas;
+
+            if (min && max) {
+                // Parsea las fechas ISO (ej: "2024-05-01T10:00:00Z")
+                const fechaInicio = min.substring(0, 10); // "2024-05-01"
+                const horaInicio = min.substring(11, 16); // "10:00"
+                const fechaFin = max.substring(0, 10);
+                const horaFin = max.substring(11, 16);
+                
+                // Pre-rellena los inputs del filtro
+                setFiltrosMapaAntenas({ fechaInicio, horaInicio, fechaFin, horaFin });
+                
+                // Aplica este rango inicial al mapa
+                setFiltrosMapaAplicados({ fromDate: min, toDate: max });
+            }
+        } catch (err) {
+            console.error("Error fetching initial date range:", err);
+        }
+    };
+
+    fetchDateRange();
+  }, [idSabana]);
+
 
   useEffect(() => {
     if (!idSabana) return;
@@ -375,6 +431,7 @@ const GestionSabanaView = () => {
   };
 
   const renderContent = () => {
+    // ... (código de renderContent sin cambios significativos)
     if (error) {
       return (
         <div className="error-message">
@@ -391,6 +448,7 @@ const GestionSabanaView = () => {
         </div>
       );
     }
+
 
     switch (activeButton) {
       case "info":
@@ -419,7 +477,11 @@ const GestionSabanaView = () => {
 
       case "map":
         return (
-          <MapAntenas idSabana={idSabana} filtros={filtrosMapaAplicados} />
+          <MapAntenas
+            idSabana={idSabana}
+            fromDate={filtrosMapaAplicados.fromDate}
+            toDate={filtrosMapaAplicados.toDate}
+          />
         );
 
       default:
@@ -442,6 +504,7 @@ const GestionSabanaView = () => {
 
   return (
     <div className="sabana-main-container">
+      {/* ... (código JSX sin cambios hasta el renderizado del mapa) ... */}
       <div className="sabana-title-section">
         <div className="title-content">
           <h2>Gestión de Sabana</h2>
@@ -722,6 +785,7 @@ const GestionSabanaView = () => {
                 </>
               )}
 
+
               <div className="buttons-section">
                 <button
                   className={`info-action-btn ${
@@ -756,7 +820,6 @@ const GestionSabanaView = () => {
             </div>
           </div>
         </div>
-
         <div className="section-right">
           <div className="section-header">
             <h3>Detalles de Sabana</h3>
