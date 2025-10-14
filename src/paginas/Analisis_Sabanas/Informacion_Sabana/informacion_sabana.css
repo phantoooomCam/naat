@@ -44,7 +44,7 @@
 
 /* Grid layout - changed to 20/80 split */
 .sabana-grid-layout {
-  display: grid;
+  display: flex;
   grid-template-columns: 0.5fr 1fr; /* Changed from 1fr 1fr to 20/80 split */
   gap: 2vh;
   height: calc(100vh - 150px);

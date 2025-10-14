@@ -84,12 +84,16 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
         ]);
 
         if (!sitesRes.ok) {
-            const errorData = await sitesRes.text();
-            throw new Error(`Fallo al obtener sitios: ${sitesRes.status} ${errorData}`);
+          const errorData = await sitesRes.text();
+          throw new Error(
+            `Fallo al obtener sitios: ${sitesRes.status} ${errorData}`
+          );
         }
         if (!sectorsRes.ok) {
-            const errorData = await sectorsRes.text();
-            throw new Error(`Fallo al obtener sectores: ${sectorsRes.status} ${errorData}`);
+          const errorData = await sectorsRes.text();
+          throw new Error(
+            `Fallo al obtener sectores: ${sectorsRes.status} ${errorData}`
+          );
         }
 
         const sitesData = await sitesRes.json();
@@ -97,7 +101,6 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
 
         setSites(sitesData.items || []);
         setSectors(sectorsData.items || []);
-
       } catch (err) {
         if (err.name !== "AbortError") {
           console.error("Error fetching map data:", err);
@@ -131,7 +134,7 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
   // Ajusta la vista cuando los sitios cambian
   useEffect(() => {
     if (sites.length > 0) {
-        fitBoundsToSites();
+      fitBoundsToSites();
     }
   }, [sites, fitBoundsToSites]);
 
@@ -203,7 +206,7 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
           <div className="legend-polygon"></div>
           <span>Sector (Azimut)</span>
         </div>
-         <div className="legend-item">
+        <div className="legend-item">
           <span className="legend-rank">N</span>
           <span>Ranking por Frecuencia</span>
         </div>
@@ -219,22 +222,23 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
           streetViewControl: false,
           mapTypeControl: false,
           fullscreenControl: true,
+          gestureHandling: "greedy",
         }}
       >
         {/* Renderiza los polígonos de los sectores */}
         {sectorPolygons.map((poly) => (
-            <Polygon
-              key={poly.id}
-              path={poly.path}
-              options={{
-                fillColor: "#2563eb",
-                fillOpacity: 0.2,
-                strokeColor: "#2563eb",
-                strokeOpacity: 0.6,
-                strokeWeight: 1,
-                zIndex: poly.rank, // El ranking puede influir en la superposición
-              }}
-            />
+          <Polygon
+            key={poly.id}
+            path={poly.path}
+            options={{
+              fillColor: "#2563eb",
+              fillOpacity: 0.2,
+              strokeColor: "#2563eb",
+              strokeOpacity: 0.6,
+              strokeWeight: 1,
+              zIndex: poly.rank, // El ranking puede influir en la superposición
+            }}
+          />
         ))}
 
         {/* Renderiza los marcadores de los sitios */}
@@ -244,7 +248,10 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
             position={{ lat: site.lat, lng: site.lng }}
             mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
           >
-            <div className="antenna-marker" title={`Sitio #${site.siteId} - Rank #${site.rank}`}>
+            <div
+              className="antenna-marker"
+              title={`Sitio #${site.siteId} - Rank #${site.rank}`}
+            >
               <LuRadioTower className="antenna-icon" />
               <span className="rank-badge">{site.rank}</span>
             </div>
@@ -255,8 +262,12 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
       {/* Muestra un mensaje de carga o error sobre el mapa */}
       {(loading || error) && (
         <div className="map-overlay-status">
-            {loading && <div className="mapa-antenas-status loading">Cargando antenas...</div>}
-            {error && <div className="mapa-antenas-status error">{error}</div>}
+          {loading && (
+            <div className="mapa-antenas-status loading">
+              Cargando antenas...
+            </div>
+          )}
+          {error && <div className="mapa-antenas-status error">{error}</div>}
         </div>
       )}
     </div>
@@ -267,7 +278,9 @@ MapAntenas.propTypes = {
   idSabana: PropTypes.oneOfType([
     PropTypes.string,
     PropTypes.number,
-    PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number])),
+    PropTypes.arrayOf(
+      PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    ),
   ]).isRequired,
   fromDate: PropTypes.string,
   toDate: PropTypes.string,
