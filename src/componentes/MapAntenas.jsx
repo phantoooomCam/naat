@@ -6,12 +6,7 @@ import "./MapAntenas.css";
 // La librería 'geometry' ya no es necesaria
 const libraries = [];
 
-/**
- * Componente que renderiza un mapa de Google vacío.
- * No recibe propiedades y está centrado por defecto en la Ciudad de México.
- */
 const MapAntenas = () => {
-  // La API Key se sigue cargando desde las variables de entorno
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   const { isLoaded, loadError } = useJsApiLoader({
@@ -60,7 +55,6 @@ const MapAntenas = () => {
           fullscreenControl: true,
         }}
       >
-        {/* El mapa está intencionalmente vacío, sin marcadores ni polígonos */}
       </GoogleMap>
     </div>
   );
