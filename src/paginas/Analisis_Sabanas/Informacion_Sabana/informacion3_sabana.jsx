@@ -83,7 +83,8 @@ const GestionSabanaView = () => {
     toDate: null,
   });
   
-  // ... (código de filtros de Red de Vínculos sin cambios)
+  // Mantenemos el estado filtrosRedVinculos para no romper la funcionalidad
+  // pero eliminamos la UI del filtrado de comunicación
   const [filtrosRedVinculos, setFiltrosRedVinculos] = useState({
     0: true, // Datos
     1: true, // MensajeriaMultimedia
@@ -132,7 +133,7 @@ const GestionSabanaView = () => {
     setFiltrosMapaAplicados({ fromDate: from, toDate: to });
   };
 
-  // ... (código de filtros de Red de Vínculos sin cambios)
+  // Mantenemos estas funciones para no romper la referencia
   const handleFiltroRedChange = (tipoId, checked) => {
     setFiltrosRedVinculos((prev) => ({
       ...prev,
@@ -504,7 +505,6 @@ const GestionSabanaView = () => {
 
   return (
     <div className="sabana-main-container">
-      {/* ... (código JSX sin cambios hasta el renderizado del mapa) ... */}
       <div className="sabana-title-section">
         <div className="title-content">
           <h2>Gestión de Sabana</h2>
@@ -609,75 +609,8 @@ const GestionSabanaView = () => {
                     </div>
                   </div>
                 </div>
-              ) : activeButton === "network" ? (
-                <div className="checkbox-section">
-                  <h5
-                    className="mb-4"
-                    style={{
-                      fontSize: "0.95rem",
-                      fontWeight: "600",
-                      color: "#374151",
-                    }}
-                  >
-                    Filtrar por tipo de comunicación:
-                  </h5>
-                  <div
-                    className="mb-5"
-                    style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}
-                  >
-                    <button
-                      onClick={() => toggleTodosFiltrosRed(true)}
-                      className="info-action-btn"
-                      style={{
-                        padding: "8px 12px",
-                        fontSize: "0.8rem",
-                        flex: "1",
-                        minWidth: "120px",
-                      }}
-                    >
-                      Seleccionar Todos
-                    </button>
-                    <button
-                      onClick={() => toggleTodosFiltrosRed(false)}
-                      className="info-action-btn"
-                      style={{
-                        padding: "8px 12px",
-                        fontSize: "0.8rem",
-                        backgroundColor: "#6b7280",
-                        flex: "1",
-                        minWidth: "120px",
-                      }}
-                    >
-                      Deseleccionar Todos
-                    </button>
-                  </div>
-                  <div className="checkbox-section">
-                    {Object.entries(filtrosRedVinculos).map(
-                      ([tipoId, activo]) => (
-                        <label key={tipoId} className="filter-checkbox-label">
-                          <input
-                            type="checkbox"
-                            checked={activo}
-                            onChange={(e) =>
-                              handleFiltroRedChange(tipoId, e.target.checked)
-                            }
-                          />
-                          <span
-                            style={{
-                              marginRight: "6px",
-                              display: "inline-flex",
-                              alignItems: "center",
-                            }}
-                          >
-                            {getTypeIcon(Number(tipoId))}
-                          </span>
-                          <span>{getTypeText(Number(tipoId))}</span>
-                        </label>
-                      )
-                    )}
-                  </div>
-                </div>
               ) : (
+                // MODIFICADO: Mismo código de filtros para info y network
                 <>
                   <div className="checkbox-section">
                     <label className="filter-checkbox-label">
