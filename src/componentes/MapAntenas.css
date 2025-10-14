@@ -15,7 +15,7 @@
 /* Contenedor principal del mapa */
 .mapa-antenas-wrapper {
   width: 100%;
-  height: 800px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   background: var(--antenna-bg);
