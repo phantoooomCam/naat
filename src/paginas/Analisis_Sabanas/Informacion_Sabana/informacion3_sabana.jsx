@@ -92,6 +92,10 @@ const GestionSabanaView = () => {
   const [errorAntenas, setErrorAntenas] = useState("");
   const [expandirFiltroAntenas, setExpandirFiltroAntenas] = useState(false);
   const [sitiosSeleccionados, setSitiosSeleccionados] = useState([]); // array de siteId
+  // NUEVO: rank por sitio y estados de carga/errores
+  const [rankPorSitio, setRankPorSitio] = useState({});
+  const [loadingRank, setLoadingRank] = useState(false);
+  const [errorRank, setErrorRank] = useState("");
   
   // Mantenemos el estado filtrosRedVinculos para no romper la funcionalidad
   // pero eliminamos la UI del filtrado de comunicación
@@ -194,6 +198,85 @@ const GestionSabanaView = () => {
     cargarCatalogo();
     return () => controller.abort();
   }, [idSabana, activeButton, filtrosMapaAplicados.fromDate, filtrosMapaAplicados.toDate]);
+
+  // NUEVO: Cargar resumen para obtener rank por siteId
+  useEffect(() => {
+    if (!idSabana || activeButton !== "map") return;
+
+    const siteIds = (catalogoAntenas?.sites ?? []).map((s) => s.siteId);
+    if (siteIds.length === 0) {
+      setRankPorSitio({});
+      return;
+    }
+
+    const controller = new AbortController();
+    const cargarRank = async () => {
+      try {
+        setLoadingRank(true);
+        setErrorRank("");
+
+        const sabanaIds = (Array.isArray(idSabana) ? idSabana : [idSabana]).map((id) => ({ id: Number(id) }));
+
+        const body = {
+          sabanas: sabanaIds,
+          from: filtrosMapaAplicados.fromDate || undefined,
+          to: filtrosMapaAplicados.toDate || undefined,
+          siteIds,
+          sortBy: "rank",
+          order: "asc",
+          perSabana: false,
+        };
+
+        const res = await fetchWithAuth("/api/sabanas/registros/batch/antennas/summary", {
+          method: "POST",
+          signal: controller.signal,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(`Error resumen antenas: ${res.status} ${txt}`);
+        }
+
+        const items = await res.json();
+        const mapa = {};
+        if (Array.isArray(items)) {
+          for (const it of items) {
+            if (it?.siteId != null && it?.rank != null) mapa[it.siteId] = it.rank;
+          }
+        } else if (Array.isArray(items?.items)) {
+          for (const it of items.items) {
+            if (it?.siteId != null && it?.rank != null) mapa[it.siteId] = it.rank;
+          }
+        }
+        setRankPorSitio(mapa);
+      } catch (e) {
+        if (e.name !== "AbortError") {
+          console.error(e);
+          setErrorRank(e.message || "No se pudo cargar el rank de antenas");
+        }
+      } finally {
+        setLoadingRank(false);
+      }
+    };
+
+    cargarRank();
+    return () => controller.abort();
+  }, [idSabana, activeButton, catalogoAntenas.sites, filtrosMapaAplicados.fromDate, filtrosMapaAplicados.toDate]);
+
+  // NUEVO: Ordenar catálogo por rank asc si existe
+  const sitiosOrdenados = useMemo(() => {
+    const sites = catalogoAntenas?.sites ?? [];
+    return sites.slice().sort((a, b) => {
+      const ra = rankPorSitio[a.siteId];
+      const rb = rankPorSitio[b.siteId];
+      if (ra == null && rb == null) return 0;
+      if (ra == null) return 1;
+      if (rb == null) return -1;
+      return ra - rb;
+    });
+  }, [catalogoAntenas.sites, rankPorSitio]);
 
   const marcarTodosSitios = () => {
     setSitiosSeleccionados(catalogoAntenas.sites.map((s) => s.siteId));
@@ -728,7 +811,9 @@ const GestionSabanaView = () => {
                             {catalogoAntenas.sites.length === 0 ? (
                               <div className="placeholder-text">No hay antenas en el rango.</div>
                             ) : (
-                              catalogoAntenas.sites.map((site) => (
+                              sitiosOrdenados.map((site) => {
+                                const rank = rankPorSitio[site.siteId];
+                                return (
                                 <label key={site.siteId} className="filter-checkbox-label" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 2px" }}>
                                   <input
                                     type="checkbox"
@@ -736,11 +821,12 @@ const GestionSabanaView = () => {
                                     onChange={(e) => toggleSitioSeleccion(site.siteId, e.target.checked)}
                                   />
                                   <span style={{ fontSize: 13 }}>
-                                    {site.siteId} · ({Number(site.lat).toFixed(5)}, {Number(site.lng).toFixed(5)})
-                                    {typeof site.frecuenciaTotal === "number" ? ` — freq ${site.frecuenciaTotal}` : ""}
+                                    {(rank ?? "—")}. ({Number(site.lat).toFixed(5)}, {Number(site.lng).toFixed(5)})
+                                    {typeof site.totalSectores === "number" ? ` — ${site.totalSectores} sectores` : ""}
                                   </span>
                                 </label>
-                              ))
+                                );
+                              })
                             )}
                           </div>
                         )}
