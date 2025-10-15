@@ -8,6 +8,10 @@ import {
   faInfoCircle,
   faProjectDiagram,
   faMapMarkerAlt,
+  faChevronDown,
+  faChevronUp,
+  faCheckDouble,
+  faBroom,
 } from "@fortawesome/free-solid-svg-icons";
 import "./informacion_sabana.css";
 import { useLocation } from "react-router-dom";
@@ -33,7 +37,6 @@ const Informacion3_Sabana = ({ activeView }) => {
 
     return () => observer.disconnect();
   }, []);
-
   const views = {
     gestion: <GestionSabanaView />,
   };
@@ -82,6 +85,13 @@ const GestionSabanaView = () => {
     fromDate: null,
     toDate: null,
   });
+
+  // NUEVO: Estado para catálogo de antenas y selección
+  const [catalogoAntenas, setCatalogoAntenas] = useState({ sites: [], sectors: [], fechas: { min: null, max: null } });
+  const [loadingAntenas, setLoadingAntenas] = useState(false);
+  const [errorAntenas, setErrorAntenas] = useState("");
+  const [expandirFiltroAntenas, setExpandirFiltroAntenas] = useState(false);
+  const [sitiosSeleccionados, setSitiosSeleccionados] = useState([]); // array de siteId
   
   // Mantenemos el estado filtrosRedVinculos para no romper la funcionalidad
   // pero eliminamos la UI del filtrado de comunicación
@@ -131,6 +141,75 @@ const GestionSabanaView = () => {
     const to = fechaFin ? `${fechaFin}T${horaFin || '23:59:59'}Z` : null;
     
     setFiltrosMapaAplicados({ fromDate: from, toDate: to });
+  };
+
+  // NUEVO: Fetch de catálogo de antenas para popular el selector
+  useEffect(() => {
+    if (!idSabana || activeButton !== "map") return;
+
+    const controller = new AbortController();
+    const cargarCatalogo = async () => {
+      try {
+        setLoadingAntenas(true);
+        setErrorAntenas("");
+
+        const sabanaIds = (Array.isArray(idSabana) ? idSabana : [idSabana]).map((id) => ({ id: Number(id) }));
+
+        const body = {
+          sabanas: sabanaIds,
+          from: filtrosMapaAplicados.fromDate || undefined,
+          to: filtrosMapaAplicados.toDate || undefined,
+          includeFrequencies: false,
+          excludeZero: true,
+        };
+
+          const res = await fetchWithAuth("/api/sabanas/registros/batch/catalogs/antennas", {
+            method: "POST",
+            signal: controller.signal,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          });
+
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(`Error catálogo antenas: ${res.status} ${txt}`);
+        }
+
+        const data = await res.json();
+        const sites = Array.isArray(data?.sites) ? data.sites : [];
+        const sectors = Array.isArray(data?.sectors) ? data.sectors : [];
+        setCatalogoAntenas({ sites, sectors, fechas: data?.fechas ?? { min: null, max: null } });
+
+        // Si no hay selección aún, seleccionar todos por default
+        setSitiosSeleccionados((prev) => (prev && prev.length > 0 ? prev : sites.map((s) => s.siteId)));
+      } catch (e) {
+        if (e.name === "AbortError") return;
+        console.error(e);
+        setErrorAntenas(e.message || "No se pudo cargar el catálogo de antenas");
+      } finally {
+        setLoadingAntenas(false);
+      }
+    };
+
+    cargarCatalogo();
+    return () => controller.abort();
+  }, [idSabana, activeButton, filtrosMapaAplicados.fromDate, filtrosMapaAplicados.toDate]);
+
+  const marcarTodosSitios = () => {
+    setSitiosSeleccionados(catalogoAntenas.sites.map((s) => s.siteId));
+  };
+
+  const limpiarSitios = () => {
+    setSitiosSeleccionados([]);
+  };
+
+  const toggleSitioSeleccion = (siteId, checked) => {
+    setSitiosSeleccionados((prev) => {
+      const set = new Set(prev);
+      if (checked) set.add(siteId);
+      else set.delete(siteId);
+      return Array.from(set);
+    });
   };
 
   // Mantenemos estas funciones para no romper la referencia
@@ -244,11 +323,12 @@ const GestionSabanaView = () => {
         const ids = (Array.isArray(idSabana) ? idSabana : [idSabana])
           .map(id => ({ id: Number(id) }));
 
-        try {
-            const res = await fetchWithAuth('/api/sabanas/registros/batch/catalogs/antennas', {
-                method: 'POST',
-                body: JSON.stringify({ sabanas: ids })
-            });
+    try {
+      const res = await fetchWithAuth('/api/sabanas/registros/batch/catalogs/antennas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sabanas: ids })
+      });
             if (!res.ok) throw new Error('Failed to fetch date range');
             
             const data = await res.json();
@@ -482,6 +562,7 @@ const GestionSabanaView = () => {
             idSabana={idSabana}
             fromDate={filtrosMapaAplicados.fromDate}
             toDate={filtrosMapaAplicados.toDate}
+            allowedSiteIds={sitiosSeleccionados}
           />
         );
 
@@ -607,6 +688,64 @@ const GestionSabanaView = () => {
                         Aplicar Filtros
                       </button>
                     </div>
+                  </div>
+
+                  {/* NUEVO: Panel de filtro por antenas */}
+                  <div className="antenas-filter" style={{ marginTop: 16 }}>
+                    <button
+                      type="button"
+                      className="info-action-btn"
+                      onClick={() => setExpandirFiltroAntenas((v) => !v)}
+                      style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}
+                    >
+                      <span>
+                        <FontAwesomeIcon icon={faFilter} style={{ marginRight: 8 }} />
+                        Filtrar antenas
+                      </span>
+                      <FontAwesomeIcon icon={expandirFiltroAntenas ? faChevronUp : faChevronDown} />
+                    </button>
+
+                    {expandirFiltroAntenas && (
+                      <div className="antenas-filter-body" style={{ marginTop: 12, border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
+                        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                          <button type="button" className="info-action-btn" onClick={marcarTodosSitios}>
+                            <FontAwesomeIcon icon={faCheckDouble} style={{ marginRight: 6 }} /> Marcar todo
+                          </button>
+                          <button type="button" className="info-action-btn" onClick={limpiarSitios}>
+                            <FontAwesomeIcon icon={faBroom} style={{ marginRight: 6 }} /> Limpiar
+                          </button>
+                        </div>
+
+                        {loadingAntenas && (
+                          <div className="placeholder-text">Cargando antenas...</div>
+                        )}
+                        {errorAntenas && (
+                          <div className="error-message">{errorAntenas}</div>
+                        )}
+
+                        {!loadingAntenas && !errorAntenas && (
+                          <div style={{ maxHeight: 240, overflowY: "auto", paddingRight: 4 }}>
+                            {catalogoAntenas.sites.length === 0 ? (
+                              <div className="placeholder-text">No hay antenas en el rango.</div>
+                            ) : (
+                              catalogoAntenas.sites.map((site) => (
+                                <label key={site.siteId} className="filter-checkbox-label" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 2px" }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={sitiosSeleccionados.includes(site.siteId)}
+                                    onChange={(e) => toggleSitioSeleccion(site.siteId, e.target.checked)}
+                                  />
+                                  <span style={{ fontSize: 13 }}>
+                                    {site.siteId} · ({Number(site.lat).toFixed(5)}, {Number(site.lng).toFixed(5)})
+                                    {typeof site.frecuenciaTotal === "number" ? ` — freq ${site.frecuenciaTotal}` : ""}
+                                  </span>
+                                </label>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (

@@ -24,7 +24,7 @@ const fetchWithAuth = (url, options) => {
 
 const libraries = ["geometry"];
 
-const MapAntenas = ({ idSabana, fromDate, toDate }) => {
+const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds }) => {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   const [sites, setSites] = useState([]);
@@ -64,11 +64,25 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
       };
 
       try {
-        // --- PASO 1: Obtener los sitios más importantes ---
+        const hasFilter = Array.isArray(allowedSiteIds);
+        const selectedCount = hasFilter ? allowedSiteIds.length : null;
+
+        // Si hay filtro y está vacío, limpiamos el mapa
+        if (hasFilter && selectedCount === 0) {
+          setSites([]);
+          setSectors([]);
+          return;
+        }
+
+        // --- PASO 1: Obtener sitios (filtrados por siteIds si aplica) ---
+        const sitesBody = hasFilter
+          ? { ...baseApiBody, siteIds: allowedSiteIds, sortBy: "rank", order: "asc" }
+          : { ...baseApiBody, topN: 1000 };
+
         const sitesRes = await fetchWithAuth("/api/sabanas/registros/batch/antennas/summary", {
           method: "POST",
           signal: controller.signal,
-          body: JSON.stringify({ ...baseApiBody, topN: 200 }),
+          body: JSON.stringify(sitesBody),
         });
 
         if (!sitesRes.ok) {
@@ -77,7 +91,7 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
         }
 
         const sitesData = await sitesRes.json();
-        const fetchedSites = sitesData.items || [];
+        const fetchedSites = Array.isArray(sitesData) ? sitesData : (sitesData.items || []);
         setSites(fetchedSites);
 
         // Si no se encontraron sitios, no necesitamos buscar sectores
@@ -87,7 +101,7 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
         }
 
         // --- PASO 2: Extraer los IDs de los sitios obtenidos ---
-        const siteIds = fetchedSites.map(site => site.siteId);
+        const siteIds = hasFilter ? allowedSiteIds : fetchedSites.map(site => site.siteId);
 
         // --- PASO 3: Obtener TODOS los sectores para ESOS sitios ---
         const sectorsApiBody = {
@@ -107,7 +121,7 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
         }
         
         const sectorsData = await sectorsRes.json();
-        setSectors(sectorsData.items || []);
+        setSectors(Array.isArray(sectorsData) ? sectorsData : (sectorsData.items || []));
 
       } catch (err) {
         if (err.name !== "AbortError") {
@@ -126,33 +140,48 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
     return () => {
       controller.abort();
     };
-  }, [idSabana, fromDate, toDate, isLoaded]);
+  }, [idSabana, fromDate, toDate, isLoaded, allowedSiteIds]);
+
+  const filteredSites = useMemo(() => {
+    if (!allowedSiteIds || allowedSiteIds.length === 0) return [];
+    const set = new Set(allowedSiteIds);
+    return (sites || []).filter((s) => set.has(s.siteId));
+  }, [sites, allowedSiteIds]);
+
+  const filteredSectors = useMemo(() => {
+    if (!allowedSiteIds || allowedSiteIds.length === 0) return [];
+    const set = new Set(allowedSiteIds);
+    return (sectors || []).filter((sec) => set.has(sec.siteId));
+  }, [sectors, allowedSiteIds]);
 
   const fitBoundsToSites = useCallback(() => {
-    if (mapRef && sites.length > 0) {
+    const targets = filteredSites.length > 0 ? filteredSites : sites;
+    if (mapRef && targets.length > 0) {
       const bounds = new window.google.maps.LatLngBounds();
-      sites.forEach((site) => {
+      targets.forEach((site) => {
         bounds.extend(new window.google.maps.LatLng(site.lat, site.lng));
       });
       mapRef.fitBounds(bounds);
     }
-  }, [mapRef, sites]);
+  }, [mapRef, sites, filteredSites]);
 
   // MODIFICADO: Este useEffect ahora se encarga de ajustar la vista inicial automáticamente
   useEffect(() => {
-    if (mapRef && sites.length > 0) {
+    const targets = filteredSites.length > 0 ? filteredSites : sites;
+    if (mapRef && targets.length > 0) {
       fitBoundsToSites();
     }
-  }, [sites, mapRef, fitBoundsToSites]);
+  }, [sites, filteredSites, mapRef, fitBoundsToSites]);
 
   const onMapLoad = useCallback((map) => {
     setMapRef(map);
   }, []);
 
   const sectorPolygons = useMemo(() => {
-    if (!sectors.length || !isLoaded || !window.google.maps.geometry) return [];
+    const source = filteredSectors.length > 0 ? filteredSectors : sectors;
+    if (!source.length || !isLoaded || !window.google.maps.geometry) return [];
 
-    return sectors.map((sector) => {
+    return source.map((sector) => {
       const origin = new window.google.maps.LatLng(sector.lat, sector.lng);
       const point1 = window.google.maps.geometry.spherical.computeOffset(
         origin,
@@ -171,7 +200,7 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
         rank: sector.rankDelSitio,
       };
     });
-  }, [sectors, isLoaded]);
+  }, [sectors, filteredSectors, isLoaded]);
 
   if (loadError) {
     return (
@@ -242,7 +271,7 @@ const MapAntenas = ({ idSabana, fromDate, toDate }) => {
             />
         ))}
 
-        {sites.map((site) => (
+        {(filteredSites.length > 0 ? filteredSites : sites).map((site) => (
           <OverlayView
             key={site.siteId}
             position={{ lat: site.lat, lng: site.lng }}
@@ -274,6 +303,7 @@ MapAntenas.propTypes = {
   ]).isRequired,
   fromDate: PropTypes.string,
   toDate: PropTypes.string,
+  allowedSiteIds: PropTypes.arrayOf(PropTypes.string),
 };
 
 export default MapAntenas;
