@@ -96,6 +96,9 @@ const GestionSabanaView = () => {
   const [rankPorSitio, setRankPorSitio] = useState({});
   const [loadingRank, setLoadingRank] = useState(false);
   const [errorRank, setErrorRank] = useState("");
+  // NUEVO: modo trazado de rutas
+  const [routeMode, setRouteMode] = useState(false);
+  const [routeDate, setRouteDate] = useState(""); // YYYY-MM-DD
   
   // Mantenemos el estado filtrosRedVinculos para no romper la funcionalidad
   // pero eliminamos la UI del filtrado de comunicación
@@ -149,7 +152,7 @@ const GestionSabanaView = () => {
 
   // NUEVO: Fetch de catálogo de antenas para popular el selector
   useEffect(() => {
-    if (!idSabana || activeButton !== "map") return;
+    if (!idSabana || activeButton !== "map" || routeMode) return;
 
     const controller = new AbortController();
     const cargarCatalogo = async () => {
@@ -197,11 +200,11 @@ const GestionSabanaView = () => {
 
     cargarCatalogo();
     return () => controller.abort();
-  }, [idSabana, activeButton, filtrosMapaAplicados.fromDate, filtrosMapaAplicados.toDate]);
+  }, [idSabana, activeButton, filtrosMapaAplicados.fromDate, filtrosMapaAplicados.toDate, routeMode]);
 
   // NUEVO: Cargar resumen para obtener rank por siteId
   useEffect(() => {
-    if (!idSabana || activeButton !== "map") return;
+    if (!idSabana || activeButton !== "map" || routeMode) return;
 
     const siteIds = (catalogoAntenas?.sites ?? []).map((s) => s.siteId);
     if (siteIds.length === 0) {
@@ -263,7 +266,7 @@ const GestionSabanaView = () => {
 
     cargarRank();
     return () => controller.abort();
-  }, [idSabana, activeButton, catalogoAntenas.sites, filtrosMapaAplicados.fromDate, filtrosMapaAplicados.toDate]);
+  }, [idSabana, activeButton, catalogoAntenas.sites, filtrosMapaAplicados.fromDate, filtrosMapaAplicados.toDate, routeMode]);
 
   // NUEVO: Ordenar catálogo por rank asc si existe
   const sitiosOrdenados = useMemo(() => {
@@ -284,6 +287,22 @@ const GestionSabanaView = () => {
 
   const limpiarSitios = () => {
     setSitiosSeleccionados([]);
+  };
+
+  // NUEVO: alternar modo rutas/antenas
+  const toggleRouteMode = () => {
+    setRouteMode((prev) => {
+      const next = !prev;
+      if (next) {
+        // al activar rutas, colapsamos filtro de antenas
+        setExpandirFiltroAntenas(false);
+        // si no hay fecha de ruta, usamos la fechaInicio del rango si existe
+        if (!routeDate && filtrosMapaAntenas.fechaInicio) {
+          setRouteDate(filtrosMapaAntenas.fechaInicio);
+        }
+      }
+      return next;
+    });
   };
 
   const toggleSitioSeleccion = (siteId, checked) => {
@@ -646,6 +665,8 @@ const GestionSabanaView = () => {
             fromDate={filtrosMapaAplicados.fromDate}
             toDate={filtrosMapaAplicados.toDate}
             allowedSiteIds={sitiosSeleccionados}
+            routeMode={routeMode}
+            routeDate={routeDate}
           />
         );
 
@@ -697,6 +718,30 @@ const GestionSabanaView = () => {
                     />
                     Filtrar por Fecha y Hora
                   </h5>
+                  {/* NUEVO: Toggle de rutas/antenas + selector de día */}
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "8px 0 12px" }}>
+                    <button
+                      type="button"
+                      className="info-action-btn"
+                      onClick={toggleRouteMode}
+                      title={routeMode ? "Volver a ver antenas y azimuth" : "Mostrar trazado de rutas del día"}
+                      style={{ backgroundColor: routeMode ? "#2563eb" : undefined }}
+                    >
+                      {routeMode ? "Antenas y Azimuth" : "Trazado de rutas"}
+                    </button>
+                    {routeMode && (
+                      <div className="input-field">
+                        <label htmlFor="ruta-fecha">Día a trazar:</label>
+                        <input
+                          id="ruta-fecha"
+                          type="date"
+                          value={routeDate}
+                          onChange={(e) => setRouteDate(e.target.value)}
+                          className="date-field"
+                        />
+                      </div>
+                    )}
+                  </div>
                   <div className="datetime-section">
                     <div className="date-row">
                       <div className="input-field">
@@ -773,7 +818,8 @@ const GestionSabanaView = () => {
                     </div>
                   </div>
 
-                  {/* NUEVO: Panel de filtro por antenas */}
+                  {/* NUEVO: Panel de filtro por antenas (oculto en modo rutas) */}
+                  {!routeMode && (
                   <div className="antenas-filter" style={{ marginTop: 16 }}>
                     <button
                       type="button"
@@ -833,6 +879,7 @@ const GestionSabanaView = () => {
                       </div>
                     )}
                   </div>
+                  )}
                 </div>
               ) : (
                 // MODIFICADO: Mismo código de filtros para info y network
