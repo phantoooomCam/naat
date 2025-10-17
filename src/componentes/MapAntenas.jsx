@@ -32,6 +32,7 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [mapRef, setMapRef] = useState(null);
+  const [sabanaColorMap, setSabanaColorMap] = useState({});
   
   // MODIFICADO: Ahora es un objeto { sabanaId: points[] }
   const [routePointsBySabana, setRoutePointsBySabana] = useState({});
@@ -115,6 +116,20 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
     return variations;
   }, []);
 
+  // Asignar colores a las sábanas
+  useEffect(() => {
+    if (!idSabana) return;
+    
+    const sabanaIds = Array.isArray(idSabana) ? idSabana : [idSabana];
+    const newColorMap = {};
+    
+    sabanaIds.forEach((sabId, idx) => {
+      newColorMap[Number(sabId)] = sabanaColors[idx % sabanaColors.length];
+    });
+    
+    setSabanaColorMap(newColorMap);
+  }, [idSabana, sabanaColors]);
+
   // Antenas y sectores (deshabilitado en modo rutas)
   useEffect(() => {
     if (!idSabana || !isLoaded || routeMode) return;
@@ -127,18 +142,7 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
       setSites([]);
       setSectors([]);
 
-      const sabanaIds = (Array.isArray(idSabana) ? idSabana : [idSabana]).map(
-        (id) => ({ id: Number(id) })
-      );
-
-      const baseApiBody = {
-        sabanas: sabanaIds,
-        from: fromDate,
-        to: toDate,
-        tz: "America/Mexico_City",
-        minFreq: 1,
-        perSabana: false,
-      };
+      const sabanaIds = (Array.isArray(idSabana) ? idSabana : [idSabana]).map(id => Number(id));
 
       try {
         const hasFilter = Array.isArray(allowedSiteIds);
@@ -151,54 +155,82 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
           return;
         }
 
-        // --- PASO 1: Obtener sitios (filtrados por siteIds si aplica) ---
-        const sitesBody = hasFilter
-          ? { ...baseApiBody, siteIds: allowedSiteIds, sortBy: "rank", order: "asc" }
-          : { ...baseApiBody, topN: 1000 };
+        // ESTRATEGIA: Cargar datos de CADA sábana por separado y asignarle su sabanaId
+        const allSites = [];
+        const allSectors = [];
 
-        const sitesRes = await fetchWithAuth("/api/sabanas/registros/batch/antennas/summary", {
-          method: "POST",
-          signal: controller.signal,
-          body: JSON.stringify(sitesBody),
-        });
+        // Cargar cada sábana en paralelo
+        await Promise.all(sabanaIds.map(async (sabanaId) => {
+          const baseApiBody = {
+            sabanas: [{ id: sabanaId }], // UNA sábana a la vez
+            from: fromDate,
+            to: toDate,
+            tz: "America/Mexico_City",
+            minFreq: 1,
+            perSabana: false,
+          };
 
-        if (!sitesRes.ok) {
-          const errorData = await sitesRes.text();
-          throw new Error(`Fallo al obtener sitios: ${sitesRes.status} ${errorData}`);
-        }
+          try {
+            // --- Obtener sitios de esta sábana ---
+            const sitesBody = hasFilter
+              ? { ...baseApiBody, siteIds: allowedSiteIds, sortBy: "rank", order: "asc" }
+              : { ...baseApiBody, topN: 1000 };
 
-        const sitesData = await sitesRes.json();
-        const fetchedSites = Array.isArray(sitesData) ? sitesData : (sitesData.items || []);
-        setSites(fetchedSites);
+            const sitesRes = await fetchWithAuth("/api/sabanas/registros/batch/antennas/summary", {
+              method: "POST",
+              signal: controller.signal,
+              body: JSON.stringify(sitesBody),
+            });
 
-        // Si no se encontraron sitios, no necesitamos buscar sectores
-        if (fetchedSites.length === 0) {
-          setSectors([]);
-          return;
-        }
+            if (!sitesRes.ok) {
+              throw new Error(`Sábana ${sabanaId} sitios: ${sitesRes.status}`);
+            }
 
-        // --- PASO 2: Extraer los IDs de los sitios obtenidos ---
-        const siteIds = hasFilter ? allowedSiteIds : fetchedSites.map(site => site.siteId);
+            const sitesData = await sitesRes.json();
+            const fetchedSites = Array.isArray(sitesData) ? sitesData : (sitesData.items || []);
+            
+            // AGREGAR sabanaId a cada sitio
+            fetchedSites.forEach(site => {
+              allSites.push({ ...site, sabanaId });
+            });
 
-        // --- PASO 3: Obtener TODOS los sectores para ESOS sitios ---
-        const sectorsApiBody = {
-          ...baseApiBody,
-          siteIds: siteIds,
-        };
+            // --- Obtener sectores de esta sábana ---
+            if (fetchedSites.length > 0) {
+              const siteIds = hasFilter ? allowedSiteIds : fetchedSites.map(site => site.siteId);
+              
+              const sectorsApiBody = {
+                ...baseApiBody,
+                siteIds: siteIds,
+              };
 
-        const sectorsRes = await fetchWithAuth("/api/sabanas/registros/batch/sectors/summary", {
-          method: "POST",
-          signal: controller.signal,
-          body: JSON.stringify(sectorsApiBody),
-        });
+              const sectorsRes = await fetchWithAuth("/api/sabanas/registros/batch/sectors/summary", {
+                method: "POST",
+                signal: controller.signal,
+                body: JSON.stringify(sectorsApiBody),
+              });
 
-        if (!sectorsRes.ok) {
-          const errorData = await sectorsRes.text();
-          throw new Error(`Fallo al obtener sectores: ${sectorsRes.status} ${errorData}`);
-        }
-        
-        const sectorsData = await sectorsRes.json();
-        setSectors(Array.isArray(sectorsData) ? sectorsData : (sectorsData.items || []));
+              if (!sectorsRes.ok) {
+                throw new Error(`Sábana ${sabanaId} sectores: ${sectorsRes.status}`);
+              }
+              
+              const sectorsData = await sectorsRes.json();
+              const fetchedSectors = Array.isArray(sectorsData) ? sectorsData : (sectorsData.items || []);
+              
+              // AGREGAR sabanaId a cada sector
+              fetchedSectors.forEach(sector => {
+                allSectors.push({ ...sector, sabanaId });
+              });
+            }
+          } catch (err) {
+            if (err.name !== "AbortError") {
+              console.error(`Error en sábana ${sabanaId}:`, err);
+            }
+          }
+        }));
+
+        console.log(`✅ Cargados ${allSites.length} sitios y ${allSectors.length} sectores de ${sabanaIds.length} sábana(s)`);
+        setSites(allSites);
+        setSectors(allSectors);
 
       } catch (err) {
         if (err.name !== "AbortError") {
@@ -626,13 +658,18 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
         sector.azimuth + 5
       );
 
+      // Obtener color según la sábana
+      const sectorColor = sabanaColorMap[sector.sabanaId] || "#2563eb";
+
       return {
         id: sector.sectorId,
         path: [origin, point1, point2],
         rank: sector.rankDelSitio,
+        color: sectorColor,
+        sabanaId: sector.sabanaId,
       };
     });
-  }, [sectors, filteredSectors, isLoaded, routeMode]);
+  }, [sectors, filteredSectors, isLoaded, routeMode, sabanaColorMap]);
 
   if (loadError) {
     return (
@@ -676,6 +713,27 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
               <span className="legend-rank">N</span>
               <span>Ranking por Frecuencia</span>
             </div>
+            {Object.keys(sabanaColorMap).length > 1 && (
+              <>
+                <hr style={{ margin: '8px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
+                <div className="legend-item" style={{ fontWeight: 'bold', marginTop: '4px' }}>
+                  <span>Colores por Sábana:</span>
+                </div>
+                {Object.entries(sabanaColorMap).map(([sabanaId, color]) => (
+                  <div key={sabanaId} className="legend-item">
+                    <div style={{ 
+                      width: 20, 
+                      height: 20, 
+                      borderRadius: '4px',
+                      backgroundColor: color,
+                      border: '2px solid white',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)'
+                    }}></div>
+                    <span>Sábana #{sabanaId}</span>
+                  </div>
+                ))}
+              </>
+            )}
           </>
         ) : (
           <>
@@ -717,9 +775,9 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
                 key={poly.id}
                 path={poly.path}
                 options={{
-                  fillColor: "#2563eb",
+                  fillColor: poly.color,
                   fillOpacity: 0.2,
-                  strokeColor: "#2563eb",
+                  strokeColor: poly.color,
                   strokeOpacity: 0.6,
                   strokeWeight: 1,
                   zIndex: poly.rank,
@@ -727,18 +785,26 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
               />
             ))}
 
-            {(filteredSites.length > 0 ? filteredSites : sites).map((site) => (
-              <OverlayView
-                key={site.siteId}
-                position={{ lat: site.lat, lng: site.lng }}
-                mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-              >
-                <div className="antenna-marker" title={`Sitio #${site.siteId} - Rank #${site.rank}`}>
-                  <LuRadioTower className="antenna-icon" />
-                  <span className="rank-badge">{site.rank}</span>
-                </div>
-              </OverlayView>
-            ))}
+            {(filteredSites.length > 0 ? filteredSites : sites).map((site) => {
+              const siteColor = sabanaColorMap[site.sabanaId] || "#2563eb";
+              
+              return (
+                <OverlayView
+                  key={site.siteId}
+                  position={{ lat: site.lat, lng: site.lng }}
+                  mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+                >
+                  <div 
+                    className="antenna-marker" 
+                    title={`Sitio #${site.siteId} - Rank #${site.rank} - Sábana #${site.sabanaId}`}
+                    style={{ '--antenna-color': siteColor }}
+                  >
+                    <LuRadioTower className="antenna-icon" style={{ color: siteColor }} />
+                    <span className="rank-badge" style={{ backgroundColor: siteColor }}>{site.rank}</span>
+                  </div>
+                </OverlayView>
+              );
+            })}
           </>
         )}
 
@@ -779,4 +845,3 @@ MapAntenas.propTypes = {
 };
 
 export default MapAntenas;
-
