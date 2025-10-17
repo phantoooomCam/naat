@@ -13,6 +13,7 @@ import {
   faCheckDouble,
   faBroom,
 } from "@fortawesome/free-solid-svg-icons";
+import { FaMapMarkedAlt } from "react-icons/fa";
 import "./informacion_sabana.css";
 import { useLocation } from "react-router-dom";
 import TablaRegistros from "../../../componentes/TablaRegistros.jsx";
@@ -763,7 +764,7 @@ const GestionSabanaView = () => {
                             opacity: !routeDate ? 0.5 : 1
                           }}
                         >
-                          🗺️ Trazar Ruta
+                          <FaMapMarkedAlt style={{ marginRight: 6 }} /> Trazar Ruta
                         </button>
                       </>
                     )}

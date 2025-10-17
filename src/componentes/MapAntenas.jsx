@@ -54,6 +54,67 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
     "#06b6d4", "#84cc16", "#f97316", "#db2777", "#0ea5e9",
   ];
 
+  // NUEVO: Genera variaciones de color para segmentos de ruta
+  const generateColorVariations = useCallback((baseColor, numVariations) => {
+    // Convertir hex a RGB
+    const hexToRgb = (hex) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : null;
+    };
+
+    // Convertir RGB a HSL
+    const rgbToHsl = (r, g, b) => {
+      r /= 255;
+      g /= 255;
+      b /= 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max === min) {
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+          case g: h = ((b - r) / d + 2) / 6; break;
+          case b: h = ((r - g) / d + 4) / 6; break;
+          default: h = 0;
+        }
+      }
+      return { h: h * 360, s: s * 100, l: l * 100 };
+    };
+
+    const rgb = hexToRgb(baseColor);
+    if (!rgb) return [baseColor];
+
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    const variations = [];
+
+    for (let i = 0; i < numVariations; i++) {
+      const progress = i / Math.max(numVariations - 1, 1);
+      
+      // Variar el matiz (hue) en un rango de ±30 grados
+      const hueShift = Math.sin(progress * Math.PI * 2) * 30;
+      let newHue = (hsl.h + hueShift + 360) % 360;
+      
+      // Variar la saturación (50% a 100%)
+      const newSat = 50 + (progress * 50);
+      
+      // Variar la luminosidad (35% a 65%)
+      const newLight = 35 + (Math.cos(progress * Math.PI * 2) * 15) + 15;
+      
+      variations.push(`hsl(${newHue}, ${newSat}%, ${newLight}%)`);
+    }
+
+    return variations;
+  }, []);
+
   // Antenas y sectores (deshabilitado en modo rutas)
   useEffect(() => {
     if (!idSabana || !isLoaded || routeMode) return;
@@ -213,60 +274,51 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
     
     const overlays = nativeOverlaysBySabanaRef.current[sabanaId];
     const directionsService = new window.google.maps.DirectionsService();
-    const color = sabanaColors[colorIndex % sabanaColors.length];
+    const baseColor = sabanaColors[colorIndex % sabanaColors.length];
+    
+    // Generar variaciones de color para todos los segmentos punto a punto
+    const numSegments = points.length - 1;
+    const colorVariations = generateColorVariations(baseColor, numSegments);
 
-    // Dividir en chunks de máximo 25 puntos
-    const chunkSize = 25;
-    const chunks = [];
-    let start = 0;
-    while (start < points.length - 1) {
-      const end = Math.min(start + chunkSize - 1, points.length - 1);
-      chunks.push(points.slice(start, end + 1));
-      start = end;
-    }
-
-    // Procesar cada chunk
-    const processChunk = async (chunk) => {
-      const origin = { lat: chunk[0].lat, lng: chunk[0].lng };
-      const destination = { lat: chunk[chunk.length - 1].lat, lng: chunk[chunk.length - 1].lng };
-      const waypoints = chunk.slice(1, -1).slice(0, 23).map(p => ({
-        location: { lat: p.lat, lng: p.lng },
-        stopover: false
-      }));
-
+    // Procesar CADA PAR de puntos individualmente con su propio color
+    const processSegment = async (pointA, pointB, segmentIndex) => {
       return new Promise((resolve) => {
         directionsService.route(
           {
-            origin,
-            destination,
-            waypoints,
+            origin: { lat: pointA.lat, lng: pointA.lng },
+            destination: { lat: pointB.lat, lng: pointB.lng },
             travelMode: window.google.maps.TravelMode.DRIVING,
             optimizeWaypoints: false,
           },
           (result, status) => {
             if (status === 'OK' && result.routes[0]) {
               const route = result.routes[0];
+              const path = [];
+              
+              // Extraer todos los puntos del path
               route.legs.forEach((leg) => {
-                const path = [];
                 leg.steps.forEach(step => {
                   step.path.forEach(p => {
                     path.push({ lat: p.lat(), lng: p.lng() });
                   });
                 });
-
-                if (path.length >= 2) {
-                  const polyline = new window.google.maps.Polyline({
-                    path: path,
-                    geodesic: false,
-                    strokeColor: color,
-                    strokeOpacity: 0.95,
-                    strokeWeight: 4,
-                    map: mapRef,
-                  });
-                  
-                  overlays.polylines.push(polyline);
-                }
               });
+
+              if (path.length >= 2) {
+                // Usar el color único para este segmento específico
+                const segmentColor = colorVariations[segmentIndex];
+                
+                const polyline = new window.google.maps.Polyline({
+                  path: path,
+                  geodesic: false,
+                  strokeColor: segmentColor,
+                  strokeOpacity: 0.9,
+                  strokeWeight: 5,
+                  map: mapRef,
+                });
+                
+                overlays.polylines.push(polyline);
+              }
             }
             resolve();
           }
@@ -274,19 +326,23 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
       });
     };
 
-    // Procesar todos los chunks secuencialmente
-    const processAllChunks = async () => {
-      for (let i = 0; i < chunks.length; i++) {
-        await processChunk(chunks[i]);
+    // Procesar todos los segmentos secuencialmente
+    const processAllSegments = async () => {
+      for (let i = 0; i < points.length - 1; i++) {
+        await processSegment(points[i], points[i + 1], i);
+        // Pequeña pausa para evitar saturar la API de Google
+        if (i % 10 === 0 && i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
       }
-      console.log(`✅ Ruta de sábana ${sabanaId} dibujada completamente`);
+      console.log(`✅ Ruta de sábana ${sabanaId} dibujada con ${points.length - 1} segmentos de colores únicos`);
       
       // Dibujar marcadores después de las polylines
-      drawMarkersForSabana(sabanaId, points, color);
+      drawMarkersForSabana(sabanaId, points, baseColor);
     };
 
-    processAllChunks();
-  }, [mapRef, sabanaColors]);
+    processAllSegments();
+  }, [mapRef, sabanaColors, generateColorVariations]);
 
   // NUEVO: Dibuja marcadores numerados para una sábana
   const drawMarkersForSabana = useCallback((sabanaId, points, color) => {
