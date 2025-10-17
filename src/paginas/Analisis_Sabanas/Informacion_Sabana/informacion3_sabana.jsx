@@ -176,6 +176,14 @@ const GestionSabanaView = () => {
     }));
   };
 
+  // NUEVO: Agregar función para manejar cambios en filtros de Red de Vínculos
+  const handleRedVinculosFilterChange = (filterName, value) => {
+    setFiltrosRedVinculos((prev) => ({
+      ...prev,
+      [filterName]: value,
+    }));
+  };
+
   // MODIFICADO: Combina fecha y hora y actualiza los filtros aplicados
   const aplicarFiltrosMapa = () => {
     const { fechaInicio, horaInicio, fechaFin, horaFin } = filtrosMapaAntenas;
@@ -1362,7 +1370,7 @@ const GestionSabanaView = () => {
                           handleFilterChange("ciudades", e.target.checked)
                         }
                       />
-                      <span>Buscar localización en ciudades</span>
+                      <span>Buscar localización in ciudades</span>
                     </label>
 
                     <label className="filter-checkbox-label">
