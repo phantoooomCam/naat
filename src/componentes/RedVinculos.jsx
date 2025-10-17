@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useEffect } from "react"
+import React, { useRef, useState, useEffect } from "react" // Agregado React aquí
 import PropTypes from "prop-types"
 import cytoscape from "cytoscape"
 import dagre from "cytoscape-dagre"
@@ -17,12 +17,16 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
   const [stats, setStats] = useState({ nodes: 0, edges: 0, sabanas: 0 })
   const [originalData, setOriginalData] = useState(null)
   
-  // Filtros para controlar las conexiones
-  const [filters, setFilters] = useState({
-    maxConnectionsPerSabana: 100, // Más generoso por defecto para una sola sábana
-    showSharedOnly: false,
-    minConnections: 1,
-  })
+  // SOLUCIONADO: Usar useMemo para evitar recrear el objeto filters en cada render
+  const filters = React.useMemo(() => ({
+    maxConnectionsPerSabana: filtrosActivos?.maxConnectionsPerSabana || 100,
+    showSharedOnly: filtrosActivos?.showSharedOnly || false,
+    minConnections: filtrosActivos?.minConnections || 1,
+  }), [
+    filtrosActivos?.maxConnectionsPerSabana,
+    filtrosActivos?.showSharedOnly,
+    filtrosActivos?.minConnections
+  ])
 
   useEffect(() => {
     if (!idSabana || !containerRef.current) return
@@ -77,9 +81,9 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
     return () => {
       controller.abort()
     }
-  }, [idSabana])
+  }, [idSabana]) // IMPORTANTE: Solo depende de idSabana, NO de filters
 
-  // Re-build graph when filters change
+  // SOLUCIONADO: useEffect separado solo para rebuilding cuando cambian los filtros
   useEffect(() => {
     if (originalData && idSabana) {
       console.log("[v0] Rebuilding graph with new filters:", filters)
@@ -88,7 +92,7 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
       updateCytoscapeGraph(elements)
       updateStats(elements, ids)
     }
-  }, [filters, originalData])
+  }, [filters, originalData, idSabana]) // Ahora filters es estable gracias a useMemo
 
   const updateStats = (elements, ids) => {
     const nodes = elements.filter(e => e.group === "nodes").length
@@ -113,9 +117,9 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
             return 10
           },
           levelWidth: function(nodes) {
-            return Math.max(3, Math.ceil(nodes.length / 8)) // Más dinámico
+            return Math.max(3, Math.ceil(nodes.length / 8))
           },
-          spacingFactor: 1.2, // Menos espaciado
+          spacingFactor: 1.2,
           padding: 80,
           startAngle: -Math.PI / 2,
           clockwise: true,
@@ -133,8 +137,8 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
     const elements = []
     const nodesMap = new Map()
     const edgesSet = new Set()
-    const numberConnections = new Map() // Track how many sabanas each number connects to
-    const numberFrequency = new Map() // Track frequency of each number
+    const numberConnections = new Map()
+    const numberFrequency = new Map()
 
     console.log("[v0] Building graph with filters:", currentFilters)
     console.log("[v0] Data structure:", {
@@ -151,7 +155,6 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
         
         records.forEach((record) => {
           const { numeroB } = record
-          // Mejorar la validación de numeroB
           if (!numeroB || 
               numeroB === 'ims' || 
               numeroB === 'internet.itelcel.com' || 
@@ -160,7 +163,6 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
             return
           }
           
-          // Count unique connections
           const key = `${numeroB}-${id}`
           if (!numberConnections.has(key)) {
             numberConnections.set(key, true)
@@ -172,7 +174,6 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
     }
 
     console.log("[v0] Number frequencies calculated:", numberFrequency.size)
-    console.log("[v0] Sample frequencies:", Array.from(numberFrequency.entries()).slice(0, 10))
 
     // Create sabana nodes (central nodes)
     ids.forEach((id) => {
@@ -203,7 +204,6 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
         // Filter records based on current filters
         let filteredRecords = records.filter((record) => {
           const { numeroB } = record
-          // Mejorar la validación de numeroB
           if (!numeroB || 
               numeroB === 'ims' || 
               numeroB === 'internet.itelcel.com' || 
@@ -226,7 +226,7 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
           return true
         })
 
-        // Remove duplicates by numeroB (puede haber registros duplicados)
+        // Remove duplicates by numeroB
         const uniqueNumbers = new Map()
         filteredRecords.forEach(record => {
           if (!uniqueNumbers.has(record.numeroB)) {
@@ -265,7 +265,8 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
               },
             })
             nodesMap.set(numeroNodeId, true)
-            console.log("[v0] Created numero node:", numeroNodeId, "frequency:", frequency)
+            // REDUCIDO: Solo log para debugging específico
+            // console.log("[v0] Created numero node:", numeroNodeId, "frequency:", frequency)
           }
 
           // Create edge from sabana to numero
@@ -285,12 +286,6 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
         })
       })
     }
-
-    // *** ELIMINAMOS COMPLETAMENTE EL PROCESAMIENTO DE COINCIDENCIAS ***
-    // Ya no necesitamos las conexiones directas entre sábanas porque
-    // las coincidencias se ven claramente a través de los números compartidos (naranjas)
-    
-    console.log("[v0] Skipping coincidence processing - connections shown through shared numbers")
 
     console.log("[v0] Final elements:", {
       total: elements.length,
@@ -320,21 +315,21 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
             "text-max-width": "80px",
             "background-color": (ele) => {
               if (ele.data("type") === "sabana") return "#3498db"
-              if (ele.data("isShared")) return "#e74c3c" // Red for shared numbers
-              return "#95a5a6" // Gray for regular numbers
+              if (ele.data("isShared")) return "#e74c3c"
+              return "#95a5a6"
             },
             width: (ele) => {
-              if (ele.data("type") === "sabana") return "80px" // Larger for center
+              if (ele.data("type") === "sabana") return "80px"
               if (ele.data("isShared")) return "50px"
               return "40px"
             },
             height: (ele) => {
-              if (ele.data("type") === "sabana") return "80px" // Larger for center
+              if (ele.data("type") === "sabana") return "80px"
               if (ele.data("isShared")) return "50px"
               return "40px"
             },
             "border-width": (ele) => {
-              if (ele.data("type") === "sabana") return "4px" // Thicker border for sabana
+              if (ele.data("type") === "sabana") return "4px"
               if (ele.data("isShared")) return "3px"
               return "2px"
             },
@@ -356,28 +351,11 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
         {
           selector: "edge",
           style: {
-            width: (ele) => {
-              return ele.data("type") === "coincidence" ? 4 : 2
-            },
-            "line-color": (ele) => {
-              return ele.data("type") === "coincidence" ? "#e74c3c" : "#bdc3c7"
-            },
-            "target-arrow-color": (ele) => {
-              return ele.data("type") === "coincidence" ? "#e74c3c" : "#bdc3c7"
-            },
-            "target-arrow-shape": (ele) => {
-              return ele.data("type") === "coincidence" ? "none" : "triangle"
-            },
+            width: 2,
+            "line-color": "#bdc3c7",
+            "target-arrow-color": "#bdc3c7",
+            "target-arrow-shape": "triangle",
             "curve-style": "bezier",
-            label: (ele) => {
-              return ele.data("type") === "coincidence" ? ele.data("label") : ""
-            },
-            "font-size": "10px",
-            "text-rotation": "autorotate",
-            color: "#e74c3c",
-            "text-background-color": "#fff",
-            "text-background-opacity": 0.8,
-            "text-background-padding": "3px",
           },
         },
         {
@@ -406,51 +384,32 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
             "z-index": 999,
           },
         },
-        {
-          selector: "node:unselected",
-          style: {
-            opacity: function(ele) {
-              return ele.hasClass('highlighted') ? 1 : 0.6
-            }
-          },
-        },
-        {
-          selector: "edge:unselected",
-          style: {
-            opacity: function(ele) {
-              return ele.hasClass('highlighted') ? 1 : 0.3
-            }
-          },
-        },
       ],
       layout: {
         name: "concentric",
         concentric: function(node) {
-          // Sabanas in the center (highest value)
           if (node.data("type") === "sabana") {
             return 100
           }
-          // Shared numbers in the middle ring
           if (node.data("isShared")) {
             return 50
           }
-          // Regular numbers in the outer ring
           return 10
         },
         levelWidth: function(nodes) {
-          return Math.max(3, Math.ceil(nodes.length / 8)) // More dynamic
+          return Math.max(3, Math.ceil(nodes.length / 8))
         },
-        spacingFactor: 1.2, // Closer spacing
+        spacingFactor: 1.2,
         padding: 80,
-        startAngle: -Math.PI / 2, // Start at top
+        startAngle: -Math.PI / 2,
         clockwise: true,
         animate: true,
         animationDuration: 800,
-        equidistant: false, // Allow varying distances between levels
+        equidistant: false,
       },
       minZoom: 0.1,
       maxZoom: 5,
-      wheelSensitivity: 5, 
+      wheelSensitivity: 4, 
       touchTapThreshold: 8,
       desktopTapThreshold: 4,
     })
@@ -478,7 +437,6 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
       const node = evt.target
       console.log("[v0] Node clicked:", node.data())
       
-      // Highlight connected nodes
       const connectedNodes = node.neighborhood().add(node)
       cy.elements().removeClass('highlighted')
       connectedNodes.addClass('highlighted')
@@ -489,20 +447,11 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
       console.log("[v0] Edge clicked:", edge.data())
     })
 
-    // Click on background to clear highlights
     cy.on("tap", (evt) => {
       if (evt.target === cy) {
         cy.elements().removeClass('highlighted')
       }
     })
-  }
-
-  const handleFilterChange = (filterName, value) => {
-    console.log("[v0] Filter changed:", filterName, value)
-    setFilters(prev => ({
-      ...prev,
-      [filterName]: value
-    }))
   }
 
   const handleFitView = () => {
@@ -555,63 +504,6 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
           </button>
           <button className="network-btn" onClick={handleExportImage} title="Exportar imagen">
             📷 Exportar
-          </button>
-        </div>
-      </div>
-
-      {/* Filtros de conexiones */}
-      <div className="network-filters">
-        <div className="filter-group">
-          <label>Máx. números por sábana:</label>
-          <select
-            value={filters.maxConnectionsPerSabana}
-            onChange={(e) => handleFilterChange('maxConnectionsPerSabana', parseInt(e.target.value))}
-            className="filter-select"
-          >
-            <option value={10}>10</option>
-            <option value={20}>20</option>
-            <option value={50}>50 (por defecto)</option>
-            <option value={100}>100</option>
-            <option value={500}>Sin límite</option>
-          </select>
-        </div>
-        
-        <div className="filter-group">
-          <label>
-            <input
-              type="checkbox"
-              checked={filters.showSharedOnly}
-              onChange={(e) => handleFilterChange('showSharedOnly', e.target.checked)}
-              className="filter-checkbox"
-            />
-            Solo números compartidos
-          </label>
-        </div>
-
-        <div className="filter-presets">
-          <button 
-            className="preset-btn"
-            onClick={() => setFilters({ maxConnectionsPerSabana: 20, showSharedOnly: false, minConnections: 1 })}
-          >
-            Vista Simple
-          </button>
-          <button 
-            className="preset-btn"
-            onClick={() => setFilters({ maxConnectionsPerSabana: 100, showSharedOnly: false, minConnections: 1 })}
-          >
-            Vista Normal
-          </button>
-          <button 
-            className="preset-btn"
-            onClick={() => setFilters({ maxConnectionsPerSabana: 500, showSharedOnly: false, minConnections: 1 })}
-          >
-            Vista Completa
-          </button>
-          <button 
-            className="preset-btn"
-            onClick={() => setFilters({ maxConnectionsPerSabana: 500, showSharedOnly: true, minConnections: 2 })}
-          >
-            Solo Vínculos
           </button>
         </div>
       </div>

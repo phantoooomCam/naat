@@ -106,9 +106,9 @@ const GestionSabanaView = () => {
   const [routeDate, setRouteDate] = useState(""); // YYYY-MM-DD
   const [shouldTraceRoute, setShouldTraceRoute] = useState(false); // controla cuándo trazar
 
-  // Mantenemos el estado filtrosRedVinculos para no romper la funcionalidad
-  // pero eliminamos la UI del filtrado de comunicación
+  // MODIFICADO: Agregar filtros específicos para Red de Vínculos
   const [filtrosRedVinculos, setFiltrosRedVinculos] = useState({
+    // Filtros originales de comunicación (mantenemos para no romper)
     0: true, // Datos
     1: true, // MensajeriaMultimedia
     2: true, // Mensaje2ViasEnt
@@ -121,6 +121,11 @@ const GestionSabanaView = () => {
     9: false, // Wifi
     10: false, // ReenvioSal
     11: false, // ReenvioEnt
+
+    // NUEVO: Filtros específicos para la visualización de red
+    maxConnectionsPerSabana: 100,
+    showSharedOnly: false,
+    minConnections: 1,
   });
 
   const [activeButton, setActiveButton] = useState("info");
@@ -1233,8 +1238,98 @@ const GestionSabanaView = () => {
                     )}
                   </div>
                 </div>
+              ) : activeButton === "network" ? (
+                // NUEVO: Panel de filtros específico para Red de Vínculos
+                <div className="filtros-panel-red">
+                  <h5>
+                    <FontAwesomeIcon
+                      icon={faProjectDiagram}
+                      style={{ marginRight: "8px" }}
+                    />
+                    Configurar Red de Vínculos
+                  </h5>
+
+                  <div className="red-filters-section">
+                    <div className="filter-group-red">
+                      <label>Máximo de números por sábana:</label>
+                      <select
+                        value={filtrosRedVinculos.maxConnectionsPerSabana}
+                        onChange={(e) => handleRedVinculosFilterChange('maxConnectionsPerSabana', parseInt(e.target.value))}
+                        className="filter-select-red"
+                      >
+                        <option value={10}>10 números</option>
+                        <option value={20}>20 números</option>
+                        <option value={50}>50 números</option>
+                        <option value={100}>100 números</option>
+                        <option value={500}>Sin límite</option>
+                      </select>
+                    </div>
+
+                    <div className="filter-group-red">
+                      <label className="filter-checkbox-label-red">
+                        <input
+                          type="checkbox"
+                          checked={filtrosRedVinculos.showSharedOnly}
+                          onChange={(e) => handleRedVinculosFilterChange('showSharedOnly', e.target.checked)}
+                          className="filter-checkbox-red"
+                        />
+                        <span>Solo mostrar números compartidos entre sábanas</span>
+                      </label>
+                    </div>
+
+                    <div className="filter-presets-red">
+                      <h6>Vistas predefinidas:</h6>
+                      <div className="preset-buttons-red">
+                        <button 
+                          className="preset-btn-red"
+                          onClick={() => setFiltrosRedVinculos(prev => ({ 
+                            ...prev, 
+                            maxConnectionsPerSabana: 20, 
+                            showSharedOnly: false, 
+                            minConnections: 1 
+                          }))}
+                        >
+                          Vista Simple
+                        </button>
+                        <button 
+                          className="preset-btn-red"
+                          onClick={() => setFiltrosRedVinculos(prev => ({ 
+                            ...prev, 
+                            maxConnectionsPerSabana: 100, 
+                            showSharedOnly: false, 
+                            minConnections: 1 
+                          }))}
+                        >
+                          Vista Normal
+                        </button>
+                        <button 
+                          className="preset-btn-red"
+                          onClick={() => setFiltrosRedVinculos(prev => ({ 
+                            ...prev, 
+                            maxConnectionsPerSabana: 500, 
+                            showSharedOnly: false, 
+                            minConnections: 1 
+                          }))}
+                        >
+                          Vista Completa
+                        </button>
+                        <button 
+                          className="preset-btn-red"
+                          onClick={() => setFiltrosRedVinculos(prev => ({ 
+                            ...prev, 
+                            maxConnectionsPerSabana: 500, 
+                            showSharedOnly: true, 
+                            minConnections: 2 
+                          }))}
+                        >
+                          Solo Vínculos
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ) : (
-                // MODIFICADO: Mismo código de filtros para info y network
+                // Filtros para "info" (sin cambios)
                 <>
                   <div className="checkbox-section">
                     <label className="filter-checkbox-label">
@@ -1342,6 +1437,7 @@ const GestionSabanaView = () => {
                 </>
               )}
 
+              {/* Botones de navegación sin cambios */}
               <div className="buttons-section">
                 <button
                   className={`info-action-btn ${
@@ -1376,6 +1472,7 @@ const GestionSabanaView = () => {
             </div>
           </div>
         </div>
+
         <div className="section-right">
           <div className="section-header">
             <h3>Detalles de Sabana</h3>
