@@ -982,66 +982,6 @@ const GestionSabanaView = () => {
                       </button>
                     </div>
                   </div>
-                  {/* NUEVO: Toggle de rutas/antenas + selector de día */}
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 8,
-                      alignItems: "center",
-                      margin: "8px 0 12px",
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      className="info-action-btn"
-                      onClick={toggleRouteMode}
-                      title={
-                        routeMode
-                          ? "Volver a ver antenas y azimuth"
-                          : "Mostrar trazado de rutas del día"
-                      }
-                      style={{
-                        backgroundColor: routeMode ? "#2563eb" : undefined,
-                      }}
-                    >
-                      {routeMode ? "Antenas y Azimuth" : "Trazado de rutas"}
-                    </button>
-                    {routeMode && (
-                      <>
-                        <div className="input-field">
-                          <label htmlFor="ruta-fecha">Día a trazar:</label>
-                          <input
-                            id="ruta-fecha"
-                            type="date"
-                            value={routeDate}
-                            onChange={(e) => setRouteDate(e.target.value)}
-                            className="date-field"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          className="info-action-btn"
-                          onClick={() => {
-                            if (routeDate) {
-                              setShouldTraceRoute(true);
-                            }
-                          }}
-                          disabled={!routeDate}
-                          title="Trazar ruta para la fecha seleccionada"
-                          style={{
-                            backgroundColor: "#10b981",
-                            cursor: !routeDate ? "not-allowed" : "pointer",
-                            opacity: !routeDate ? 0.5 : 1,
-                          }}
-                        >
-                          <FaMapMarkedAlt style={{ marginRight: 6 }} /> Trazar
-                          Ruta
-                        </button>
-                      </>
-                    )}
-                  </div>
-
                   {/* NUEVO: Panel de filtro por antenas (oculto en modo rutas) */}
                   {!routeMode && (
                     <div className="antenas-filter" style={{ marginTop: 16 }}>
@@ -1233,6 +1173,65 @@ const GestionSabanaView = () => {
                       )}
                     </div>
                   )}
+                  {/* NUEVO: Toggle de rutas/antenas + selector de día */}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      alignItems: "center",
+                      margin: "8px 0 12px",
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      className="info-action-btn"
+                      onClick={toggleRouteMode}
+                      title={
+                        routeMode
+                          ? "Volver a ver antenas y azimuth"
+                          : "Mostrar trazado de rutas del día"
+                      }
+                      style={{
+                        backgroundColor: routeMode ? "#2563eb" : undefined,
+                      }}
+                    >
+                      {routeMode ? "Antenas y Azimuth" : "Trazado de rutas"}
+                    </button>
+                    {routeMode && (
+                      <>
+                        <div className="input-field">
+                          <label htmlFor="ruta-fecha">Día a trazar:</label>
+                          <input
+                            id="ruta-fecha"
+                            type="date"
+                            value={routeDate}
+                            onChange={(e) => setRouteDate(e.target.value)}
+                            className="date-field"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          className="info-action-btn"
+                          onClick={() => {
+                            if (routeDate) {
+                              setShouldTraceRoute(true);
+                            }
+                          }}
+                          disabled={!routeDate}
+                          title="Trazar ruta para la fecha seleccionada"
+                          style={{
+                            backgroundColor: "#10b981",
+                            cursor: !routeDate ? "not-allowed" : "pointer",
+                            opacity: !routeDate ? 0.5 : 1,
+                          }}
+                        >
+                          <FaMapMarkedAlt style={{ marginRight: 6 }} /> Trazar
+                          Ruta
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </div>
               ) : (
                 // MODIFICADO: Mismo código de filtros para info y network
