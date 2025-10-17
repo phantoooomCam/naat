@@ -93,6 +93,7 @@ const GestionSabanaView = () => {
   const [errorAntenas, setErrorAntenas] = useState("");
   const [expandirFiltroAntenas, setExpandirFiltroAntenas] = useState(false);
   const [sitiosSeleccionados, setSitiosSeleccionados] = useState([]); // array de siteId
+  const [sabanaSeleccionadaFiltro, setSabanaSeleccionadaFiltro] = useState(null); // para filtrar antenas por sabana
   // NUEVO: rank por sitio y estados de carga/errores
   const [rankPorSitio, setRankPorSitio] = useState({});
   const [loadingRank, setLoadingRank] = useState(false);
@@ -126,6 +127,26 @@ const GestionSabanaView = () => {
   const [error, setError] = useState("");
 
   console.log("Valor de idSabana al cargar:", idSabana);
+
+  // NUEVO: Colores por sabana (misma paleta que MapAntenas)
+  const baseSabanaColors = [
+    "#001219", "#005f73", "#0a9396", "#ee9b00", 
+    "#ca6702", "#bb3e03", "#ae2012", "#9b2226",
+  ];
+
+  // Generar mapa de colores por sabana
+  const sabanaColorMap = useMemo(() => {
+    if (!idSabana) return {};
+    
+    const sabanaIds = Array.isArray(idSabana) ? idSabana : [idSabana];
+    const colorMap = {};
+    
+    sabanaIds.forEach((sabId, idx) => {
+      colorMap[Number(sabId)] = baseSabanaColors[idx % baseSabanaColors.length];
+    });
+    
+    return colorMap;
+  }, [idSabana]);
 
   const handleFilterChange = (filterName, value) => {
     setFilters((prev) => ({
@@ -162,35 +183,80 @@ const GestionSabanaView = () => {
         setLoadingAntenas(true);
         setErrorAntenas("");
 
-        const sabanaIds = (Array.isArray(idSabana) ? idSabana : [idSabana]).map((id) => ({ id: Number(id) }));
+        const sabanaIds = Array.isArray(idSabana) ? idSabana : [idSabana];
+        
+        // Hacer llamadas individuales por sabana para poder asignar sabanaId
+        const results = await Promise.allSettled(
+          sabanaIds.map(async (sabanaId) => {
+            const body = {
+              sabanas: [{ id: Number(sabanaId) }],
+              from: filtrosMapaAplicados.fromDate || undefined,
+              to: filtrosMapaAplicados.toDate || undefined,
+              includeFrequencies: false,
+              excludeZero: true,
+            };
 
-        const body = {
-          sabanas: sabanaIds,
-          from: filtrosMapaAplicados.fromDate || undefined,
-          to: filtrosMapaAplicados.toDate || undefined,
-          includeFrequencies: false,
-          excludeZero: true,
-        };
+            const res = await fetchWithAuth("/api/sabanas/registros/batch/catalogs/antennas", {
+              method: "POST",
+              signal: controller.signal,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+            });
 
-          const res = await fetchWithAuth("/api/sabanas/registros/batch/catalogs/antennas", {
-            method: "POST",
-            signal: controller.signal,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-          });
+            if (!res.ok) {
+              const txt = await res.text();
+              throw new Error(`Error catálogo antenas sabana ${sabanaId}: ${res.status} ${txt}`);
+            }
 
-        if (!res.ok) {
-          const txt = await res.text();
-          throw new Error(`Error catálogo antenas: ${res.status} ${txt}`);
-        }
+            const data = await res.json();
+            
+            // Asignar sabanaId a cada site y sector
+            const sites = Array.isArray(data?.sites) 
+              ? data.sites.map(site => ({ ...site, sabanaId: Number(sabanaId) }))
+              : [];
+            const sectors = Array.isArray(data?.sectors) 
+              ? data.sectors.map(sector => ({ ...sector, sabanaId: Number(sabanaId) }))
+              : [];
+            
+            return { sites, sectors, fechas: data?.fechas };
+          })
+        );
 
-        const data = await res.json();
-        const sites = Array.isArray(data?.sites) ? data.sites : [];
-        const sectors = Array.isArray(data?.sectors) ? data.sectors : [];
-        setCatalogoAntenas({ sites, sectors, fechas: data?.fechas ?? { min: null, max: null } });
+        // Combinar resultados de todas las sabanas
+        const allSites = [];
+        const allSectors = [];
+        let minFecha = null;
+        let maxFecha = null;
+
+        results.forEach((result) => {
+          if (result.status === "fulfilled" && result.value) {
+            allSites.push(...result.value.sites);
+            allSectors.push(...result.value.sectors);
+            
+            if (result.value.fechas) {
+              if (!minFecha || result.value.fechas.min < minFecha) {
+                minFecha = result.value.fechas.min;
+              }
+              if (!maxFecha || result.value.fechas.max > maxFecha) {
+                maxFecha = result.value.fechas.max;
+              }
+            }
+          }
+        });
+
+        setCatalogoAntenas({ 
+          sites: allSites, 
+          sectors: allSectors, 
+          fechas: { min: minFecha, max: maxFecha } 
+        });
 
         // Si no hay selección aún, seleccionar todos por default
-        setSitiosSeleccionados((prev) => (prev && prev.length > 0 ? prev : sites.map((s) => s.siteId)));
+        setSitiosSeleccionados((prev) => (prev && prev.length > 0 ? prev : allSites.map((s) => s.siteId)));
+        
+        // Si hay múltiples sabanas y no hay sabana seleccionada para filtro, seleccionar la primera
+        if (Array.isArray(idSabana) && idSabana.length > 1 && !sabanaSeleccionadaFiltro) {
+          setSabanaSeleccionadaFiltro(Number(idSabana[0]));
+        }
       } catch (e) {
         if (e.name === "AbortError") return;
         console.error(e);
@@ -204,7 +270,7 @@ const GestionSabanaView = () => {
     return () => controller.abort();
   }, [idSabana, activeButton, filtrosMapaAplicados.fromDate, filtrosMapaAplicados.toDate, routeMode]);
 
-  // NUEVO: Cargar resumen para obtener rank por siteId
+  // MODIFICADO: Cargar resumen para obtener rank por siteId - AHORA POR SABANA INDIVIDUAL
   useEffect(() => {
     if (!idSabana || activeButton !== "map" || routeMode) return;
 
@@ -220,42 +286,62 @@ const GestionSabanaView = () => {
         setLoadingRank(true);
         setErrorRank("");
 
-        const sabanaIds = (Array.isArray(idSabana) ? idSabana : [idSabana]).map((id) => ({ id: Number(id) }));
+        const sabanaIds = (Array.isArray(idSabana) ? idSabana : [idSabana]).map((id) => Number(id));
+        const rankMapa = {};
 
-        const body = {
-          sabanas: sabanaIds,
-          from: filtrosMapaAplicados.fromDate || undefined,
-          to: filtrosMapaAplicados.toDate || undefined,
-          siteIds,
-          sortBy: "rank",
-          order: "asc",
-          perSabana: false,
-        };
+        // NUEVO: Hacer peticiones INDIVIDUALES por cada sábana
+        const resultados = await Promise.allSettled(
+          sabanaIds.map(async (sabanaId) => {
+            // Obtener solo los sitios de esta sábana
+            const sitiosDeEstaSabana = catalogoAntenas.sites
+              .filter(s => s.sabanaId === sabanaId)
+              .map(s => s.siteId);
 
-        const res = await fetchWithAuth("/api/sabanas/registros/batch/antennas/summary", {
-          method: "POST",
-          signal: controller.signal,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(body),
-        });
+            if (sitiosDeEstaSabana.length === 0) return;
 
-        if (!res.ok) {
-          const txt = await res.text();
-          throw new Error(`Error resumen antenas: ${res.status} ${txt}`);
+            const body = {
+              sabanas: [{ id: sabanaId }], // UNA sola sábana por petición
+              from: filtrosMapaAplicados.fromDate || undefined,
+              to: filtrosMapaAplicados.toDate || undefined,
+              siteIds: sitiosDeEstaSabana,
+              sortBy: "rank",
+              order: "asc",
+              perSabana: false, // Como es una sola sábana, no importa
+            };
+
+            const res = await fetchWithAuth("/api/sabanas/registros/batch/antennas/summary", {
+              method: "POST",
+              signal: controller.signal,
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            });
+
+            if (!res.ok) {
+              const txt = await res.text();
+              throw new Error(`Error resumen antenas sabana ${sabanaId}: ${res.status} ${txt}`);
+            }
+
+            const items = await res.json();
+            const itemsArray = Array.isArray(items) ? items : (items?.items || []);
+
+            // Asignar el rank de esta sábana usando clave compuesta
+            for (const it of itemsArray) {
+              if (it?.siteId != null && it?.rank != null) {
+                // Clave única: siteId_sabanaId para evitar conflictos
+                const key = `${it.siteId}_${sabanaId}`;
+                rankMapa[key] = it.rank;
+              }
+            }
+          })
+        );
+
+        // Verificar si hubo errores
+        const errores = resultados.filter(r => r.status === 'rejected');
+        if (errores.length > 0) {
+          console.error("Errores al cargar ranks:", errores);
         }
 
-        const items = await res.json();
-        const mapa = {};
-        if (Array.isArray(items)) {
-          for (const it of items) {
-            if (it?.siteId != null && it?.rank != null) mapa[it.siteId] = it.rank;
-          }
-        } else if (Array.isArray(items?.items)) {
-          for (const it of items.items) {
-            if (it?.siteId != null && it?.rank != null) mapa[it.siteId] = it.rank;
-          }
-        }
-        setRankPorSitio(mapa);
+        setRankPorSitio(rankMapa);
       } catch (e) {
         if (e.name !== "AbortError") {
           console.error(e);
@@ -270,25 +356,56 @@ const GestionSabanaView = () => {
     return () => controller.abort();
   }, [idSabana, activeButton, catalogoAntenas.sites, filtrosMapaAplicados.fromDate, filtrosMapaAplicados.toDate, routeMode]);
 
-  // NUEVO: Ordenar catálogo por rank asc si existe
+  // MODIFICADO: Ordenar catálogo por rank asc si existe - USANDO LA CLAVE COMPUESTA
   const sitiosOrdenados = useMemo(() => {
     const sites = catalogoAntenas?.sites ?? [];
-    return sites.slice().sort((a, b) => {
-      const ra = rankPorSitio[a.siteId];
-      const rb = rankPorSitio[b.siteId];
+    // Si hay múltiples sabanas y hay una seleccionada para filtro, filtrar solo esa sabana
+    const sitesFiltrados = Array.isArray(idSabana) && idSabana.length > 1 && sabanaSeleccionadaFiltro
+      ? sites.filter(s => s.sabanaId === sabanaSeleccionadaFiltro)
+      : sites;
+    
+    return sitesFiltrados.slice().sort((a, b) => {
+      // MODIFICADO: Usar clave compuesta siteId_sabanaId
+      const keyA = `${a.siteId}_${a.sabanaId}`;
+      const keyB = `${b.siteId}_${b.sabanaId}`;
+      const ra = rankPorSitio[keyA];
+      const rb = rankPorSitio[keyB];
+      
       if (ra == null && rb == null) return 0;
       if (ra == null) return 1;
       if (rb == null) return -1;
       return ra - rb;
     });
-  }, [catalogoAntenas.sites, rankPorSitio]);
+  }, [catalogoAntenas.sites, rankPorSitio, idSabana, sabanaSeleccionadaFiltro]);
 
   const marcarTodosSitios = () => {
-    setSitiosSeleccionados(catalogoAntenas.sites.map((s) => s.siteId));
+    // Si hay múltiples sabanas y hay una seleccionada, marcar solo los de esa sabana
+    if (Array.isArray(idSabana) && idSabana.length > 1 && sabanaSeleccionadaFiltro) {
+      const sitiosDeEstaSabana = catalogoAntenas.sites
+        .filter(s => s.sabanaId === sabanaSeleccionadaFiltro)
+        .map(s => s.siteId);
+      setSitiosSeleccionados(prev => {
+        const set = new Set(prev);
+        sitiosDeEstaSabana.forEach(id => set.add(id));
+        return Array.from(set);
+      });
+    } else {
+      // Si solo hay una sabana o no hay filtro activo, marcar todos
+      setSitiosSeleccionados(catalogoAntenas.sites.map((s) => s.siteId));
+    }
   };
 
   const limpiarSitios = () => {
-    setSitiosSeleccionados([]);
+    // Si hay múltiples sabanas y hay una seleccionada, limpiar solo los de esa sabana
+    if (Array.isArray(idSabana) && idSabana.length > 1 && sabanaSeleccionadaFiltro) {
+      const sitiosDeEstaSabana = catalogoAntenas.sites
+        .filter(s => s.sabanaId === sabanaSeleccionadaFiltro)
+        .map(s => s.siteId);
+      setSitiosSeleccionados(prev => prev.filter(id => !sitiosDeEstaSabana.includes(id)));
+    } else {
+      // Si solo hay una sabana o no hay filtro activo, limpiar todos
+      setSitiosSeleccionados([]);
+    }
   };
 
   // NUEVO: alternar modo rutas/antenas
@@ -863,6 +980,42 @@ const GestionSabanaView = () => {
 
                     {expandirFiltroAntenas && (
                       <div className="antenas-filter-body" style={{ marginTop: 12, border: "1px solid #e5e7eb", borderRadius: 8, padding: 12 }}>
+                        {/* NUEVO: Selector de sabana (solo si hay múltiples) */}
+                        {Array.isArray(idSabana) && idSabana.length > 1 && (
+                          <div style={{ marginBottom: 12 }}>
+                            <label htmlFor="select-sabana-filtro" style={{ display: "block", marginBottom: 6, fontSize: 13, fontWeight: 600 }}>
+                              Seleccionar sábana:
+                            </label>
+                            <select
+                              id="select-sabana-filtro"
+                              value={sabanaSeleccionadaFiltro || ""}
+                              onChange={(e) => setSabanaSeleccionadaFiltro(Number(e.target.value))}
+                              style={{
+                                width: "100%",
+                                padding: "8px",
+                                borderRadius: "4px",
+                                border: "1px solid #d1d5db",
+                                fontSize: "14px",
+                                fontWeight: "600",
+                                color: sabanaColorMap[sabanaSeleccionadaFiltro] || "#000"
+                              }}
+                            >
+                              {idSabana.map((id) => (
+                                <option 
+                                  key={id} 
+                                  value={id}
+                                  style={{ 
+                                    color: sabanaColorMap[Number(id)] || "#000",
+                                    fontWeight: "600"
+                                  }}
+                                >
+                                  Sábana {id}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        
                         <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
                           <button type="button" className="info-action-btn" onClick={marcarTodosSitios}>
                             <FontAwesomeIcon icon={faCheckDouble} style={{ marginRight: 6 }} /> Marcar todo
@@ -883,11 +1036,15 @@ const GestionSabanaView = () => {
                           <div style={{ maxHeight: 240, overflowY: "auto", paddingRight: 4 }}>
                             {catalogoAntenas.sites.length === 0 ? (
                               <div className="placeholder-text">No hay antenas en el rango.</div>
+                            ) : sitiosOrdenados.length === 0 ? (
+                              <div className="placeholder-text">No hay antenas para la sábana seleccionada.</div>
                             ) : (
                               sitiosOrdenados.map((site) => {
-                                const rank = rankPorSitio[site.siteId];
+                                // MODIFICADO: Usar clave compuesta para obtener el rank
+                                const key = `${site.siteId}_${site.sabanaId}`;
+                                const rank = rankPorSitio[key];
                                 return (
-                                <label key={site.siteId} className="filter-checkbox-label" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 2px" }}>
+                                <label key={`${site.siteId}_${site.sabanaId}`} className="filter-checkbox-label" style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 2px" }}>
                                   <input
                                     type="checkbox"
                                     checked={sitiosSeleccionados.includes(site.siteId)}
