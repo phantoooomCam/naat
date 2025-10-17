@@ -24,12 +24,21 @@ const fetchWithAuth = (url, options) => {
 
 const libraries = ["geometry"];
 
+// NUEVO: Cache simple en memoria
+const dataCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+const getCacheKey = (sabanaId, fromDate, toDate, type) => {
+  return `${type}_${sabanaId}_${fromDate}_${toDate}`;
+};
+
 const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = false, routeDate = null, shouldTraceRoute = false, onRouteTraced = null }) => {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   const [sites, setSites] = useState([]);
   const [sectors, setSectors] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingSectors, setLoadingSectors] = useState(false); // NUEVO: Estado separado para sectores
   const [error, setError] = useState(null);
   const [mapRef, setMapRef] = useState(null);
   const [sabanaColorMap, setSabanaColorMap] = useState({});
@@ -42,6 +51,7 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
   
   // Referencias nativas para polylines y marcadores (ahora por sábana)
   const nativeOverlaysBySabanaRef = useRef({});
+  const sectorsLoadedRef = useRef(false); // NUEVO: Bandera para cargar sectores solo una vez
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-map-script",
@@ -130,17 +140,18 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
     setSabanaColorMap(newColorMap);
   }, [idSabana, sabanaColors]);
 
-  // Antenas y sectores (deshabilitado en modo rutas)
+  // OPTIMIZADO: Cargar solo sitios inicialmente
   useEffect(() => {
     if (!idSabana || !isLoaded || routeMode) return;
 
     const controller = new AbortController();
+    sectorsLoadedRef.current = false; // Reset al cambiar parámetros
 
-    const fetchData = async () => {
+    const fetchSites = async () => {
       setLoading(true);
       setError(null);
       setSites([]);
-      setSectors([]);
+      setSectors([]); // Limpiar sectores
 
       const sabanaIds = (Array.isArray(idSabana) ? idSabana : [idSabana]).map(id => Number(id));
 
@@ -148,21 +159,26 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
         const hasFilter = Array.isArray(allowedSiteIds);
         const selectedCount = hasFilter ? allowedSiteIds.length : null;
 
-        // Si hay filtro y está vacío, limpiamos el mapa
         if (hasFilter && selectedCount === 0) {
           setSites([]);
           setSectors([]);
           return;
         }
 
-        // ESTRATEGIA: Cargar datos de CADA sábana por separado y asignarle su sabanaId
         const allSites = [];
-        const allSectors = [];
 
-        // Cargar cada sábana en paralelo
-        await Promise.all(sabanaIds.map(async (sabanaId) => {
+        // OPTIMIZACIÓN: Cargar sitios en paralelo con Promise.allSettled (más robusto)
+        const results = await Promise.allSettled(sabanaIds.map(async (sabanaId) => {
+          // Verificar cache
+          const cacheKey = getCacheKey(sabanaId, fromDate, toDate, 'sites');
+          const cached = dataCache.get(cacheKey);
+          
+          if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+            return cached.data;
+          }
+
           const baseApiBody = {
-            sabanas: [{ id: sabanaId }], // UNA sábana a la vez
+            sabanas: [{ id: sabanaId }],
             from: fromDate,
             to: toDate,
             tz: "America/Mexico_City",
@@ -170,91 +186,153 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
             perSabana: false,
           };
 
-          try {
-            // --- Obtener sitios de esta sábana ---
-            const sitesBody = hasFilter
-              ? { ...baseApiBody, siteIds: allowedSiteIds, sortBy: "rank", order: "asc" }
-              : { ...baseApiBody, topN: 1000 };
+          const sitesBody = hasFilter
+            ? { ...baseApiBody, siteIds: allowedSiteIds, sortBy: "rank", order: "asc" }
+            : { ...baseApiBody, topN: 1000 };
 
-            const sitesRes = await fetchWithAuth("/api/sabanas/registros/batch/antennas/summary", {
-              method: "POST",
-              signal: controller.signal,
-              body: JSON.stringify(sitesBody),
-            });
+          const sitesRes = await fetchWithAuth("/api/sabanas/registros/batch/antennas/summary", {
+            method: "POST",
+            signal: controller.signal,
+            body: JSON.stringify(sitesBody),
+          });
 
-            if (!sitesRes.ok) {
-              throw new Error(`Sábana ${sabanaId} sitios: ${sitesRes.status}`);
-            }
-
-            const sitesData = await sitesRes.json();
-            const fetchedSites = Array.isArray(sitesData) ? sitesData : (sitesData.items || []);
-            
-            // AGREGAR sabanaId a cada sitio
-            fetchedSites.forEach(site => {
-              allSites.push({ ...site, sabanaId });
-            });
-
-            // --- Obtener sectores de esta sábana ---
-            if (fetchedSites.length > 0) {
-              const siteIds = hasFilter ? allowedSiteIds : fetchedSites.map(site => site.siteId);
-              
-              const sectorsApiBody = {
-                ...baseApiBody,
-                siteIds: siteIds,
-              };
-
-              const sectorsRes = await fetchWithAuth("/api/sabanas/registros/batch/sectors/summary", {
-                method: "POST",
-                signal: controller.signal,
-                body: JSON.stringify(sectorsApiBody),
-              });
-
-              if (!sectorsRes.ok) {
-                throw new Error(`Sábana ${sabanaId} sectores: ${sectorsRes.status}`);
-              }
-              
-              const sectorsData = await sectorsRes.json();
-              const fetchedSectors = Array.isArray(sectorsData) ? sectorsData : (sectorsData.items || []);
-              
-              // AGREGAR sabanaId a cada sector
-              fetchedSectors.forEach(sector => {
-                allSectors.push({ ...sector, sabanaId });
-              });
-            }
-          } catch (err) {
-            if (err.name !== "AbortError") {
-              console.error(`Error en sábana ${sabanaId}:`, err);
-            }
+          if (!sitesRes.ok) {
+            throw new Error(`Sábana ${sabanaId} sitios: ${sitesRes.status}`);
           }
+
+          const sitesData = await sitesRes.json();
+          const fetchedSites = Array.isArray(sitesData) ? sitesData : (sitesData.items || []);
+          
+          const sitesWithSabanaId = fetchedSites.map(site => ({ ...site, sabanaId }));
+          
+          // Guardar en cache
+          dataCache.set(cacheKey, {
+            data: sitesWithSabanaId,
+            timestamp: Date.now()
+          });
+          
+          return sitesWithSabanaId;
         }));
 
-        console.log(`✅ Cargados ${allSites.length} sitios y ${allSectors.length} sectores de ${sabanaIds.length} sábana(s)`);
+        // Procesar resultados (incluyendo errores)
+        results.forEach((result, idx) => {
+          if (result.status === 'fulfilled') {
+            allSites.push(...result.value);
+          }
+        });
+        
         setSites(allSites);
-        setSectors(allSectors);
 
       } catch (err) {
         if (err.name !== "AbortError") {
-          console.error("Error fetching map data:", err);
-          setError(
-            "No se pudieron cargar los datos de las antenas. " + err.message
-          );
+          setError("No se pudieron cargar los datos de las antenas. " + err.message);
         }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchSites();
 
     return () => {
       controller.abort();
     };
   }, [idSabana, fromDate, toDate, isLoaded, allowedSiteIds, routeMode]);
 
+  // NUEVO: Cargar sectores solo cuando el mapa esté listo y visible
+  useEffect(() => {
+    if (!sites.length || sectorsLoadedRef.current || !mapRef || !isLoaded || routeMode) return;
+
+    const controller = new AbortController();
+
+    const fetchSectors = async () => {
+      setLoadingSectors(true);
+
+      const sabanaIds = [...new Set(sites.map(s => s.sabanaId))];
+      const allSectors = [];
+
+      try {
+        const hasFilter = Array.isArray(allowedSiteIds);
+        
+        const results = await Promise.allSettled(sabanaIds.map(async (sabanaId) => {
+          // Verificar cache
+          const cacheKey = getCacheKey(sabanaId, fromDate, toDate, 'sectors');
+          const cached = dataCache.get(cacheKey);
+          
+          if (cached && (Date.now() - cached.timestamp < CACHE_TTL)) {
+            return cached.data;
+          }
+
+          const baseApiBody = {
+            sabanas: [{ id: sabanaId }],
+            from: fromDate,
+            to: toDate,
+            tz: "America/Mexico_City",
+            minFreq: 1,
+            perSabana: false,
+          };
+
+          const sitesInThisSabana = sites.filter(s => s.sabanaId === sabanaId);
+          const siteIds = hasFilter 
+            ? allowedSiteIds 
+            : sitesInThisSabana.map(site => site.siteId);
+
+          const sectorsApiBody = {
+            ...baseApiBody,
+            siteIds: siteIds,
+          };
+
+          const sectorsRes = await fetchWithAuth("/api/sabanas/registros/batch/sectors/summary", {
+            method: "POST",
+            signal: controller.signal,
+            body: JSON.stringify(sectorsApiBody),
+          });
+
+          if (!sectorsRes.ok) {
+            throw new Error(`Sábana ${sabanaId} sectores: ${sectorsRes.status}`);
+          }
+          
+          const sectorsData = await sectorsRes.json();
+          const fetchedSectors = Array.isArray(sectorsData) ? sectorsData : (sectorsData.items || []);
+          
+          const sectorsWithSabanaId = fetchedSectors.map(sector => ({ ...sector, sabanaId }));
+          
+          // Guardar en cache
+          dataCache.set(cacheKey, {
+            data: sectorsWithSabanaId,
+            timestamp: Date.now()
+          });
+          
+          return sectorsWithSabanaId;
+        }));
+
+        results.forEach((result, idx) => {
+          if (result.status === 'fulfilled') {
+            allSectors.push(...result.value);
+          }
+        });
+        
+        setSectors(allSectors);
+        sectorsLoadedRef.current = true;
+
+      } catch (err) {
+        // Error silencioso para sectores
+      } finally {
+        setLoadingSectors(false);
+      }
+    };
+
+    // Delay para dar prioridad a la renderización del mapa
+    const timeoutId = setTimeout(fetchSectors, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [sites, mapRef, isLoaded, fromDate, toDate, allowedSiteIds, routeMode]);
+
   // NUEVO: Limpia overlays de una sábana específica
   const clearNativeRouteOverlaysForSabana = useCallback((sabanaId) => {
-    console.log(`🧹 Limpiando overlays de sábana ${sabanaId}...`);
-    
     const overlays = nativeOverlaysBySabanaRef.current[sabanaId];
     if (!overlays) return;
 
@@ -263,7 +341,7 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
       try {
         polyline.setMap(null);
       } catch (e) {
-        console.warn('Error limpiando polyline:', e);
+        // Error silencioso
       }
     });
     
@@ -272,29 +350,24 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
       try {
         marker.setMap(null);
       } catch (e) {
-        console.warn('Error limpiando marker:', e);
+        // Error silencioso
       }
     });
     
     delete nativeOverlaysBySabanaRef.current[sabanaId];
-    console.log(`✅ Overlays de sábana ${sabanaId} limpiados`);
   }, []);
 
   // NUEVO: Limpia TODOS los overlays de todas las sábanas
   const clearAllNativeRouteOverlays = useCallback(() => {
-    console.log('🧹 Limpiando TODOS los overlays...');
     Object.keys(nativeOverlaysBySabanaRef.current).forEach(sabanaId => {
       clearNativeRouteOverlaysForSabana(Number(sabanaId));
     });
     nativeOverlaysBySabanaRef.current = {};
-    console.log('✅ Todos los overlays limpiados');
   }, [clearNativeRouteOverlaysForSabana]);
 
   // MODIFICADO: Dibuja la ruta de UNA sábana específica
   const drawNativeRouteForSabana = useCallback((sabanaId, points, colorIndex) => {
     if (!mapRef || !window.google || points.length < 2) return;
-    
-    console.log(`🎨 Dibujando ruta de sábana ${sabanaId} con`, points.length, 'puntos');
     
     // Inicializar contenedor de overlays para esta sábana
     if (!nativeOverlaysBySabanaRef.current[sabanaId]) {
@@ -367,7 +440,6 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
           await new Promise(resolve => setTimeout(resolve, 100));
         }
       }
-      console.log(`✅ Ruta de sábana ${sabanaId} dibujada con ${points.length - 1} segmentos de colores únicos`);
       
       // Dibujar marcadores después de las polylines
       drawMarkersForSabana(sabanaId, points, baseColor);
@@ -466,7 +538,6 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
 
     const fetchAllRoutes = async () => {
       // FASE 1: LIMPIEZA TOTAL
-      console.log('🧹 Iniciando limpieza de todas las rutas anteriores...');
       clearAllNativeRouteOverlays();
       setRoutePointsBySabana({});
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -480,8 +551,6 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
       const errors = [];
 
       try {
-        console.log(`🔄 Cargando rutas para ${sabanaIds.length} sábana(s)...`);
-        
         // Cargar rutas de cada sábana INDEPENDIENTEMENTE
         const promises = sabanaIds.map(async (sabId, colorIndex) => {
           const numericId = Number(sabId);
@@ -506,8 +575,6 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
             const points = Array.isArray(data?.points) ? data.points : [];
             const filtered = points.filter((p) => Number(p.lat) !== 0 || Number(p.lng) !== 0);
             
-            console.log(`✅ Sábana ${numericId}: ${filtered.length} puntos cargados`);
-            
             newRoutePoints[numericId] = filtered;
             
             // Dibujar inmediatamente
@@ -516,7 +583,6 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
             }
           } catch (err) {
             if (err.name !== "AbortError") {
-              console.error(`Error cargando sábana ${numericId}:`, err);
               errors.push(`Sábana ${numericId}: ${err.message}`);
             }
           }
@@ -544,7 +610,6 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
         }
       } catch (err) {
         if (err.name !== "AbortError") {
-          console.error("Error fetching routes:", err);
           setRouteError("Error general: " + (err.message || ""));
         }
       } finally {
@@ -580,10 +645,11 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // OPTIMIZADO: Memoizar sitios filtrados - retornar todos si no hay filtro
   const filteredSites = useMemo(() => {
-    if (!allowedSiteIds || allowedSiteIds.length === 0) return [];
+    if (!allowedSiteIds || allowedSiteIds.length === 0) return sites;
     const set = new Set(allowedSiteIds);
-    return (sites || []).filter((s) => set.has(s.siteId));
+    return sites.filter((s) => set.has(s.siteId));
   }, [sites, allowedSiteIds]);
 
   // MODIFICADO: Ahora obtenemos todos los puntos de todas las sábanas
@@ -591,10 +657,11 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
     return Object.values(routePointsBySabana).flat();
   }, [routePointsBySabana]);
 
+  // OPTIMIZADO: Memoizar sectores filtrados - retornar todos si no hay filtro
   const filteredSectors = useMemo(() => {
-    if (!allowedSiteIds || allowedSiteIds.length === 0) return [];
+    if (!allowedSiteIds || allowedSiteIds.length === 0) return sectors;
     const set = new Set(allowedSiteIds);
-    return (sectors || []).filter((sec) => set.has(sec.siteId));
+    return sectors.filter((sec) => set.has(sec.siteId));
   }, [sectors, allowedSiteIds]);
 
   const fitBoundsToSites = useCallback(() => {
@@ -640,10 +707,11 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
     setMapRef(map);
   }, []);
 
+  // OPTIMIZADO: Calcular polígonos solo cuando cambian los sectores
   const sectorPolygons = useMemo(() => {
     if (routeMode) return [];
     const source = filteredSectors.length > 0 ? filteredSectors : sectors;
-    if (!source.length || !isLoaded || !window.google.maps.geometry) return [];
+    if (!source.length || !isLoaded || !window.google?.maps?.geometry) return [];
 
     return source.map((sector) => {
       const origin = new window.google.maps.LatLng(sector.lat, sector.lng);
@@ -734,6 +802,12 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
                 ))}
               </>
             )}
+            {/* NUEVO: Indicador de carga de sectores */}
+            {loadingSectors && (
+              <div className="legend-item" style={{ marginTop: '8px', fontSize: '11px', color: '#6b7280' }}>
+                <span>⏳ Cargando sectores...</span>
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -813,7 +887,7 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
 
       {(!routeMode && (loading || error)) && (
         <div className="map-overlay-status">
-            {loading && <div className="mapa-antenas-status loading">Cargando antenas...</div>}
+            {loading && <div className="mapa-antenas-status loading">⏳ Cargando sitios...</div>}
             {error && <div className="mapa-antenas-status error">{error}</div>}
         </div>
       )}
