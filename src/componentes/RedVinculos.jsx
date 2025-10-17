@@ -4,6 +4,7 @@ import React, { useRef, useState, useEffect } from "react" // Agregado React aqu
 import PropTypes from "prop-types"
 import cytoscape from "cytoscape"
 import dagre from "cytoscape-dagre"
+import { MdZoomOutMap, MdRefresh, MdCameraAlt } from "react-icons/md" // Added React Icons imports
 import "./RedVinculos.css"
 import fetchWithAuth from "../utils/fetchWithAuth.js"
 
@@ -16,17 +17,16 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
   const [error, setError] = useState(null)
   const [stats, setStats] = useState({ nodes: 0, edges: 0, sabanas: 0 })
   const [originalData, setOriginalData] = useState(null)
-  
+
   // SOLUCIONADO: Usar useMemo para evitar recrear el objeto filters en cada render
-  const filters = React.useMemo(() => ({
-    maxConnectionsPerSabana: filtrosActivos?.maxConnectionsPerSabana || 100,
-    showSharedOnly: filtrosActivos?.showSharedOnly || false,
-    minConnections: filtrosActivos?.minConnections || 1,
-  }), [
-    filtrosActivos?.maxConnectionsPerSabana,
-    filtrosActivos?.showSharedOnly,
-    filtrosActivos?.minConnections
-  ])
+  const filters = React.useMemo(
+    () => ({
+      maxConnectionsPerSabana: filtrosActivos?.maxConnectionsPerSabana || 100,
+      showSharedOnly: filtrosActivos?.showSharedOnly || false,
+      minConnections: filtrosActivos?.minConnections || 1,
+    }),
+    [filtrosActivos?.maxConnectionsPerSabana, filtrosActivos?.showSharedOnly, filtrosActivos?.minConnections],
+  )
 
   useEffect(() => {
     if (!idSabana || !containerRef.current) return
@@ -95,8 +95,8 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
   }, [filters, originalData, idSabana]) // Ahora filters es estable gracias a useMemo
 
   const updateStats = (elements, ids) => {
-    const nodes = elements.filter(e => e.group === "nodes").length
-    const edges = elements.filter(e => e.group === "edges").length
+    const nodes = elements.filter((e) => e.group === "nodes").length
+    const edges = elements.filter((e) => e.group === "edges").length
     setStats({ nodes, edges, sabanas: ids.length })
   }
 
@@ -107,7 +107,7 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
       cyRef.current
         .layout({
           name: "concentric",
-          concentric: function(node) {
+          concentric: (node) => {
             if (node.data("type") === "sabana") {
               return 100
             }
@@ -116,9 +116,7 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
             }
             return 10
           },
-          levelWidth: function(nodes) {
-            return Math.max(3, Math.ceil(nodes.length / 8))
-          },
+          levelWidth: (nodes) => Math.max(3, Math.ceil(nodes.length / 8)),
           spacingFactor: 1.2,
           padding: 80,
           startAngle: -Math.PI / 2,
@@ -143,8 +141,8 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
     console.log("[v0] Building graph with filters:", currentFilters)
     console.log("[v0] Data structure:", {
       hasBySabana: !!data.bySabana,
-      hasCoincidences: !!(data.coincidences || data.coincidencias),
-      ids: ids
+      hasCoincidences: !!(data.coincidences || data.coincidences),
+      ids: ids,
     })
 
     // First pass: Count connections and frequency for each number
@@ -152,17 +150,19 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
       ids.forEach((id) => {
         const records = data.bySabana[String(id)] || data.bySabana[id] || []
         console.log(`[v0] Sabana ${id} has ${records.length} records`)
-        
+
         records.forEach((record) => {
           const { numeroB } = record
-          if (!numeroB || 
-              numeroB === 'ims' || 
-              numeroB === 'internet.itelcel.com' || 
-              numeroB === 'BUZON' ||
-              numeroB.toString().trim() === '') {
+          if (
+            !numeroB ||
+            numeroB === "ims" ||
+            numeroB === "internet.itelcel.com" ||
+            numeroB === "BUZON" ||
+            numeroB.toString().trim() === ""
+          ) {
             return
           }
-          
+
           const key = `${numeroB}-${id}`
           if (!numberConnections.has(key)) {
             numberConnections.set(key, true)
@@ -204,21 +204,23 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
         // Filter records based on current filters
         let filteredRecords = records.filter((record) => {
           const { numeroB } = record
-          if (!numeroB || 
-              numeroB === 'ims' || 
-              numeroB === 'internet.itelcel.com' || 
-              numeroB === 'BUZON' ||
-              numeroB.toString().trim() === '') {
+          if (
+            !numeroB ||
+            numeroB === "ims" ||
+            numeroB === "internet.itelcel.com" ||
+            numeroB === "BUZON" ||
+            numeroB.toString().trim() === ""
+          ) {
             return false
           }
 
           const frequency = numberFrequency.get(numeroB) || 0
-          
+
           // Apply filters
           if (currentFilters.showSharedOnly && frequency < 2) {
             return false
           }
-          
+
           if (frequency < currentFilters.minConnections) {
             return false
           }
@@ -228,7 +230,7 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
 
         // Remove duplicates by numeroB
         const uniqueNumbers = new Map()
-        filteredRecords.forEach(record => {
+        filteredRecords.forEach((record) => {
           if (!uniqueNumbers.has(record.numeroB)) {
             uniqueNumbers.set(record.numeroB, record)
           }
@@ -289,8 +291,8 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
 
     console.log("[v0] Final elements:", {
       total: elements.length,
-      nodes: elements.filter(e => e.group === "nodes").length,
-      edges: elements.filter(e => e.group === "edges").length
+      nodes: elements.filter((e) => e.group === "nodes").length,
+      edges: elements.filter((e) => e.group === "edges").length,
     })
 
     return elements
@@ -387,7 +389,7 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
       ],
       layout: {
         name: "concentric",
-        concentric: function(node) {
+        concentric: (node) => {
           if (node.data("type") === "sabana") {
             return 100
           }
@@ -396,9 +398,7 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
           }
           return 10
         },
-        levelWidth: function(nodes) {
-          return Math.max(3, Math.ceil(nodes.length / 8))
-        },
+        levelWidth: (nodes) => Math.max(3, Math.ceil(nodes.length / 8)),
         spacingFactor: 1.2,
         padding: 80,
         startAngle: -Math.PI / 2,
@@ -409,7 +409,7 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
       },
       minZoom: 0.1,
       maxZoom: 5,
-      wheelSensitivity: 4, 
+      wheelSensitivity: 4,
       touchTapThreshold: 8,
       desktopTapThreshold: 4,
     })
@@ -417,18 +417,18 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
     cyRef.current = cy
 
     // Improved zoom controls
-    cy.on('wheel', function(e) {
+    cy.on("wheel", (e) => {
       e.preventDefault()
       const zoomLevel = cy.zoom()
       const factor = e.originalEvent.deltaY > 0 ? 0.9 : 1.1
       const newZoom = Math.max(0.1, Math.min(5, zoomLevel * factor))
-      
+
       cy.zoom({
         level: newZoom,
         renderedPosition: {
           x: e.renderedPosition.x,
-          y: e.renderedPosition.y
-        }
+          y: e.renderedPosition.y,
+        },
       })
     })
 
@@ -436,10 +436,10 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
     cy.on("tap", "node", (evt) => {
       const node = evt.target
       console.log("[v0] Node clicked:", node.data())
-      
+
       const connectedNodes = node.neighborhood().add(node)
-      cy.elements().removeClass('highlighted')
-      connectedNodes.addClass('highlighted')
+      cy.elements().removeClass("highlighted")
+      connectedNodes.addClass("highlighted")
     })
 
     cy.on("tap", "edge", (evt) => {
@@ -449,7 +449,7 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
 
     cy.on("tap", (evt) => {
       if (evt.target === cy) {
-        cy.elements().removeClass('highlighted')
+        cy.elements().removeClass("highlighted")
       }
     })
   }
@@ -497,13 +497,13 @@ const RedVinculos = ({ idSabana, filtrosActivos, primaryNumbers = [] }) => {
         </div>
         <div className="network-controls">
           <button className="network-btn" onClick={handleFitView} title="Ajustar vista">
-            🔍 Ajustar
+            <MdZoomOutMap /> Ajustar
           </button>
           <button className="network-btn" onClick={handleResetZoom} title="Restablecer zoom">
-            ↺ Reset
+            <MdRefresh /> Reset
           </button>
           <button className="network-btn" onClick={handleExportImage} title="Exportar imagen">
-            📷 Exportar
+            <MdCameraAlt /> Exportar
           </button>
         </div>
       </div>
