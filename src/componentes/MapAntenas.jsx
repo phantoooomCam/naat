@@ -32,21 +32,27 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [mapRef, setMapRef] = useState(null);
-  // Ruta diaria
-  const [routePoints, setRoutePoints] = useState([]);
+  
+  // MODIFICADO: Ahora es un objeto { sabanaId: points[] }
+  const [routePointsBySabana, setRoutePointsBySabana] = useState({});
   const [routeLoading, setRouteLoading] = useState(false);
   const [routeError, setRouteError] = useState(null);
   const [activeRouteDate, setActiveRouteDate] = useState(null);
   
-  // NUEVO: Referencias nativas para polylines y marcadores (control total)
-  const nativePolylinesRef = useRef([]);
-  const nativeMarkersRef = useRef([]);
+  // Referencias nativas para polylines y marcadores (ahora por sábana)
+  const nativeOverlaysBySabanaRef = useRef({});
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-map-script",
     googleMapsApiKey: apiKey,
     libraries,
   });
+
+  // Colores únicos por sábana (ciclo infinito)
+  const sabanaColors = [
+    "#2563eb", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6",
+    "#06b6d4", "#84cc16", "#f97316", "#db2777", "#0ea5e9",
+  ];
 
   // Antenas y sectores (deshabilitado en modo rutas)
   useEffect(() => {
@@ -152,44 +158,62 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
     };
   }, [idSabana, fromDate, toDate, isLoaded, allowedSiteIds, routeMode]);
 
-  // NUEVO: Función para limpiar polylines y marcadores nativos
-  const clearNativeRouteOverlays = useCallback(() => {
-    console.log('🧹 Limpiando overlays nativos...');
+  // NUEVO: Limpia overlays de una sábana específica
+  const clearNativeRouteOverlaysForSabana = useCallback((sabanaId) => {
+    console.log(`🧹 Limpiando overlays de sábana ${sabanaId}...`);
     
+    const overlays = nativeOverlaysBySabanaRef.current[sabanaId];
+    if (!overlays) return;
+
     // Limpiar polylines
-    nativePolylinesRef.current.forEach(polyline => {
+    (overlays.polylines || []).forEach(polyline => {
       try {
         polyline.setMap(null);
       } catch (e) {
         console.warn('Error limpiando polyline:', e);
       }
     });
-    nativePolylinesRef.current = [];
     
     // Limpiar marcadores
-    nativeMarkersRef.current.forEach(marker => {
+    (overlays.markers || []).forEach(marker => {
       try {
         marker.setMap(null);
       } catch (e) {
         console.warn('Error limpiando marker:', e);
       }
     });
-    nativeMarkersRef.current = [];
     
-    console.log('✅ Overlays nativos limpiados');
+    delete nativeOverlaysBySabanaRef.current[sabanaId];
+    console.log(`✅ Overlays de sábana ${sabanaId} limpiados`);
   }, []);
 
-  // NUEVO: Función para dibujar la ruta usando API nativa
-  const drawNativeRoute = useCallback((points) => {
+  // NUEVO: Limpia TODOS los overlays de todas las sábanas
+  const clearAllNativeRouteOverlays = useCallback(() => {
+    console.log('🧹 Limpiando TODOS los overlays...');
+    Object.keys(nativeOverlaysBySabanaRef.current).forEach(sabanaId => {
+      clearNativeRouteOverlaysForSabana(Number(sabanaId));
+    });
+    nativeOverlaysBySabanaRef.current = {};
+    console.log('✅ Todos los overlays limpiados');
+  }, [clearNativeRouteOverlaysForSabana]);
+
+  // MODIFICADO: Dibuja la ruta de UNA sábana específica
+  const drawNativeRouteForSabana = useCallback((sabanaId, points, colorIndex) => {
     if (!mapRef || !window.google || points.length < 2) return;
     
-    console.log('🎨 Dibujando ruta nativa con', points.length, 'puntos');
+    console.log(`🎨 Dibujando ruta de sábana ${sabanaId} con`, points.length, 'puntos');
     
+    // Inicializar contenedor de overlays para esta sábana
+    if (!nativeOverlaysBySabanaRef.current[sabanaId]) {
+      nativeOverlaysBySabanaRef.current[sabanaId] = {
+        polylines: [],
+        markers: []
+      };
+    }
+    
+    const overlays = nativeOverlaysBySabanaRef.current[sabanaId];
     const directionsService = new window.google.maps.DirectionsService();
-    const segmentColors = [
-      "#2563eb", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6",
-      "#06b6d4", "#84cc16", "#f97316", "#db2777", "#0ea5e9",
-    ];
+    const color = sabanaColors[colorIndex % sabanaColors.length];
 
     // Dividir en chunks de máximo 25 puntos
     const chunkSize = 25;
@@ -200,8 +224,6 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
       chunks.push(points.slice(start, end + 1));
       start = end;
     }
-
-    let colorIndex = 0;
 
     // Procesar cada chunk
     const processChunk = async (chunk) => {
@@ -233,18 +255,16 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
                 });
 
                 if (path.length >= 2) {
-                  // Crear polyline nativa
                   const polyline = new window.google.maps.Polyline({
                     path: path,
                     geodesic: false,
-                    strokeColor: segmentColors[colorIndex % segmentColors.length],
+                    strokeColor: color,
                     strokeOpacity: 0.95,
                     strokeWeight: 4,
                     map: mapRef,
                   });
                   
-                  nativePolylinesRef.current.push(polyline);
-                  colorIndex++;
+                  overlays.polylines.push(polyline);
                 }
               });
             }
@@ -259,12 +279,23 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
       for (let i = 0; i < chunks.length; i++) {
         await processChunk(chunks[i]);
       }
-      console.log('✅ Ruta dibujada completamente');
+      console.log(`✅ Ruta de sábana ${sabanaId} dibujada completamente`);
+      
+      // Dibujar marcadores después de las polylines
+      drawMarkersForSabana(sabanaId, points, color);
     };
 
     processAllChunks();
+  }, [mapRef, sabanaColors]);
 
-    // Dibujar marcadores numerados
+  // NUEVO: Dibuja marcadores numerados para una sábana
+  const drawMarkersForSabana = useCallback((sabanaId, points, color) => {
+    if (!mapRef || !window.google) return;
+    
+    const overlays = nativeOverlaysBySabanaRef.current[sabanaId];
+    if (!overlays) return;
+
+    // Agrupar puntos por coordenadas
     const grouped = new Map();
     points.forEach((p, i) => {
       const key = `${Number(p.lat).toFixed(6)},${Number(p.lng).toFixed(6)}`;
@@ -291,14 +322,15 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
         icon: {
           path: window.google.maps.SymbolPath.CIRCLE,
           scale: 15,
-          fillColor: '#111827',
+          fillColor: color,
           fillOpacity: 1,
           strokeColor: '#fff',
           strokeWeight: 3,
         },
         zIndex: 99999,
+        title: `Sábana ${sabanaId} - Punto ${principal.idx}`,
       });
-      nativeMarkersRef.current.push(mainMarker);
+      overlays.markers.push(mainMarker);
 
       // Marcadores secundarios alrededor
       if (window.google.maps.geometry && others.length > 0) {
@@ -320,80 +352,103 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
             icon: {
               path: window.google.maps.SymbolPath.CIRCLE,
               scale: 10,
-              fillColor: '#2563eb',
-              fillOpacity: 1,
+              fillColor: color,
+              fillOpacity: 0.8,
               strokeColor: '#fff',
               strokeWeight: 2,
             },
+            title: `Sábana ${sabanaId} - Punto ${item.idx}`,
           });
-          nativeMarkersRef.current.push(marker);
+          overlays.markers.push(marker);
         });
       }
     });
-
   }, [mapRef]);
 
-  // Rutas diarias (SOLO cuando shouldTraceRoute === true)
+  // MODIFICADO: Carga rutas para TODAS las sábanas independientemente
   useEffect(() => {
     if (!idSabana || !isLoaded || !routeMode || !shouldTraceRoute || !mapRef) return;
     
     if (!routeDate) {
-      setRoutePoints([]);
+      setRoutePointsBySabana({});
       return;
     }
 
     const controller = new AbortController();
 
-    const fetchRoute = async () => {
+    const fetchAllRoutes = async () => {
       // FASE 1: LIMPIEZA TOTAL
-      console.log('🧹 Iniciando limpieza de rutas anteriores...');
-      clearNativeRouteOverlays();
-      setRoutePoints([]);
+      console.log('🧹 Iniciando limpieza de todas las rutas anteriores...');
+      clearAllNativeRouteOverlays();
+      setRoutePointsBySabana({});
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      // FASE 2: CARGAR NUEVA RUTA
+      // FASE 2: CARGAR NUEVAS RUTAS
       setRouteLoading(true);
       setRouteError(null);
 
-      const sabanaIds = (Array.isArray(idSabana) ? idSabana : [idSabana]).map(
-        (id) => ({ id: Number(id) })
-      );
+      const sabanaIds = Array.isArray(idSabana) ? idSabana : [idSabana];
+      const newRoutePoints = {};
+      const errors = [];
 
       try {
-        console.log('🔄 Cargando nueva ruta para:', routeDate);
+        console.log(`🔄 Cargando rutas para ${sabanaIds.length} sábana(s)...`);
         
-        const res = await fetchWithAuth("/api/sabanas/registros/batch/routes/day", {
-          method: "POST",
-          signal: controller.signal,
-          body: JSON.stringify({
-            sabanas: sabanaIds,
-            date: routeDate,
-            tz: "America/Mexico_City",
-          }),
+        // Cargar rutas de cada sábana INDEPENDIENTEMENTE
+        const promises = sabanaIds.map(async (sabId, colorIndex) => {
+          const numericId = Number(sabId);
+          
+          try {
+            const res = await fetchWithAuth("/api/sabanas/registros/batch/routes/day", {
+              method: "POST",
+              signal: controller.signal,
+              body: JSON.stringify({
+                sabanas: [{ id: numericId }], // UNA sábana a la vez
+                date: routeDate,
+                tz: "America/Mexico_City",
+              }),
+            });
+
+            if (!res.ok) {
+              const txt = await res.text();
+              throw new Error(`Sábana ${numericId}: ${res.status} ${txt}`);
+            }
+
+            const data = await res.json();
+            const points = Array.isArray(data?.points) ? data.points : [];
+            const filtered = points.filter((p) => Number(p.lat) !== 0 || Number(p.lng) !== 0);
+            
+            console.log(`✅ Sábana ${numericId}: ${filtered.length} puntos cargados`);
+            
+            newRoutePoints[numericId] = filtered;
+            
+            // Dibujar inmediatamente
+            if (filtered.length >= 2) {
+              drawNativeRouteForSabana(numericId, filtered, colorIndex);
+            }
+          } catch (err) {
+            if (err.name !== "AbortError") {
+              console.error(`Error cargando sábana ${numericId}:`, err);
+              errors.push(`Sábana ${numericId}: ${err.message}`);
+            }
+          }
         });
 
-        if (!res.ok) {
-          const txt = await res.text();
-          throw new Error(`Fallo al obtener ruta: ${res.status} ${txt}`);
-        }
-
-        const data = await res.json();
-        const points = Array.isArray(data?.points) ? data.points : [];
-        const filtered = points.filter((p) => Number(p.lat) !== 0 || Number(p.lng) !== 0);
+        await Promise.all(promises);
         
-        console.log('✅ Nueva ruta cargada con', filtered.length, 'puntos');
-        
-        setRoutePoints(filtered);
+        setRoutePointsBySabana(newRoutePoints);
         setActiveRouteDate(routeDate);
         
-        // Dibujar la ruta usando API nativa
-        if (filtered.length >= 2) {
-          drawNativeRoute(filtered);
-          
-          // Ajustar bounds
+        // Ajustar bounds para TODAS las rutas
+        const allPoints = Object.values(newRoutePoints).flat();
+        if (allPoints.length > 0) {
           const bounds = new window.google.maps.LatLngBounds();
-          filtered.forEach(p => bounds.extend({ lat: p.lat, lng: p.lng }));
+          allPoints.forEach(p => bounds.extend({ lat: p.lat, lng: p.lng }));
           mapRef.fitBounds(bounds);
+        }
+        
+        if (errors.length > 0) {
+          setRouteError(`Errores: ${errors.join('; ')}`);
         }
         
         if (onRouteTraced) {
@@ -401,39 +456,41 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
         }
       } catch (err) {
         if (err.name !== "AbortError") {
-          console.error("Error fetching route:", err);
-          setRouteError(
-            "No se pudo cargar la ruta diaria. " + (err.message || "")
-          );
+          console.error("Error fetching routes:", err);
+          setRouteError("Error general: " + (err.message || ""));
         }
       } finally {
         setRouteLoading(false);
       }
     };
 
-    fetchRoute();
+    fetchAllRoutes();
     return () => controller.abort();
-  }, [idSabana, isLoaded, routeMode, routeDate, shouldTraceRoute, onRouteTraced, mapRef, clearNativeRouteOverlays, drawNativeRoute]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idSabana, isLoaded, routeMode, routeDate, shouldTraceRoute, mapRef]);
 
   // Limpiar cuando se desactiva el modo ruta
   useEffect(() => {
     if (!routeMode) {
-      clearNativeRouteOverlays();
-      setRoutePoints([]);
+      clearAllNativeRouteOverlays();
+      setRoutePointsBySabana({});
     }
-  }, [routeMode, clearNativeRouteOverlays]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeMode]);
 
   // Limpiar si cambia la sabana
   useEffect(() => {
-    clearNativeRouteOverlays();
-  }, [idSabana, clearNativeRouteOverlays]);
+    clearAllNativeRouteOverlays();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idSabana]);
 
   // Cleanup al desmontar
   useEffect(() => {
     return () => {
-      clearNativeRouteOverlays();
+      clearAllNativeRouteOverlays();
     };
-  }, [clearNativeRouteOverlays]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filteredSites = useMemo(() => {
     if (!allowedSiteIds || allowedSiteIds.length === 0) return [];
@@ -441,11 +498,10 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
     return (sites || []).filter((s) => set.has(s.siteId));
   }, [sites, allowedSiteIds]);
 
-  // Ruta: puntos filtrados (sin 0,0) y numerados
-  const filteredRoutePoints = useMemo(() => {
-    if (!routePoints?.length) return [];
-    return routePoints.filter((p) => Number(p.lat) !== 0 || Number(p.lng) !== 0);
-  }, [routePoints]);
+  // MODIFICADO: Ahora obtenemos todos los puntos de todas las sábanas
+  const allRoutePoints = useMemo(() => {
+    return Object.values(routePointsBySabana).flat();
+  }, [routePointsBySabana]);
 
   const filteredSectors = useMemo(() => {
     if (!allowedSiteIds || allowedSiteIds.length === 0) return [];
@@ -455,10 +511,9 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
 
   const fitBoundsToSites = useCallback(() => {
     if (!mapRef) return;
-    // En modo rutas, ajustar a los puntos de ruta
-    if (routeMode && filteredRoutePoints.length > 0) {
+    if (routeMode && allRoutePoints.length > 0) {
       const bounds = new window.google.maps.LatLngBounds();
-      filteredRoutePoints.forEach((p) => bounds.extend(new window.google.maps.LatLng(p.lat, p.lng)));
+      allRoutePoints.forEach((p) => bounds.extend(new window.google.maps.LatLng(p.lat, p.lng)));
       mapRef.fitBounds(bounds);
       return;
     }
@@ -471,20 +526,27 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
       });
       mapRef.fitBounds(bounds);
     }
-  }, [mapRef, sites, filteredSites, routeMode, filteredRoutePoints]);
+  }, [mapRef, sites, filteredSites, routeMode, allRoutePoints]);
 
-  // MODIFICADO: Este useEffect ahora se encarga de ajustar la vista inicial automáticamente
   useEffect(() => {
     if (!mapRef) return;
     if (routeMode) {
-      if (filteredRoutePoints.length > 0) fitBoundsToSites();
+      if (allRoutePoints.length > 0) {
+        const bounds = new window.google.maps.LatLngBounds();
+        allRoutePoints.forEach((p) => bounds.extend(new window.google.maps.LatLng(p.lat, p.lng)));
+        mapRef.fitBounds(bounds);
+      }
       return;
     }
     const targets = filteredSites.length > 0 ? filteredSites : sites;
     if (targets.length > 0) {
-      fitBoundsToSites();
+      const bounds = new window.google.maps.LatLngBounds();
+      targets.forEach((site) => {
+        bounds.extend(new window.google.maps.LatLng(site.lat, site.lng));
+      });
+      mapRef.fitBounds(bounds);
     }
-  }, [sites, filteredSites, mapRef, fitBoundsToSites, routeMode, filteredRoutePoints]);
+  }, [sites, filteredSites, mapRef, routeMode, allRoutePoints]);
 
   const onMapLoad = useCallback((map) => {
     setMapRef(map);
@@ -537,7 +599,9 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
   return (
     <div className="mapa-antenas-wrapper">
       <div className="map-controls">
-  <button onClick={fitBoundsToSites} disabled={routeMode ? filteredRoutePoints.length === 0 : sites.length === 0}>Ajustar Vista</button>
+        <button onClick={fitBoundsToSites} disabled={routeMode ? allRoutePoints.length === 0 : sites.length === 0}>
+          Ajustar Vista
+        </button>
       </div>
 
       <div className="map-legend">
@@ -558,10 +622,23 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
             </div>
           </>
         ) : (
-          <div className="legend-item">
-            <div style={{ width: 24, height: 4, background: "#2563eb" }}></div>
-            <span style={{ marginLeft: 8 }}>Ruta diaria</span>
-          </div>
+          <>
+            <div className="legend-item">
+              <span style={{ fontWeight: 'bold' }}>Rutas por Sábana:</span>
+            </div>
+            {Object.entries(routePointsBySabana).map(([sabanaId, points], idx) => (
+              <div key={sabanaId} className="legend-item">
+                <div style={{ 
+                  width: 24, 
+                  height: 4, 
+                  background: sabanaColors[idx % sabanaColors.length] 
+                }}></div>
+                <span style={{ marginLeft: 8 }}>
+                  Sábana {sabanaId} ({points.length} pts)
+                </span>
+              </div>
+            ))}
+          </>
         )}
       </div>
 
