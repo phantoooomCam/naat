@@ -59,11 +59,105 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
     libraries,
   });
 
-  // Colores únicos por sábana (ciclo infinito)
-  const sabanaColors = [
-    "#2563eb", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6",
-    "#06b6d4", "#84cc16", "#f97316", "#db2777", "#0ea5e9",
+  // Colores únicos por sábana - Paleta personalizada
+  const baseSabanaColors = [
+    "#001219", "#005f73", "#0a9396", "#ee9b00", 
+    "#ca6702", "#bb3e03", "#ae2012", "#9b2226",
   ];
+
+  // NUEVO: Generar colores adicionales semejantes si se necesitan más de 8 sábanas
+  const generateSimilarColor = useCallback((baseColor, variation) => {
+    const hexToRgb = (hex) => {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : { r: 0, g: 0, b: 0 };
+    };
+
+    const rgbToHsl = (r, g, b) => {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      let h, s, l = (max + min) / 2;
+
+      if (max === min) {
+        h = s = 0;
+      } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+          case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+          case g: h = ((b - r) / d + 2) / 6; break;
+          case b: h = ((r - g) / d + 4) / 6; break;
+          default: h = 0;
+        }
+      }
+      return { h: h * 360, s: s * 100, l: l * 100 };
+    };
+
+    const hslToRgb = (h, s, l) => {
+      h /= 360; s /= 100; l /= 100;
+      let r, g, b;
+
+      if (s === 0) {
+        r = g = b = l;
+      } else {
+        const hue2rgb = (p, q, t) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+      }
+
+      return {
+        r: Math.round(r * 255),
+        g: Math.round(g * 255),
+        b: Math.round(b * 255)
+      };
+    };
+
+    const rgb = hexToRgb(baseColor);
+    const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+    
+    // Variar el tono ligeramente y ajustar luminosidad
+    const newHue = (hsl.h + (variation * 15)) % 360;
+    const newSat = Math.min(100, Math.max(20, hsl.s + (variation * 10)));
+    const newLight = Math.min(70, Math.max(20, hsl.l + (variation * 8)));
+    
+    const newRgb = hslToRgb(newHue, newSat, newLight);
+    return `#${newRgb.r.toString(16).padStart(2, '0')}${newRgb.g.toString(16).padStart(2, '0')}${newRgb.b.toString(16).padStart(2, '0')}`;
+  }, []);
+
+  // Generar array de colores extendido si hay más sábanas
+  const sabanaColors = useMemo(() => {
+    const sabanaCount = Array.isArray(idSabana) ? idSabana.length : 1;
+    
+    if (sabanaCount <= baseSabanaColors.length) {
+      return baseSabanaColors;
+    }
+    
+    // Si necesitamos más colores, generamos variaciones
+    const extendedColors = [...baseSabanaColors];
+    const neededColors = sabanaCount - baseSabanaColors.length;
+    
+    for (let i = 0; i < neededColors; i++) {
+      const baseColorIndex = i % baseSabanaColors.length;
+      const variation = Math.floor(i / baseSabanaColors.length) + 1;
+      const newColor = generateSimilarColor(baseSabanaColors[baseColorIndex], variation);
+      extendedColors.push(newColor);
+    }
+    
+    return extendedColors;
+  }, [idSabana, generateSimilarColor]);
 
   // NUEVO: Genera variaciones de color para segmentos de ruta
   const generateColorVariations = useCallback((baseColor, numVariations) => {
