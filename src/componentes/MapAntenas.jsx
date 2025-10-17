@@ -7,8 +7,6 @@ import {
   useJsApiLoader,
   Polygon,
   OverlayView,
-  Polyline,
-  Marker,
 } from "@react-google-maps/api";
 import { LuRadioTower } from "react-icons/lu";
 import "./MapAntenas.css";
@@ -26,7 +24,7 @@ const fetchWithAuth = (url, options) => {
 
 const libraries = ["geometry"];
 
-const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = false, routeDate = null }) => {
+const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = false, routeDate = null, shouldTraceRoute = false, onRouteTraced = null }) => {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   const [sites, setSites] = useState([]);
@@ -38,9 +36,11 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
   const [routePoints, setRoutePoints] = useState([]);
   const [routeLoading, setRouteLoading] = useState(false);
   const [routeError, setRouteError] = useState(null);
-  const [routeDirections, setRouteDirections] = useState([]); // array de DirectionsResult por segmento
-  const [routeRenderKey, setRouteRenderKey] = useState(0); // fuerza desmontar/ montar capas de ruta
-  const routeOverlayRefs = useRef({ polylines: [] });
+  const [activeRouteDate, setActiveRouteDate] = useState(null);
+  
+  // NUEVO: Referencias nativas para polylines y marcadores (control total)
+  const nativePolylinesRef = useRef([]);
+  const nativeMarkersRef = useRef([]);
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-map-script",
@@ -152,10 +152,191 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
     };
   }, [idSabana, fromDate, toDate, isLoaded, allowedSiteIds, routeMode]);
 
-  // Rutas diarias (solo cuando routeMode === true)
+  // NUEVO: Función para limpiar polylines y marcadores nativos
+  const clearNativeRouteOverlays = useCallback(() => {
+    console.log('🧹 Limpiando overlays nativos...');
+    
+    // Limpiar polylines
+    nativePolylinesRef.current.forEach(polyline => {
+      try {
+        polyline.setMap(null);
+      } catch (e) {
+        console.warn('Error limpiando polyline:', e);
+      }
+    });
+    nativePolylinesRef.current = [];
+    
+    // Limpiar marcadores
+    nativeMarkersRef.current.forEach(marker => {
+      try {
+        marker.setMap(null);
+      } catch (e) {
+        console.warn('Error limpiando marker:', e);
+      }
+    });
+    nativeMarkersRef.current = [];
+    
+    console.log('✅ Overlays nativos limpiados');
+  }, []);
+
+  // NUEVO: Función para dibujar la ruta usando API nativa
+  const drawNativeRoute = useCallback((points) => {
+    if (!mapRef || !window.google || points.length < 2) return;
+    
+    console.log('🎨 Dibujando ruta nativa con', points.length, 'puntos');
+    
+    const directionsService = new window.google.maps.DirectionsService();
+    const segmentColors = [
+      "#2563eb", "#10b981", "#ef4444", "#f59e0b", "#8b5cf6",
+      "#06b6d4", "#84cc16", "#f97316", "#db2777", "#0ea5e9",
+    ];
+
+    // Dividir en chunks de máximo 25 puntos
+    const chunkSize = 25;
+    const chunks = [];
+    let start = 0;
+    while (start < points.length - 1) {
+      const end = Math.min(start + chunkSize - 1, points.length - 1);
+      chunks.push(points.slice(start, end + 1));
+      start = end;
+    }
+
+    let colorIndex = 0;
+
+    // Procesar cada chunk
+    const processChunk = async (chunk) => {
+      const origin = { lat: chunk[0].lat, lng: chunk[0].lng };
+      const destination = { lat: chunk[chunk.length - 1].lat, lng: chunk[chunk.length - 1].lng };
+      const waypoints = chunk.slice(1, -1).slice(0, 23).map(p => ({
+        location: { lat: p.lat, lng: p.lng },
+        stopover: false
+      }));
+
+      return new Promise((resolve) => {
+        directionsService.route(
+          {
+            origin,
+            destination,
+            waypoints,
+            travelMode: window.google.maps.TravelMode.DRIVING,
+            optimizeWaypoints: false,
+          },
+          (result, status) => {
+            if (status === 'OK' && result.routes[0]) {
+              const route = result.routes[0];
+              route.legs.forEach((leg) => {
+                const path = [];
+                leg.steps.forEach(step => {
+                  step.path.forEach(p => {
+                    path.push({ lat: p.lat(), lng: p.lng() });
+                  });
+                });
+
+                if (path.length >= 2) {
+                  // Crear polyline nativa
+                  const polyline = new window.google.maps.Polyline({
+                    path: path,
+                    geodesic: false,
+                    strokeColor: segmentColors[colorIndex % segmentColors.length],
+                    strokeOpacity: 0.95,
+                    strokeWeight: 4,
+                    map: mapRef,
+                  });
+                  
+                  nativePolylinesRef.current.push(polyline);
+                  colorIndex++;
+                }
+              });
+            }
+            resolve();
+          }
+        );
+      });
+    };
+
+    // Procesar todos los chunks secuencialmente
+    const processAllChunks = async () => {
+      for (let i = 0; i < chunks.length; i++) {
+        await processChunk(chunks[i]);
+      }
+      console.log('✅ Ruta dibujada completamente');
+    };
+
+    processAllChunks();
+
+    // Dibujar marcadores numerados
+    const grouped = new Map();
+    points.forEach((p, i) => {
+      const key = `${Number(p.lat).toFixed(6)},${Number(p.lng).toFixed(6)}`;
+      const arr = grouped.get(key) || [];
+      arr.push({ idx: i + 1, p });
+      grouped.set(key, arr);
+    });
+
+    grouped.forEach((arr) => {
+      arr.sort((a, b) => a.idx - b.idx);
+      const principal = arr[0];
+      const others = arr.slice(1);
+
+      // Marcador principal
+      const mainMarker = new window.google.maps.Marker({
+        position: { lat: principal.p.lat, lng: principal.p.lng },
+        map: mapRef,
+        label: {
+          text: `${principal.idx}`,
+          color: '#fff',
+          fontSize: '14px',
+          fontWeight: '900',
+        },
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 15,
+          fillColor: '#111827',
+          fillOpacity: 1,
+          strokeColor: '#fff',
+          strokeWeight: 3,
+        },
+        zIndex: 99999,
+      });
+      nativeMarkersRef.current.push(mainMarker);
+
+      // Marcadores secundarios alrededor
+      if (window.google.maps.geometry && others.length > 0) {
+        const center = new window.google.maps.LatLng(principal.p.lat, principal.p.lng);
+        const radius = 10;
+        others.forEach((item, idx) => {
+          const angle = (360 / others.length) * idx;
+          const pos = window.google.maps.geometry.spherical.computeOffset(center, radius, angle);
+          
+          const marker = new window.google.maps.Marker({
+            position: { lat: pos.lat(), lng: pos.lng() },
+            map: mapRef,
+            label: {
+              text: `${item.idx}`,
+              color: '#fff',
+              fontSize: '11px',
+              fontWeight: '700',
+            },
+            icon: {
+              path: window.google.maps.SymbolPath.CIRCLE,
+              scale: 10,
+              fillColor: '#2563eb',
+              fillOpacity: 1,
+              strokeColor: '#fff',
+              strokeWeight: 2,
+            },
+          });
+          nativeMarkersRef.current.push(marker);
+        });
+      }
+    });
+
+  }, [mapRef]);
+
+  // Rutas diarias (SOLO cuando shouldTraceRoute === true)
   useEffect(() => {
-    if (!idSabana || !isLoaded || !routeMode) return;
-    // routeDate debe ser YYYY-MM-DD
+    if (!idSabana || !isLoaded || !routeMode || !shouldTraceRoute || !mapRef) return;
+    
     if (!routeDate) {
       setRoutePoints([]);
       return;
@@ -164,16 +345,23 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
     const controller = new AbortController();
 
     const fetchRoute = async () => {
+      // FASE 1: LIMPIEZA TOTAL
+      console.log('🧹 Iniciando limpieza de rutas anteriores...');
+      clearNativeRouteOverlays();
+      setRoutePoints([]);
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // FASE 2: CARGAR NUEVA RUTA
       setRouteLoading(true);
       setRouteError(null);
-      setRoutePoints([]);
-      setRouteDirections([]);
 
       const sabanaIds = (Array.isArray(idSabana) ? idSabana : [idSabana]).map(
         (id) => ({ id: Number(id) })
       );
 
       try {
+        console.log('🔄 Cargando nueva ruta para:', routeDate);
+        
         const res = await fetchWithAuth("/api/sabanas/registros/batch/routes/day", {
           method: "POST",
           signal: controller.signal,
@@ -191,9 +379,26 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
 
         const data = await res.json();
         const points = Array.isArray(data?.points) ? data.points : [];
-        // Ignorar coordenadas 0,0
         const filtered = points.filter((p) => Number(p.lat) !== 0 || Number(p.lng) !== 0);
+        
+        console.log('✅ Nueva ruta cargada con', filtered.length, 'puntos');
+        
         setRoutePoints(filtered);
+        setActiveRouteDate(routeDate);
+        
+        // Dibujar la ruta usando API nativa
+        if (filtered.length >= 2) {
+          drawNativeRoute(filtered);
+          
+          // Ajustar bounds
+          const bounds = new window.google.maps.LatLngBounds();
+          filtered.forEach(p => bounds.extend({ lat: p.lat, lng: p.lng }));
+          mapRef.fitBounds(bounds);
+        }
+        
+        if (onRouteTraced) {
+          onRouteTraced();
+        }
       } catch (err) {
         if (err.name !== "AbortError") {
           console.error("Error fetching route:", err);
@@ -208,51 +413,27 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
 
     fetchRoute();
     return () => controller.abort();
-  }, [idSabana, isLoaded, routeMode, routeDate]);
+  }, [idSabana, isLoaded, routeMode, routeDate, shouldTraceRoute, onRouteTraced, mapRef, clearNativeRouteOverlays, drawNativeRoute]);
 
-  // Limpiar líneas y puntos cuando se desactiva el modo ruta
+  // Limpiar cuando se desactiva el modo ruta
   useEffect(() => {
     if (!routeMode) {
-      setRouteDirections([]);
+      clearNativeRouteOverlays();
       setRoutePoints([]);
-      // limpiar manualmente las polilíneas que puedan quedar
-      routeOverlayRefs.current.polylines.forEach((pl) => {
-        try { pl.setMap(null); } catch (_) {}
-      });
-      routeOverlayRefs.current.polylines = [];
     }
-  }, [routeMode]);
+  }, [routeMode, clearNativeRouteOverlays]);
 
-  // Al cambiar de fecha de ruta, limpiar y forzar re-render de capas
+  // Limpiar si cambia la sabana
   useEffect(() => {
-    if (!routeMode) return;
-    setRouteDirections([]);
-    setRoutePoints([]);
-    setRouteRenderKey((k) => k + 1);
-    // limpiar manualmente las polilíneas actuales
-    routeOverlayRefs.current.polylines.forEach((pl) => {
-      try { pl.setMap(null); } catch (_) {}
-    });
-    routeOverlayRefs.current.polylines = [];
-  }, [routeDate, routeMode]);
+    clearNativeRouteOverlays();
+  }, [idSabana, clearNativeRouteOverlays]);
 
-  // Limpiar polilíneas si cambia la sabana (seguridad extra)
-  useEffect(() => {
-    routeOverlayRefs.current.polylines.forEach((pl) => {
-      try { pl.setMap(null); } catch (_) {}
-    });
-    routeOverlayRefs.current.polylines = [];
-  }, [idSabana]);
-
-  // Cleanup al desmontar el componente
+  // Cleanup al desmontar
   useEffect(() => {
     return () => {
-      routeOverlayRefs.current.polylines.forEach((pl) => {
-        try { pl.setMap(null); } catch (_) {}
-      });
-      routeOverlayRefs.current.polylines = [];
+      clearNativeRouteOverlays();
     };
-  }, []);
+  }, [clearNativeRouteOverlays]);
 
   const filteredSites = useMemo(() => {
     if (!allowedSiteIds || allowedSiteIds.length === 0) return [];
@@ -334,159 +515,6 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
       };
     });
   }, [sectors, filteredSectors, isLoaded, routeMode]);
-
-  // Calcular rutas sobre calles usando Directions API (segmentado si > 25 puntos)
-  useEffect(() => {
-    if (!isLoaded || !routeMode) {
-      setRouteDirections([]);
-      return;
-    }
-    const pts = filteredRoutePoints;
-    if (!pts || pts.length < 2) {
-      setRouteDirections([]);
-      return;
-    }
-
-    let cancelled = false;
-    const directionsService = new window.google.maps.DirectionsService();
-
-    const chunkSize = 25; // 1 + 23 waypoints + 1
-    const makeChunks = (arr) => {
-      if (arr.length <= chunkSize) return [arr];
-      const chunks = [];
-      let start = 0;
-      while (start < arr.length - 1) {
-        const end = Math.min(start + chunkSize - 1, arr.length - 1);
-        // chunk includes origin arr[start]...arr[end]
-        const chunk = arr.slice(start, end + 1);
-        chunks.push(chunk);
-        // overlap next chunk origin with previous end to keep continuity
-        start = end;
-      }
-      return chunks;
-    };
-
-    const chunks = makeChunks(pts);
-    const run = async () => {
-      const results = [];
-      for (const chunk of chunks) {
-        if (cancelled) return;
-        const origin = { lat: chunk[0].lat, lng: chunk[0].lng };
-        const destination = { lat: chunk[chunk.length - 1].lat, lng: chunk[chunk.length - 1].lng };
-        const inter = chunk.slice(1, -1);
-        const waypoints = inter.slice(0, 23).map((p) => ({ location: { lat: p.lat, lng: p.lng }, stopover: false }));
-
-        const req = {
-          origin,
-          destination,
-          waypoints,
-          travelMode: window.google.maps.TravelMode.DRIVING,
-          optimizeWaypoints: false,
-          provideRouteAlternatives: false,
-        };
-
-        const dir = await new Promise((resolve, reject) => {
-          directionsService.route(req, (res, status) => {
-            if (status === window.google.maps.DirectionsStatus.OK) resolve(res);
-            else reject(new Error(`Directions failed: ${status}`));
-          });
-        }).catch((e) => {
-          console.warn(e);
-          return null;
-        });
-
-        if (cancelled) return;
-        if (dir) results.push(dir);
-      }
-      if (!cancelled) setRouteDirections(results);
-    };
-
-    setRouteDirections([]);
-    run();
-    return () => {
-      cancelled = true;
-    };
-  }, [isLoaded, routeMode, filteredRoutePoints]);
-
-  // Paleta de colores para segmentos
-  const segmentColors = useMemo(() => [
-    "#2563eb", // azul
-    "#10b981", // verde
-    "#ef4444", // rojo
-    "#f59e0b", // ámbar
-    "#8b5cf6", // púrpura
-    "#06b6d4", // cian
-    "#84cc16", // lima
-    "#f97316", // naranja
-    "#db2777", // rosa
-    "#0ea5e9", // azul claro
-  ], []);
-
-  // Convertir Directions en segmentos coloreados por tramo consecutivo
-  const coloredSegments = useMemo(() => {
-    if (!routeMode) return [];
-    const segs = [];
-    if (routeDirections.length === 0) return segs; // no dibujar hasta tener Directions
-    let globalIdx = 0;
-    for (const dir of routeDirections) {
-      const route = dir?.routes?.[0];
-      if (!route?.legs) continue;
-      for (const leg of route.legs) {
-        const path = [];
-        if (Array.isArray(leg.steps)) {
-          for (const step of leg.steps) {
-            const stepPath = step.path || [];
-            for (const ll of stepPath) {
-              const lat = typeof ll.lat === "function" ? ll.lat() : ll.lat;
-              const lng = typeof ll.lng === "function" ? ll.lng() : ll.lng;
-              path.push({ lat, lng });
-            }
-          }
-        }
-        if (path.length >= 2) {
-          segs.push({
-            index: globalIdx,
-            color: segmentColors[globalIdx % segmentColors.length],
-            path,
-          });
-        }
-        globalIdx++;
-      }
-    }
-    return segs;
-  }, [routeMode, routeDirections, segmentColors]);
-
-  // Forzar remount y limpieza cuando cambian las Directions
-  useEffect(() => {
-    if (!routeMode) return;
-    // limpiar manualmente las polilíneas actuales antes de re-renderizar
-    routeOverlayRefs.current.polylines.forEach((pl) => {
-      try { pl.setMap(null); } catch (_) {}
-    });
-    routeOverlayRefs.current.polylines = [];
-    setRouteRenderKey((k) => k + 1);
-  }, [routeDirections, routeMode]);
-
-  // Clustering de puntos repetidos: principal = índice menor; otros alrededor
-  const clusteredSteps = useMemo(() => {
-    if (!routeMode) return [];
-    const groups = new Map();
-    filteredRoutePoints.forEach((p, i) => {
-      const key = `${Number(p.lat).toFixed(6)},${Number(p.lng).toFixed(6)}`;
-      const arr = groups.get(key) || [];
-      arr.push({ idx: i + 1, p });
-      groups.set(key, arr);
-    });
-
-    const clusters = [];
-    groups.forEach((arr) => {
-      arr.sort((a, b) => a.idx - b.idx);
-      const principal = arr[0];
-      const others = arr.slice(1).map((x) => x.idx);
-      clusters.push({ lat: principal.p.lat, lng: principal.p.lng, mainIndex: principal.idx, others });
-    });
-    return clusters;
-  }, [routeMode, filteredRoutePoints]);
 
   if (loadError) {
     return (
@@ -581,107 +609,7 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
           </>
         )}
 
-        {routeMode && filteredRoutePoints.length > 0 && (
-          <>
-            {/* Dibujar segmentos con colores distintos */}
-            <div key={`routes-${routeRenderKey}`}>
-            {coloredSegments.map((seg) => (
-              <Polyline
-                key={`seg-${seg.index}`}
-                path={seg.path}
-                options={{
-                  geodesic: false,
-                  strokeColor: seg.color,
-                  strokeOpacity: 0.95,
-                  strokeWeight: 4,
-                }}
-                onLoad={(poly) => {
-                  // registrar referencia para poder limpiar manualmente
-                  routeOverlayRefs.current.polylines.push(poly);
-                }}
-                onUnmount={(poly) => {
-                  // remover de la lista al desmontar
-                  routeOverlayRefs.current.polylines = routeOverlayRefs.current.polylines.filter((p) => p !== poly);
-                }}
-              />
-            ))}
-
-            {/* Marcadores numerados con clustering (principal + secundarios alrededor) */}
-            {clusteredSteps.map((cluster, ci) => (
-              <>
-                {/* Secundarios (alrededor) primero para que el principal quede arriba */}
-                {(() => {
-                  if (!window.google?.maps?.geometry) return null;
-                  const center = new window.google.maps.LatLng(cluster.lat, cluster.lng);
-                  const radius = 10; // metros
-                  const total = cluster.others.length;
-                  return cluster.others.map((num, idx) => {
-                    const angle = (360 / total) * idx;
-                    const pos = window.google.maps.geometry.spherical.computeOffset(center, radius, angle);
-                    return (
-                      <OverlayView
-                        key={`cl-other-${ci}-${idx}`}
-                        position={{ lat: pos.lat(), lng: pos.lng() }}
-                        mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-                      >
-                        <div
-                          title={`Paso ${num}`}
-                          style={{
-                            transform: "translate(-50%, -50%)",
-                            background: "#2563eb",
-                            color: "#fff",
-                            borderRadius: "9999px",
-                            width: 20,
-                            height: 20,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 11,
-                            fontWeight: 700,
-                            border: "2px solid #fff",
-                            boxShadow: "0 0 4px rgba(0,0,0,0.3)",
-                          }}
-                        >
-                          {num}
-                        </div>
-                      </OverlayView>
-                    );
-                  });
-                })()}
-
-                {/* Principal arriba, más grande y con zIndex alto */}
-                <OverlayView
-                  key={`cl-main-${ci}`}
-                  position={{ lat: cluster.lat, lng: cluster.lng }}
-                  mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-                >
-                  <div
-                    title={`Paso ${cluster.mainIndex}`}
-                    style={{
-                      transform: "translate(-50%, -50%)",
-                      background: "#111827",
-                      color: "#fff",
-                      borderRadius: "9999px",
-                      width: 30,
-                      height: 30,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 14,
-                      fontWeight: 900,
-                      border: "3px solid #fff",
-                      boxShadow: "0 0 8px rgba(0,0,0,0.45)",
-                      zIndex: 99999,
-                    }}
-                  >
-                    {cluster.mainIndex}
-                  </div>
-                </OverlayView>
-              </>
-            ))}
-            </div>
-          </>
-        )}
+        {/* Las rutas se dibujan nativamente, no necesitamos componentes React aquí */}
       </GoogleMap>
 
       {(!routeMode && (loading || error)) && (
@@ -692,7 +620,7 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
       )}
       {(routeMode && (routeLoading || routeError)) && (
         <div className="map-overlay-status">
-            {routeLoading && <div className="mapa-antenas-status loading">Cargando ruta...</div>}
+            {routeLoading && <div className="mapa-antenas-status loading">🗺️ Trazando ruta...</div>}
             {routeError && <div className="mapa-antenas-status error">{routeError}</div>}
         </div>
       )}
@@ -713,6 +641,8 @@ MapAntenas.propTypes = {
   ),
   routeMode: PropTypes.bool,
   routeDate: PropTypes.string,
+  shouldTraceRoute: PropTypes.bool,
+  onRouteTraced: PropTypes.func,
 };
 
 export default MapAntenas;
