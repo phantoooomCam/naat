@@ -170,11 +170,76 @@ const applyRectangularLayout = (cy, rootId, _containerRef, opts = {}) => {
   cy.fit();
 };
 
-// Construir elementos desde JSON original (para primera carga via scraping)
+// Construir elementos desde JSON (soporta esquema legacy y schema_version 2)
 function buildGraphData(data) {
   console.log("[buildGraphData] input:", data);
-  if (!data || !data["Perfil objetivo"]) {
-    console.warn("[buildGraphData] No Perfil objetivo en data");
+  if (!data) return [];
+
+  // Nuevo esquema v2: { schema_version, root_profiles, profiles[], relations[] }
+  const isV2 =
+    data.schema_version === 2 ||
+    (Array.isArray(data.root_profiles) && Array.isArray(data.profiles));
+  if (isV2) {
+    const nodesMap = new Map();
+    const edges = [];
+    const edgeSet = new Set();
+
+    const rootSet = new Set(
+      (data.root_profiles || [])
+        .filter((s) => typeof s === "string")
+        .map((s) => s.trim())
+    );
+
+    // Crear nodos
+    for (const p of data.profiles || []) {
+      if (!p || !p.username) continue;
+      const id = p.username;
+      const rootKey = `${p.platform}:${p.username}`;
+      const isRoot = rootSet.has(rootKey);
+      if (!nodesMap.has(id)) {
+        nodesMap.set(id, {
+          data: {
+            id,
+            username: p.username,
+            platform: p.platform,
+            label: p.username || p.full_name || id,
+            full_name: p.full_name || p.username || id,
+            profile_url: p.profile_url || "",
+            photo_url: p.photo_url || "",
+            tipo: isRoot ? "perfil" : "rel",
+            sources: Array.isArray(p.sources) ? p.sources : [],
+          },
+        });
+      }
+    }
+
+    // Crear aristas
+    for (const r of data.relations || []) {
+      if (!r || !r.source || !r.target) continue;
+      const rel = r.type || r.relation_type || r.rel || "relacion";
+      const id = `${r.source}_${r.target}_${rel}`;
+      if (edgeSet.has(id)) continue;
+      edges.push({
+        data: {
+          id,
+          source: r.source,
+          target: r.target,
+          relation_type: rel,
+          rel,
+          platform: r.platform || undefined,
+        },
+      });
+      edgeSet.add(id);
+    }
+
+    const result = [...nodesMap.values(), ...edges];
+    console.log("[buildGraphData] output(v2):", result);
+    return result;
+  }
+
+  // Legacy: { "Perfil objetivo": {...}, "Perfiles relacionados": [...] }
+  if (!data["Perfil objetivo"]) {
+    console.warn("[buildGraphData] Formato no reconocido");
     return [];
   }
   const nodesMap = new Map();
@@ -237,7 +302,7 @@ function buildGraphData(data) {
     }
   });
   const result = [...nodesMap.values(), ...edges];
-  console.log("[buildGraphData] output:", result);
+  console.log("[buildGraphData] output(legacy):", result);
   return result;
 }
 
@@ -581,14 +646,17 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     return cy;
   };
 
-  // Rebuild graph when new raw data (from Buscar / Actualizar) arrives
+  // Rebuild graph when new raw data arrives (legacy or schema v2)
   useEffect(() => {
     if (!elements) return; // nothing to do
-    const isRaw = !!(
-      elements["Perfil objetivo"] && elements["Perfiles relacionados"]
+    const isLegacy = !!(
+      elements?.["Perfil objetivo"] && elements?.["Perfiles relacionados"]
     );
+    const isV2 =
+      elements?.schema_version === 2 ||
+      (Array.isArray(elements?.profiles) && Array.isArray(elements?.root_profiles));
     // Don't interfere with graph-session loading (handled inside getGraphSession)
-    if (!isRaw) return;
+    if (!isLegacy && !isV2) return;
     const cy = ensureCy();
     if (!cy) return;
     console.log("[WindowNet] Rebuilding graph from raw data");
@@ -598,7 +666,16 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     cy.add(built);
     cy.endBatch();
     cy.nodes().grabify();
-    const root = elements?.["Perfil objetivo"]?.username;
+    let root = null;
+    if (isLegacy) {
+      root = elements?.["Perfil objetivo"]?.username;
+    } else if (isV2) {
+      const firstRoot = (elements.root_profiles || [])[0] || null;
+      if (firstRoot && typeof firstRoot === "string") {
+        const parts = firstRoot.split(":");
+        root = parts[1] || null;
+      }
+    }
     applyRectangularLayout(cy, root, containerRef, {
       cellW: 510,
       cellH: 510,
@@ -756,10 +833,8 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
   const buildExportDataFromCy = () => {
     const cy = cyRef.current;
     if (!cy) return null;
-    const platform =
-      elements?.["Perfil objetivo"]?.["platform"] ?? platformLoad ?? "";
-    const owner_username =
-      elements?.["Perfil objetivo"]?.["username"] ?? usernameLoad ?? "";
+    const platform = platformLoad ?? elements?.["Perfil objetivo"]?.["platform"] ?? "";
+    const owner_username = usernameLoad ?? elements?.["Perfil objetivo"]?.["username"] ?? "";
     if (!owner_username) return null;
     const rootNode = cy.$id(owner_username);
     const rootData = rootNode?.data ? rootNode.data() : {};
@@ -900,6 +975,19 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
         );
         nodes = sep.nodes;
         edges = sep.edges;
+      // Formato schema v2
+      } else if (json?.schema_version === 2 || (Array.isArray(json?.profiles) && Array.isArray(json?.root_profiles))) {
+        const built = buildGraphData(json);
+        const sep = built.reduce(
+          (acc, el) => {
+            if (el.data?.source) acc.edges.push(el);
+            else acc.nodes.push(el);
+            return acc;
+          },
+          { nodes: [], edges: [] }
+        );
+        nodes = sep.nodes;
+        edges = sep.edges;
       } else {
         alert("Formato de archivo no reconocido.");
         return;
@@ -911,11 +999,18 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
       cy.endBatch();
       cy.nodes().grabify();
 
-      const rootId =
-        json?.["Perfil objetivo"]?.username ||
-        nodes?.find?.((n) => n?.data?.tipo === "perfil")?.data?.id ||
-        nodes?.[0]?.data?.id ||
-        null;
+      let rootId = null;
+      if (json?.schema_version === 2 && Array.isArray(json?.root_profiles) && json.root_profiles[0]) {
+        const firstRoot = json.root_profiles[0];
+        if (typeof firstRoot === "string") rootId = firstRoot.split(":")[1] || null;
+      }
+      if (!rootId) {
+        rootId =
+          json?.["Perfil objetivo"]?.username ||
+          nodes?.find?.((n) => n?.data?.tipo === "perfil")?.data?.id ||
+          nodes?.[0]?.data?.id ||
+          null;
+      }
 
       const hasPreset =
         json?.layout?.name === "preset" &&
@@ -976,10 +1071,8 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
         data: { id, source, target, relation_type, rel: relation_type },
       };
     });
-    const platform =
-      elements?.["Perfil objetivo"]?.["platform"] ?? platformLoad ?? "";
-    const owner_username =
-      elements?.["Perfil objetivo"]?.["username"] ?? usernameLoad ?? "";
+    const platform = platformLoad ?? elements?.["Perfil objetivo"]?.["platform"] ?? "";
+    const owner_username = usernameLoad ?? elements?.["Perfil objetivo"]?.["username"] ?? "";
     const payload = {
       platform,
       owner_username,
@@ -1107,8 +1200,13 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
       layoutRectangular: () => {
         if (!cyRef.current) return;
         const cy = cyRef.current;
-        const root =
-          elements?.["Perfil objetivo"]?.["username"] || usernameLoad || null;
+        let root = usernameLoad || null;
+        if (!root && elements?.schema_version === 2 && Array.isArray(elements?.root_profiles)) {
+          const firstRoot = elements.root_profiles[0];
+          if (typeof firstRoot === "string") root = firstRoot.split(":")[1] || null;
+        } else if (!root) {
+          root = elements?.["Perfil objetivo"]?.["username"] || null;
+        }
         applyRectangularLayout(cy, root, {
           cols: 20,
           cellW: 310,
@@ -1128,11 +1226,19 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
   useEffect(() => {
     const cy = ensureCy();
     if (!cy) return;
-    const plataforma = elements?.["Perfil objetivo"]?.["platform"];
-    const usuario = elements?.["Perfil objetivo"]?.["username"];
+    let plataforma = elements?.["Perfil objetivo"]?.["platform"]; 
+    let usuario = elements?.["Perfil objetivo"]?.["username"];
+    if (elements?.schema_version === 2) {
+      const firstRoot = (elements.root_profiles || [])[0];
+      if (typeof firstRoot === "string") {
+        const [plat, user] = firstRoot.split(":");
+        plataforma = plat || plataforma;
+        usuario = user || usuario;
+      }
+    }
     if (plataforma) setPlatformLoad(plataforma);
     if (usuario) setUsernameLoad(usuario); // Layout inicial
-    const root = usuario;
+    const root = usuario || null;
     applyRectangularLayout(cy, root, containerRef, {
       cellW: 510,
       cellH: 510,
