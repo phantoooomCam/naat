@@ -57,13 +57,9 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
   const platformOptions = ["facebook", "instagram", "x"];
   const [openMenu, setOpenMenu] = useState(null);
   const [openSubmenu, setOpenSubmenu] = useState(null);
-  const [formErrors, setFormErrors] = useState({ url: true, username: true });
-  // Mensajes de error por campo (solo se usa si formErrors[campo] === false)
-  const [errorMsg, setErrorMsg] = useState({ url: "" });
   const DEFAULT_FORM = {
-    url: "",
+    username: "",
     platform: "",
-    cantidadFotos: 1,
   };
   const [formState, setFormState] = useState(DEFAULT_FORM);
   const [loading, setLoading] = useState(false);
@@ -83,59 +79,24 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
   const toggleSub = (submenu) => {
     setOpenSubmenu((s) => (s === submenu ? null : submenu));
   };
-  const hostFrom = (raw) => {
-    try {
-      return new URL(raw).hostname.replace(/^www\./i, "").toLowerCase();
-    } catch {
-      return "";
-    }
-  };
+  
 
   const handleInputChange = (name, value) => {
-    setFormState((prev) => {
-      const ns = { ...prev, [name]: value };
-
-      if (name === "url") {
-        const { ok, msg } = validateSocialUrl(value);
-        setFormErrors((e) => ({ ...e, url: ok }));
-        setErrorMsg((m) => ({ ...m, url: ok ? "" : msg }));
-
-        // ⬇️ Autocompletar username y platform
-        const extracted = extractUsernameFromUrl(value);
-        ns.username = extracted || "";
-
-        const host = hostFrom(value);
-        const map = {
-          "facebook.com": "facebook",
-          "instagram.com": "instagram",
-          "x.com": "x",
-        };
-        if (map[host]) ns.platform = map[host];
-      }
-
-      return ns;
-    });
+    setFormState((prev) => ({ ...prev, [name]: value }));
   };
 
-  function extractUsernameFromUrl(url) {
-    try {
-      const u = new URL(url);
-      const seg = u.pathname.split("/").filter(Boolean);
-      return seg.length ? seg[0] : null;
-    } catch (e) {
-      return null;
-    }
-  }
+  
 
   function fetchProfileData(platform, username) {
     return fetch(`/related/${platform}/${username}`).then((r) => r.json());
   }
 
-  function scrapeProfile(platform, url, max_photos = 5) {
-    return fetch(`/scrape`, {
+  function scrapeProfile(platform, username) {
+    const roots = [{ platform, username }];
+    return fetch(`/multi-scrape`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ platform, url, max_photos }),
+      body: JSON.stringify({ roots }),
     }).then((r) => r.json());
   }
 
@@ -143,10 +104,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
     e.preventDefault();
     if (loading) return;
 
-    // Si la URL es inválida, no sigas
-    if (formErrors.url === false) return;
-
-    if (!formState.platform || !formState.username || !formState.url) return;
+    if (!formState.platform || !formState.username) return;
     setLoading(true);
     setDataResult(null);
     try {
@@ -168,8 +126,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
       if (useScrape) {
         data = await scrapeProfile(
           formState.platform,
-          formState.url,
-          formState.cantidadFotos || 5
+          formState.username
         );
       } else {
         data = relatedData;
@@ -186,13 +143,12 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
   const handleForceScrape = async (e) => {
     e.preventDefault();
     if (loading) return;
-    if (!formState.platform || !formState.url) return;
+    if (!formState.platform || !formState.username) return;
     setLoading(true);
     try {
       const data = await scrapeProfile(
         formState.platform,
-        formState.url,
-        formState.cantidadFotos || 5
+        formState.username
       );
       setDataResult(data);
       onGraphData && onGraphData(data);
@@ -217,17 +173,14 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
         <h3 className="rv-title">Red de vínculos</h3>
         <form className="rv-form" onSubmit={handleFetchOrScrape}>
           <div className="rv-field">
-            <label>Enlace del perfil (URL):</label>
+            <label>Nombre de usuario:</label>
             <input
               type="text"
-              placeholder="https://plataforma.com/usuario"
-              value={formState.url}
-              onChange={(e) => handleInputChange("url", e.target.value)}
+              placeholder="usuario"
+              value={formState.username}
+              onChange={(e) => handleInputChange("username", e.target.value)}
               required
             />
-            {formErrors.url === false && (
-              <small className="text-error">{errorMsg.url}</small>
-            )}
           </div>
           <div className="rv-field">
             <label>Plataforma:</label>
@@ -244,20 +197,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
               ))}
             </select>
           </div>
-          <div className="rv-field">
-            <label>Cantidad de fotos a analizar:</label>
-            <input
-              type="text"
-              min={0}
-              max={50}
-              maxLength={2}
-              value={formState.cantidadFotos}
-              onChange={(e) =>
-                handleInputChange("cantidadFotos", Number(e.target.value))
-              }
-              required
-            />
-          </div>
+          
           <div className="rv-buttons">
             <button type="submit" disabled={loading}>
               {loading ? (

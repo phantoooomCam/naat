@@ -24,7 +24,7 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
-      "/scrape": {
+      "/multi-scrape": {
         target: "http://192.168.100.207:8000",
         changeOrigin: true,
         secure: false,
