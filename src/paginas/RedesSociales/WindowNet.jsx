@@ -313,6 +313,12 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
   const menusRef = useRef([]);
   const [platformLoad, setPlatformLoad] = useState(null);
   const [usernameLoad, setUsernameLoad] = useState(null);
+  // UI para agregar perfiles (scraping directo desde WindowNet)
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  const [addUsername, setAddUsername] = useState("");
+  const [addPlatform, setAddPlatform] = useState("");
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState("");
 
   // Shared helper to open picker and update a node photo via undo/redo
   const attemptApplyNodeImage = (cy, nodeId, url, attempt = 1) => {
@@ -644,6 +650,65 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     } catch {}
     attachPluginsAndMenus(cy);
     return cy;
+  };
+
+  // Helper: reconstruir grafo a partir de respuesta cruda (v2 o legacy)
+  const rebuildFromRaw = (raw) => {
+    const cy = ensureCy();
+    if (!cy || !raw) return;
+    const built = buildGraphData(raw);
+    cy.startBatch();
+    cy.elements().remove();
+    cy.add(built);
+    cy.endBatch();
+    cy.nodes().grabify();
+
+    // Determinar raíz y setear loads si es v2
+    let root = null;
+    if (raw?.schema_version === 2 || (Array.isArray(raw?.profiles) && Array.isArray(raw?.root_profiles))) {
+      const firstRoot = (raw.root_profiles || [])[0];
+      if (typeof firstRoot === "string") {
+        const [plat, user] = firstRoot.split(":");
+        root = user || null;
+        if (plat) setPlatformLoad(plat);
+        if (user) setUsernameLoad(user);
+      }
+    } else if (raw?.["Perfil objetivo"]) {
+      root = raw?.["Perfil objetivo"]?.username || null;
+      const plat = raw?.["Perfil objetivo"]?.platform;
+      if (plat) setPlatformLoad(plat);
+      if (root) setUsernameLoad(root);
+    }
+
+    applyRectangularLayout(cy, root, containerRef, {
+      cellW: 510,
+      cellH: 510,
+      gapX: 50,
+      gapY: 50,
+      topPad: 80,
+      leftPad: 140,
+      rootOffsetX: 140,
+    });
+    cy.fit();
+  };
+
+  // POST directo al backend para multi-scrape
+  const postMultiScrape = async (platform, username) => {
+    const payload = { roots: [{ platform, username }] };
+    const resp = await fetch(`/multi-scrape`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!resp.ok) {
+      let detail = `Error ${resp.status}`;
+      try {
+        const j = await resp.json();
+        detail = j?.detail || j?.error || detail;
+      } catch {}
+      throw new Error(detail);
+    }
+    return resp.json();
   };
 
   // Rebuild graph when new raw data arrives (legacy or schema v2)
@@ -1251,11 +1316,122 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
   }, [elements]);
 
   return (
-    <div
-      ref={containerRef}
-      className="netlink-graph-container"
-      style={{ width: "100%", height: "100%" }}
-    />
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div
+        ref={containerRef}
+        className="netlink-graph-container"
+        style={{ width: "100%", height: "100%" }}
+      />
+
+      {/* Botón flotante "+" */}
+      <button
+        type="button"
+        onClick={() => setShowAddMenu((v) => !v)}
+        title="Agregar perfil (scrape)"
+        style={{
+          position: "absolute",
+          right: 16,
+          top: 10,
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          border: "none",
+          background: "#1A2D42",
+          color: "#fff",
+          fontSize: 24,
+          cursor: "pointer",
+          zIndex: 10,
+          boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+        }}
+      >
+        +
+      </button>
+
+      {showAddMenu && (
+        <div
+          style={{
+            position: "absolute",
+            right: 16,
+            bottom: 72,
+            zIndex: 11,
+            background: "#0F1B2A",
+            color: "#fff",
+            padding: 16,
+            borderRadius: 12,
+            width: 280,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.35)",
+            border: "1px solid #2b3e55",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <strong>Agregar perfil</strong>
+            <button
+              onClick={() => setShowAddMenu(false)}
+              style={{ background: "transparent", color: "#fff", border: "none", fontSize: 18, cursor: "pointer" }}
+              title="Cerrar"
+            >
+              ×
+            </button>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <label style={{ fontSize: 12, opacity: 0.9 }}>Username</label>
+            <input
+              type="text"
+              placeholder="usuario"
+              value={addUsername}
+              onChange={(e) => setAddUsername(e.target.value)}
+              style={{ padding: 8, borderRadius: 8, border: "1px solid #30465e", background: "#0d1724", color: "#fff" }}
+            />
+            <label style={{ fontSize: 12, opacity: 0.9 }}>Plataforma</label>
+            <select
+              value={addPlatform}
+              onChange={(e) => setAddPlatform(e.target.value)}
+              style={{ padding: 8, borderRadius: 8, border: "1px solid #30465e", background: "#0d1724", color: "#fff" }}
+            >
+              <option value="">--Selecciona--</option>
+              <option value="x">X</option>
+              <option value="instagram">instagram</option>
+              <option value="facebook">facebook</option>
+            </select>
+            {addError && (
+              <small style={{ color: "#FF6B6B" }}>{addError}</small>
+            )}
+            <button
+              type="button"
+              disabled={addLoading || !addUsername || !addPlatform}
+              onClick={async () => {
+                setAddError("");
+                if (!addUsername || !addPlatform) return;
+                try {
+                  setAddLoading(true);
+                  const data = await postMultiScrape(addPlatform, addUsername);
+                  rebuildFromRaw(data);
+                  setShowAddMenu(false);
+                  setAddUsername("");
+                  setAddPlatform("");
+                } catch (e) {
+                  console.error(e);
+                  setAddError(e.message || "No se pudo completar la solicitud");
+                } finally {
+                  setAddLoading(false);
+                }
+              }}
+              style={{
+                marginTop: 8,
+                padding: "10px 12px",
+                borderRadius: 8,
+                border: "none",
+                background: addLoading ? "#2b3e55" : "#1A2D42",
+                color: "#fff",
+                cursor: addLoading ? "not-allowed" : "pointer",
+              }}
+            >
+              {addLoading ? "Enviando..." : "Agregar"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 });
 

@@ -40,8 +40,8 @@
 .redes-grid-layout {
   width: 115%;
   display: grid;
-  grid-template-columns: 0.5fr 1.6fr; /* Changed from 1fr 1fr to 20/80 split */
-  gap: 2vh;
+  grid-template-columns: 0.4fr 1.6fr; /* Changed from 1fr 1fr to 20/80 split */
+  gap: 1vh;
   height: 80vh;
 }
 
@@ -51,11 +51,11 @@
   flex-direction: column;
 }
 .section-left {
-  width: 100%;
+  width: 90%;
   height: 30%;
 }
 .section-right {
-  width: 100%;
+  width: 83%;
   height: 95%;
 }
 
@@ -364,7 +364,7 @@
 }
 
 .netlink-graph-container {
-  width: 100%;
+  width: 70%;
   height: 70%;
 }
 
