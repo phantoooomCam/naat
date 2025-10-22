@@ -41,6 +41,7 @@ import RedVinculosPanel from "./RedVinculosPanel.jsx";
 
 const Redes = () => {
   const netRef = useRef(null);
+  const panelRef = useRef(null);
   const [graphData, setGraphData] = useState(null);
 
   const relaciones_ = {
@@ -72,7 +73,7 @@ const Redes = () => {
       <div className="redes-grid-layout">
         <div className="section-left">
           <div className="inputs-wrapper-card">
-            <RedVinculosPanel netRef={netRef} onGraphData={handleGraphData} />
+            <RedVinculosPanel ref={panelRef} netRef={netRef} onGraphData={handleGraphData} />
           </div>
         </div>
 
@@ -96,7 +97,13 @@ const Redes = () => {
             </div>
           </div>
           <div className="content-display-area">
-            <WindowNet ref={netRef} elements={graphData} />
+            <WindowNet
+              ref={netRef}
+              elements={graphData}
+              onAddRoot={(platform, username) =>
+                panelRef.current?.addRootAndScrape(platform, username)
+              }
+            />
           </div>
         </div>
       </div>

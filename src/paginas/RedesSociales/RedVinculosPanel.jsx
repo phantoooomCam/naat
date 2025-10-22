@@ -1,5 +1,5 @@
 // Fusion of WindowSeek + Navbar for RedesSociales module
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import img from "../../assets/naat_blanco.png";
 import "./redes_sociales.css";
 import { ImSpinner } from "react-icons/im";
@@ -53,7 +53,7 @@ export function validateSocialUrl(raw) {
 }
 
 // Espera ref del grafo (WindowNet) via props
-const RedVinculosPanel = ({ netRef, onGraphData }) => {
+const RedVinculosPanel = forwardRef(({ netRef, onGraphData }, ref) => {
   const platformOptions = ["facebook", "instagram", "x"];
   const [openMenu, setOpenMenu] = useState(null);
   const [openSubmenu, setOpenSubmenu] = useState(null);
@@ -66,6 +66,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
   const [dataResult, setDataResult] = useState(null);
   const [loadPlatform, setLoadPlatform] = useState("");
   const [loadUsername, setLoadUsername] = useState("");
+  const [roots, setRoots] = useState([]);
 
   useEffect(() => {
     localStorage.setItem("rv_formState", JSON.stringify(formState));
@@ -97,6 +98,14 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ roots }),
+    }).then((r) => r.json());
+  }
+
+  async function scrapeMultipleRoots(allRoots) {
+    return fetch(`/multi-scrape`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roots: allRoots }),
     }).then((r) => r.json());
   }
 
@@ -132,6 +141,8 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
         data = relatedData;
       }
       setDataResult(data);
+      // Reset roots to the current searched root
+      setRoots([{ platform: formState.platform, username: formState.username }]);
       onGraphData && onGraphData(data);
     } catch (err) {
       console.error(err);
@@ -146,10 +157,17 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
     if (!formState.platform || !formState.username) return;
     setLoading(true);
     try {
-      const data = await scrapeProfile(
-        formState.platform,
-        formState.username
-      );
+      let data;
+      // If there are accumulated roots, refresh all; otherwise scrape current form
+      if (roots.length > 0) {
+        data = await scrapeMultipleRoots(roots);
+      } else {
+        data = await scrapeProfile(
+          formState.platform,
+          formState.username
+        );
+        setRoots([{ platform: formState.platform, username: formState.username }]);
+      }
       setDataResult(data);
       onGraphData && onGraphData(data);
     } catch (err) {
@@ -158,6 +176,27 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
       setLoading(false);
     }
   };
+
+  // Expose API to add a new root and re-scrape all
+  useImperativeHandle(ref, () => ({
+    addRootAndScrape: async (platform, username) => {
+      if (!platform || !username) return;
+      const exists = roots.some((r) => r.platform === platform && r.username === username);
+      const nextRoots = exists ? roots : [...roots, { platform, username }];
+      setRoots(nextRoots);
+      try {
+        setLoading(true);
+        const data = await scrapeMultipleRoots(nextRoots);
+        setDataResult(data);
+        onGraphData && onGraphData(data);
+      } catch (e) {
+        console.error(e);
+        throw e;
+      } finally {
+        setLoading(false);
+      }
+    },
+  }));
 
   // Navbar actions
   const call = (fnName, ...args) => {
@@ -389,6 +428,6 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
       </div>
     </div>
   );
-};
+});
 
 export default RedVinculosPanel;
