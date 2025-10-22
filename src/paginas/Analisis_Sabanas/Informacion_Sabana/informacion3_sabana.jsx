@@ -16,9 +16,12 @@ import {
 import { FaMapMarkedAlt } from "react-icons/fa";
 import "./informacion_sabana.css";
 import { useLocation } from "react-router-dom";
+import Swal from "sweetalert2";
 import TablaRegistros from "../../../componentes/TablaRegistros.jsx";
 import RedVinculos from "../../../componentes/RedVinculos.jsx";
 import MapAntenas from "../../../componentes/MapAntenas.jsx";
+import IntersectionToggleButton from "../../../componentes/IntersectionToggleButton.jsx";
+import DebugFilterStatus from "../../../componentes/DebugFilterStatus.jsx";
 import "../../../componentes/RedVinculos.css";
 import fetchWithAuth from "../../../utils/fetchWithAuth.js";
 
@@ -105,6 +108,14 @@ const GestionSabanaView = () => {
   const [routeMode, setRouteMode] = useState(false);
   const [routeDate, setRouteDate] = useState(""); // YYYY-MM-DD
   const [shouldTraceRoute, setShouldTraceRoute] = useState(false); // controla cuándo trazar
+
+  // NUEVO: modo intersección de sectores
+  const [intersectionMode, setIntersectionMode] = useState(false);
+  const [intersectionStats, setIntersectionStats] = useState({
+    total: 0,
+    intersecting: 0,
+    pairsCount: 0
+  });
 
   // MODIFICADO: Agregar filtros específicos para Red de Vínculos
   const [filtrosRedVinculos, setFiltrosRedVinculos] = useState({
@@ -494,12 +505,75 @@ const GestionSabanaView = () => {
         if (!routeDate && filtrosMapaAntenas.fechaInicio) {
           setRouteDate(filtrosMapaAntenas.fechaInicio);
         }
+        // Desactivar modo intersección si estaba activo
+        setIntersectionMode(false);
       } else {
         // al desactivar rutas, reseteamos el trigger de trazado
         setShouldTraceRoute(false);
       }
       return next;
     });
+  };
+
+  // NUEVO: alternar modo intersección
+  const toggleIntersectionMode = () => {
+    // Si está intentando activar el modo
+    if (!intersectionMode) {
+      // Validar sábana
+      if (!idSabana) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Sábana no seleccionada',
+          text: 'Debes seleccionar una sábana primero',
+          confirmButtonColor: '#667eea'
+        });
+        return;
+      }
+      
+      // Validar filtros de fecha
+      if (!filtrosMapaAplicados.fromDate || !filtrosMapaAplicados.toDate) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Filtros de fecha requeridos',
+          text: 'Debes aplicar filtros de fecha antes de analizar intersecciones',
+          confirmButtonColor: '#667eea',
+          html: `
+            <p style="margin-bottom: 15px;">Para detectar azimuths coincidentes necesitas configurar:</p>
+            <ul style="text-align: left; margin: 0 auto; max-width: 300px; line-height: 1.8;">
+              <li>📅 Fecha de inicio</li>
+              <li>📅 Fecha de fin</li>
+            </ul>
+            <p style="margin-top: 15px; font-size: 13px; color: #6b7280;">
+              Luego haz click en <strong>"Aplicar Filtros"</strong>
+            </p>
+          `
+        });
+        return;
+      }
+      
+      // Si pasa todas las validaciones, activar
+      if (routeMode) {
+        setRouteMode(false);
+        setRouteDate("");
+        setShouldTraceRoute(false);
+      }
+      setIntersectionMode(true);
+    } else {
+      // Desactivar el modo
+      setIntersectionMode(false);
+      setIntersectionStats({ total: 0, intersecting: 0, pairsCount: 0 });
+    }
+  };
+
+  // NUEVO: callback para recibir estadísticas del mapa
+  const handleIntersectionStats = (stats) => {
+    setIntersectionStats(stats);
+  };
+
+  // NUEVO: obtener hora para análisis de intersección
+  const getIntersectionHour = () => {
+    if (!filtrosMapaAplicados.fromDate) return null;
+    return filtrosMapaAplicados.fromDate;
   };
 
   const toggleSitioSeleccion = (siteId, checked) => {
@@ -867,6 +941,9 @@ const GestionSabanaView = () => {
             routeDate={routeDate}
             shouldTraceRoute={shouldTraceRoute}
             onRouteTraced={() => setShouldTraceRoute(false)}
+            intersectionMode={intersectionMode}
+            intersectionHour={intersectionMode ? getIntersectionHour() : null}
+            onIntersectionStats={handleIntersectionStats}
           />
         );
 
@@ -1244,6 +1321,26 @@ const GestionSabanaView = () => {
                       </>
                     )}
                   </div>
+                  
+                  {/* NUEVO: Botón de Azimuth Coincidentes */}
+                  {!routeMode && (
+                    <div style={{ margin: "8px 0 12px" }}>
+                      <IntersectionToggleButton
+                        isIntersectionMode={intersectionMode}
+                        onToggle={toggleIntersectionMode}
+                        hasIntersections={intersectionStats.intersecting > 0}
+                        isLoading={loadingAntenas}
+                        disabled={!idSabana || !filtrosMapaAplicados.fromDate || !filtrosMapaAplicados.toDate}
+                        disabledReason={
+                          !idSabana 
+                            ? "Selecciona una sábana primero"
+                            : !filtrosMapaAplicados.fromDate || !filtrosMapaAplicados.toDate
+                              ? "Aplica filtros de fecha"
+                              : "Debes aplicar filtros"
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
               ) : activeButton === "network" ? (
                 // NUEVO: Panel de filtros específico para Red de Vínculos
@@ -1487,6 +1584,14 @@ const GestionSabanaView = () => {
           <div className="content-display-area">{renderContent()}</div>
         </div>
       </div>
+      
+      {/* Componente de Debug - TEMPORAL */}
+      <DebugFilterStatus
+        idSabana={idSabana}
+        filtrosMapaAplicados={filtrosMapaAplicados}
+        intersectionMode={intersectionMode}
+        intersectionStats={intersectionStats}
+      />
     </div>
   );
 };

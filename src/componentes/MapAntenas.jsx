@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import PropTypes from "prop-types";
 import {
   GoogleMap,
   useJsApiLoader,
   Polygon,
   OverlayView,
+  InfoWindow,
 } from "@react-google-maps/api";
 import { LuRadioTower } from "react-icons/lu";
+import { useIntersectingSectors } from "../assets/hooks/useIntersectingSectors";
 import "./MapAntenas.css";
 
 const fetchWithAuth = (url, options) => {
@@ -32,7 +34,19 @@ const getCacheKey = (sabanaId, fromDate, toDate, type) => {
   return `${type}_${sabanaId}_${fromDate}_${toDate}`;
 };
 
-const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = false, routeDate = null, shouldTraceRoute = false, onRouteTraced = null }) => {
+const MapAntenas = ({ 
+  idSabana, 
+  fromDate, 
+  toDate, 
+  allowedSiteIds, 
+  routeMode = false, 
+  routeDate = null, 
+  shouldTraceRoute = false, 
+  onRouteTraced = null,
+  intersectionMode = false,
+  intersectionHour = null,
+  onIntersectionStats = null,
+}) => {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
   const [sites, setSites] = useState([]);
@@ -49,9 +63,74 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
   const [routeError, setRouteError] = useState(null);
   const [activeRouteDate, setActiveRouteDate] = useState(null);
   
+  // NUEVO: Estados para modo de intersección
+  const [intersectionSectors, setIntersectionSectors] = useState([]);
+  const [loadingIntersections, setLoadingIntersections] = useState(false);
+  const [intersectionError, setIntersectionError] = useState(null);
+  
+  // NUEVO: Estados para InfoWindow de sectores
+  const [selectedSector, setSelectedSector] = useState(null);
+  const [sectorTimeInfo, setSectorTimeInfo] = useState({});
+  
   // Referencias nativas para polylines y marcadores (ahora por sábana)
   const nativeOverlaysBySabanaRef = useRef({});
   const sectorsLoadedRef = useRef(false); // NUEVO: Bandera para cargar sectores solo una vez
+
+  // NUEVO: Hook para detectar intersecciones
+  const { highlightedIds, pairs, stats } = useIntersectingSectors(
+    intersectionMode ? intersectionSectors : [],
+    600, // distancia máxima
+    5    // mitad del cono
+  );
+
+  // NUEVO: Notificar estadísticas al componente padre
+  useEffect(() => {
+    if (intersectionMode && onIntersectionStats) {
+      onIntersectionStats(stats);
+    }
+  }, [intersectionMode, stats, onIntersectionStats]);
+
+  // NUEVO: Procesar información de tiempo de los sectores
+  useEffect(() => {
+    if (!intersectionMode || !intersectionSectors.length) {
+      setSectorTimeInfo({});
+      return;
+    }
+
+    // Agrupar sectores por sectorId para obtener todas las horas en que se usó
+    const timeInfo = {};
+    intersectionSectors.forEach(sector => {
+      if (!timeInfo[sector.sectorId]) {
+        timeInfo[sector.sectorId] = {
+          hours: [],
+          sector: sector
+        };
+      }
+      // Si el sector tiene información de hora, agregarla
+      if (sector.timestamp || sector.hora) {
+        const hora = sector.timestamp || sector.hora;
+        if (!timeInfo[sector.sectorId].hours.includes(hora)) {
+          timeInfo[sector.sectorId].hours.push(hora);
+        }
+      }
+    });
+
+    setSectorTimeInfo(timeInfo);
+  }, [intersectionMode, intersectionSectors]);
+
+  // NUEVO: Función para formatear la hora
+  const formatHour = (timestamp) => {
+    try {
+      const date = new Date(timestamp);
+      return date.toLocaleTimeString('es-MX', { 
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    } catch {
+      return timestamp;
+    }
+  };
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: "google-map-script",
@@ -424,6 +503,82 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
       controller.abort();
     };
   }, [sites, mapRef, isLoaded, fromDate, toDate, allowedSiteIds, routeMode]);
+
+  // NUEVO: Cargar sectores para análisis de intersección
+  useEffect(() => {
+    if (!intersectionMode || !intersectionHour || !idSabana || !isLoaded) {
+      setIntersectionSectors([]);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchIntersectionSectors = async () => {
+      setLoadingIntersections(true);
+      setIntersectionError(null);
+
+      try {
+        // Convertir hora local a UTC (ventana de 1 hora)
+        const fromLocal = new Date(intersectionHour);
+        fromLocal.setMinutes(0, 0, 0);
+        const toLocal = new Date(fromLocal);
+        toLocal.setHours(toLocal.getHours() + 1);
+
+        const sabanaIds = Array.isArray(idSabana) ? idSabana : [idSabana];
+        const allSectors = [];
+
+        // Cargar sectores para cada sábana
+        const results = await Promise.allSettled(
+          sabanaIds.map(async (sabanaId) => {
+            const body = {
+              sabanas: [{ id: Number(sabanaId) }],
+              from: fromLocal.toISOString(),
+              to: toLocal.toISOString(),
+              tz: "America/Mexico_City",
+              topN: 500, // Limitar para rendimiento
+              minFreq: 1,
+              perSabana: false,
+            };
+
+            const res = await fetchWithAuth(
+              "/api/sabanas/registros/batch/sectors/summary",
+              {
+                method: "POST",
+                signal: controller.signal,
+                body: JSON.stringify(body),
+              }
+            );
+
+            if (!res.ok) {
+              throw new Error(`HTTP ${res.status}`);
+            }
+
+            const data = await res.json();
+            const sectors = Array.isArray(data) ? data : (data.items || []);
+            return sectors.map(s => ({ ...s, sabanaId: Number(sabanaId) }));
+          })
+        );
+
+        results.forEach((result) => {
+          if (result.status === "fulfilled") {
+            allSectors.push(...result.value);
+          }
+        });
+
+        setIntersectionSectors(allSectors);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          setIntersectionError("Error al cargar sectores: " + err.message);
+        }
+      } finally {
+        setLoadingIntersections(false);
+      }
+    };
+
+    fetchIntersectionSectors();
+
+    return () => controller.abort();
+  }, [intersectionMode, intersectionHour, idSabana, isLoaded]);
 
   // NUEVO: Limpia overlays de una sábana específica
   const clearNativeRouteOverlaysForSabana = useCallback((sabanaId) => {
@@ -804,7 +959,11 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
   // OPTIMIZADO: Calcular polígonos solo cuando cambian los sectores
   const sectorPolygons = useMemo(() => {
     if (routeMode) return [];
-    const source = filteredSectors.length > 0 ? filteredSectors : sectors;
+    
+    const source = intersectionMode 
+      ? intersectionSectors 
+      : (filteredSectors.length > 0 ? filteredSectors : sectors);
+    
     if (!source.length || !isLoaded || !window.google?.maps?.geometry) return [];
 
     return source.map((sector) => {
@@ -820,8 +979,12 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
         sector.azimuth + 5
       );
 
-      // Obtener color según la sábana
-      const sectorColor = sabanaColorMap[sector.sabanaId] || "#2563eb";
+      // Determinar color: fucsia si intersecta, color de sábana si no
+      const isHighlighted = highlightedIds.has(sector.sectorId);
+      const baseColor = sabanaColorMap[sector.sabanaId] || "#2563eb";
+      const sectorColor = isHighlighted ? "#ff00ff" : baseColor;
+      const opacity = isHighlighted ? 1 : 0.6;
+      const fillOpacity = isHighlighted ? 0.4 : 0.2;
 
       return {
         id: sector.sectorId,
@@ -829,9 +992,13 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
         rank: sector.rankDelSitio,
         color: sectorColor,
         sabanaId: sector.sabanaId,
+        isHighlighted,
+        opacity,
+        fillOpacity,
       };
     });
-  }, [sectors, filteredSectors, isLoaded, routeMode, sabanaColorMap]);
+  }, [sectors, filteredSectors, intersectionSectors, isLoaded, routeMode, 
+      sabanaColorMap, highlightedIds, intersectionMode]);
 
   if (loadError) {
     return (
@@ -861,7 +1028,32 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
 
       <div className="map-legend">
         <h4>Leyenda</h4>
-        {!routeMode ? (
+        {intersectionMode ? (
+          <>
+            <div className="legend-item">
+              <div style={{ 
+                width: 24, 
+                height: 4, 
+                backgroundColor: '#ff00ff',
+                boxShadow: '0 0 10px #ff00ff'
+              }}></div>
+              <span style={{ fontWeight: 'bold' }}>Sectores Coincidentes</span>
+            </div>
+            <div className="legend-item">
+              <span style={{ fontSize: '12px', color: '#6b7280' }}>
+                📊 Total: {stats.total} | Coinciden: {stats.intersecting} | Pares: {stats.pairsCount}
+              </span>
+            </div>
+            <div className="legend-item" style={{ fontSize: '11px', marginTop: '8px' }}>
+              <span>Criterio: ≤600m, azimuths ±5°</span>
+            </div>
+            {loadingIntersections && (
+              <div className="legend-item" style={{ color: '#f59e0b', fontSize: '11px' }}>
+                <span>⏳ Analizando intersecciones...</span>
+              </div>
+            )}
+          </>
+        ) : !routeMode ? (
           <>
             <div className="legend-item">
               <LuRadioTower className="legend-icon" />
@@ -939,18 +1131,89 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
         {!routeMode && (
           <>
             {sectorPolygons.map((poly) => (
-              <Polygon
-                key={poly.id}
-                path={poly.path}
-                options={{
-                  fillColor: poly.color,
-                  fillOpacity: 0.2,
-                  strokeColor: poly.color,
-                  strokeOpacity: 0.6,
-                  strokeWeight: 1,
-                  zIndex: poly.rank,
-                }}
-              />
+              <React.Fragment key={poly.id}>
+                <Polygon
+                  path={poly.path}
+                  onClick={() => {
+                    if (intersectionMode && poly.isHighlighted) {
+                      setSelectedSector(poly);
+                    }
+                  }}
+                  options={{
+                    fillColor: poly.color,
+                    fillOpacity: poly.fillOpacity || 0.2,
+                    strokeColor: poly.color,
+                    strokeOpacity: poly.opacity || 0.6,
+                    strokeWeight: poly.isHighlighted ? 3 : 1,
+                    zIndex: poly.isHighlighted ? 10000 + poly.rank : poly.rank,
+                    clickable: intersectionMode && poly.isHighlighted,
+                    cursor: intersectionMode && poly.isHighlighted ? 'pointer' : 'default',
+                  }}
+                />
+                
+                {/* InfoWindow para sectores coincidentes */}
+                {intersectionMode && selectedSector?.id === poly.id && (
+                  <InfoWindow
+                    position={{
+                      lat: poly.path[0].lat(),
+                      lng: poly.path[0].lng()
+                    }}
+                    onCloseClick={() => setSelectedSector(null)}
+                  >
+                    <div style={{ 
+                      padding: '12px',
+                      minWidth: '200px',
+                      fontFamily: 'system-ui, -apple-system, sans-serif'
+                    }}>
+                      <h3 style={{ 
+                        margin: '0 0 8px 0',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        color: '#1e293b',
+                        borderBottom: '2px solid #ff00ff',
+                        paddingBottom: '6px'
+                      }}>
+                        ⚡ Sector Coincidente
+                      </h3>
+                      <div style={{ fontSize: '14px', color: '#475569', lineHeight: '1.6' }}>
+                        <p style={{ margin: '6px 0' }}>
+                          <strong>Sector ID:</strong> {poly.id}
+                        </p>
+                        <p style={{ margin: '6px 0' }}>
+                          <strong>Sábana:</strong> #{poly.sabanaId}
+                        </p>
+                        <p style={{ margin: '6px 0' }}>
+                          <strong>Ranking:</strong> #{poly.rank}
+                        </p>
+                        
+                        {sectorTimeInfo[poly.id]?.hours.length > 0 && (
+                          <>
+                            <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #e2e8f0' }} />
+                            <p style={{ margin: '6px 0', fontWeight: 'bold', color: '#ff00ff' }}>
+                              🕐 Horas de Uso:
+                            </p>
+                            <ul style={{ 
+                              margin: '4px 0', 
+                              paddingLeft: '20px',
+                              listStyle: 'none'
+                            }}>
+                              {sectorTimeInfo[poly.id].hours.map((hora, idx) => (
+                                <li key={idx} style={{ 
+                                  padding: '3px 0',
+                                  fontSize: '13px',
+                                  color: '#64748b'
+                                }}>
+                                  • {formatHour(hora)}
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </InfoWindow>
+                )}
+              </React.Fragment>
             ))}
 
             {(filteredSites.length > 0 ? filteredSites : sites).map((site) => {
@@ -979,12 +1242,19 @@ const MapAntenas = ({ idSabana, fromDate, toDate, allowedSiteIds, routeMode = fa
         {/* Las rutas se dibujan nativamente, no necesitamos componentes React aquí */}
       </GoogleMap>
 
-      {(!routeMode && (loading || error)) && (
+      {(!routeMode && !intersectionMode && (loading || error)) && (
         <div className="map-overlay-status">
             {loading && <div className="mapa-antenas-status loading">⏳ Cargando sitios...</div>}
             {error && <div className="mapa-antenas-status error">{error}</div>}
         </div>
       )}
+      
+      {intersectionMode && intersectionError && (
+        <div className="map-overlay-status">
+          <div className="mapa-antenas-status error">{intersectionError}</div>
+        </div>
+      )}
+      
       {(routeMode && (routeLoading || routeError)) && (
         <div className="map-overlay-status">
             {routeLoading && <div className="mapa-antenas-status loading">🗺️ Trazando ruta...</div>}
@@ -1010,6 +1280,9 @@ MapAntenas.propTypes = {
   routeDate: PropTypes.string,
   shouldTraceRoute: PropTypes.bool,
   onRouteTraced: PropTypes.func,
+  intersectionMode: PropTypes.bool,
+  intersectionHour: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
+  onIntersectionStats: PropTypes.func,
 };
 
 export default MapAntenas;

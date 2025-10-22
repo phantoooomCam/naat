@@ -175,6 +175,21 @@
   background: #fef2f2;
 }
 
+/* Estilos para sectores con intersección */
+.sector-intersection {
+  filter: drop-shadow(0 0 8px rgba(255, 0, 255, 0.8));
+  animation: pulse-intersection 2s ease-in-out infinite;
+}
+
+@keyframes pulse-intersection {
+  0%, 100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 /* Diseño responsivo */
 @media (max-width: 768px) {
   .mapa-antenas-wrapper {
