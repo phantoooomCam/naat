@@ -1244,24 +1244,10 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
           return;
         }
 
-        // Layout parents in a compact rectangular grid
+        // We'll compute dynamic cell sizes based on the space needed to place all children around each parent
         const pCount = parents.length;
-        const cols = Math.max(1, Math.ceil(Math.sqrt(pCount)));
-        const cellW = 480;
-        const cellH = 480;
-        const gapX = 80;
-        const gapY = 80;
         const leftPad = 140;
         const topPad = 80;
-
-        parents.forEach((p, i) => {
-          const col = i % cols;
-          const row = Math.floor(i / cols);
-          const x = leftPad + col * (cellW + gapX);
-          const y = topPad + row * (cellH + gapY);
-          p.position({ x, y });
-          p.data("tipo", "perfil");
-        });
 
         // Scale node dimensions based on total node count (apply before perimeter placement)
         const totalNodes = cy.nodes().length;
@@ -1279,12 +1265,21 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
           n.style("height", base * scale);
         });
 
-        // For each parent, arrange its direct neighbors (non-parent nodes) along the parent's perimeter
-        // Use rectangular perimeters expanding outward as needed
-        const basePad = 50; // distance from parent border to first perimeter
-        const ringSpacing = 110; // distance between subsequent perimeters
-        const minGapFactor = 1.2; // child size multiplier to avoid overlap
+        // Compute dynamic cell width/height required for each parent, then position parents in a grid
+        // Spacing is defined in rems per request: 3rem from parent to first contour, and 3rem between layers
+        const rootFontPx = (() => {
+          try {
+            return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+          } catch {
+            return 16;
+          }
+        })();
+        const padBetween = 3 * rootFontPx; // 3rem in px
 
+        let maxCellW = 480;
+        let maxCellH = 480;
+
+        const childrenByParent = new Map();
         parents.forEach((parent) => {
           const pId = parent.id();
           const connected = parent.connectedEdges();
@@ -1298,6 +1293,53 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
           const children = Array.from(childIds)
             .map((id) => cy.$id(id))
             .filter((n) => n && n.nonempty() && n.data("tipo") !== "perfil");
+          childrenByParent.set(parent.id(), children);
+          const count = children.length;
+          const pW = parent.width();
+          const pH = parent.height();
+          const childSample = children[0];
+          const childDim = (childSample?.width?.() || baseRel * scale) || baseRel * scale;
+          const childHalf = childDim / 2;
+          const minSpacing = Math.max(40, childDim + padBetween);
+          // simulate rings to compute outermost rx/ry
+          let placed = 0;
+          let ring = 1;
+          let rx = pW / 2 + childHalf + padBetween;
+          let ry = pH / 2 + childHalf + padBetween;
+          while (placed < count) {
+            const perimeter = 2 * (2 * rx + 2 * ry);
+            const capacity = Math.max(1, Math.floor(perimeter / minSpacing));
+            placed += capacity;
+            if (placed < count) {
+              rx += childDim + padBetween;
+              ry += childDim + padBetween;
+              ring += 1;
+            }
+          }
+          const neededW = 2 * rx + childDim; // include outer child half-size
+          const neededH = 2 * ry + childDim;
+          maxCellW = Math.max(maxCellW, Math.ceil(neededW));
+          maxCellH = Math.max(maxCellH, Math.ceil(neededH));
+        });
+
+        const cols = Math.max(1, Math.ceil(Math.sqrt(pCount)));
+        const gapX = Math.max(80, padBetween);
+        const gapY = Math.max(80, padBetween);
+
+        parents.forEach((p, i) => {
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+          const x = leftPad + col * (maxCellW + gapX);
+          const y = topPad + row * (maxCellH + gapY);
+          p.position({ x, y });
+          p.data("tipo", "perfil");
+        });
+
+        // For each parent, arrange its direct neighbors (non-parent nodes) along the parent's perimeter
+        // Use rectangular perimeters expanding outward as needed
+
+        parents.forEach((parent) => {
+          const children = childrenByParent.get(parent.id()) || [];
           if (!children || children.length === 0) return;
 
           const pPos = parent.position();
@@ -1307,13 +1349,17 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
           // Estimate child dimension using the first child's width, fallback to baseRel * scale
           let childDim = children[0]?.width?.() || baseRel * scale;
           if (!childDim || Number.isNaN(childDim)) childDim = baseRel * scale;
-          const minSpacing = Math.max(40, childDim * minGapFactor);
+          const childHalf = childDim / 2;
+          // Minimum spacing along perimeter between centers to ensure ~3rem between adjacent child edges
+          const minSpacing = Math.max(40, childDim + padBetween);
 
           let placed = 0;
           let ring = 1;
           while (placed < children.length) {
-            const rx = pW / 2 + basePad + (ring - 1) * ringSpacing;
-            const ry = pH / 2 + basePad + (ring - 1) * ringSpacing;
+            // Distance from parent center to perimeter for this ring (centers), ensuring
+            // 3rem between parent edge and nearest child edge, and 3rem between rings
+            const rx = pW / 2 + childHalf + padBetween + (ring - 1) * (childDim + padBetween);
+            const ry = pH / 2 + childHalf + padBetween + (ring - 1) * (childDim + padBetween);
             const perimeter = 2 * (2 * rx + 2 * ry); // rectangle perimeter length
             const capacity = Math.max(1, Math.floor(perimeter / minSpacing));
             const remaining = children.length - placed;
@@ -1355,9 +1401,10 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
           }
         });
 
-        // Apply preset so Cytoscape honors positions, then fit
+        // Apply preset so Cytoscape honors positions, then fit with extra padding for multiple parents
         cy.layout({ name: "preset" }).run();
-        cy.fit();
+        const extraPadding = parents.length > 1 ? 250 : 100;
+        cy.fit(undefined, extraPadding);
       },
     }),
     [elements, usernameLoad]

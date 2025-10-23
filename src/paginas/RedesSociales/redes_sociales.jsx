@@ -4,6 +4,11 @@ import PropTypes from "prop-types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "./redes_sociales.css";
 import "../../componentes/RedVinculos.css";
+import { MdOutlineAddPhotoAlternate } from "react-icons/md";
+import { CiEdit } from "react-icons/ci";
+import { FaEdit } from "react-icons/fa";
+import { AiOutlineUserDelete } from "react-icons/ai";
+import { MdOutlineKeyboardArrowRight, MdOutlineKeyboardArrowDown } from "react-icons/md";
 
 //Funcion para ActiveView
 const VinculosRedes = ({ activeView }) => {
@@ -43,6 +48,7 @@ const Redes = () => {
   const netRef = useRef(null);
   const panelRef = useRef(null);
   const [graphData, setGraphData] = useState(null);
+  const [editOpen, setEditOpen] = useState(false);
 
   const relaciones_ = {
     comentó: { color: "#15a7e6" },
@@ -79,20 +85,49 @@ const Redes = () => {
 
         <div className="section-right">
           <div className="details-red">
-            Tipos de relación:
-            <div className="network-legend">
-              <div className="legend-item">
-                {Object.entries(relaciones_).map(([item, info], index) => (
-                  <div className="relacion">
-                    <div
-                      className="legend-color"
-                      style={{ backgroundColor: info.color }}
-                    ></div>
-                    <div className="relacion-nombre">
-                      {item}
+            {/*Opciones de edicion al grafo*/}
+            <div className="rv-navbar" style={{ padding: 0 }}>
+              <div className="rv-left" style={{ gap: "0.5rem" }}>
+                {/* Editar dropdown */}
+                <div className="rv-section">
+                  <button
+                    className={`rv-item ${editOpen ? "is-active" : ""}`}
+                    onClick={() => setEditOpen((o) => !o)}
+                    type="button"
+                  >
+                    Editar {editOpen ? <MdOutlineKeyboardArrowDown /> : <MdOutlineKeyboardArrowRight />}
+                  </button>
+                  {editOpen && (
+                    <div className="rv-dropdown">
+                      <button onClick={() => netRef.current?.editNodePhoto()} type="button">
+                        <MdOutlineAddPhotoAlternate /> Editar foto (nodo)
+                      </button>
+                      <button onClick={() => netRef.current?.editNodeName()} type="button">
+                        <CiEdit /> Editar nombre (nodo)
+                      </button>
+                      <button onClick={() => netRef.current?.editEdgeRelation()} type="button">
+                        <FaEdit /> Editar vínculo (arista)
+                      </button>
+                      <button onClick={() => netRef.current?.deleteSelected()} type="button">
+                        <AiOutlineUserDelete /> Eliminar seleccionado
+                      </button>
                     </div>
-                  </div>
-                ))}
+                  )}
+                </div>
+                {/* Rectangular layout */}
+                <div className="rv-section">
+                  <button className="rv-item" onClick={() => netRef.current?.layoutRectangular()} type="button">
+                    Rectangular
+                  </button>
+                </div>
+              </div>
+              <div className="rv-right">
+                <button className="rv-item" onClick={() => netRef.current?.undo()} type="button">
+                  ⟲ Deshacer
+                </button>
+                <button className="rv-item" onClick={() => netRef.current?.redo()} type="button">
+                  ⟳ Rehacer
+                </button>
               </div>
             </div>
           </div>

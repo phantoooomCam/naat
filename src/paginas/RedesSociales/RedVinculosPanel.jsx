@@ -3,11 +3,7 @@ import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } f
 import img from "../../assets/naat_blanco.png";
 import "./redes_sociales.css";
 import { ImSpinner } from "react-icons/im";
-import { MdOutlineAddPhotoAlternate } from "react-icons/md";
 import { MdPersonAddAlt } from "react-icons/md";
-import { CiEdit } from "react-icons/ci";
-import { FaEdit } from "react-icons/fa";
-import { AiOutlineUserDelete } from "react-icons/ai";
 import { HiOutlineViewGridAdd } from "react-icons/hi";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
@@ -375,55 +371,6 @@ const RedVinculosPanel = forwardRef(({ netRef, onGraphData }, ref) => {
               </div>
             )}
           </div>
-          <div className="rv-section">
-            <button
-              className={`rv-item ${openMenu === "editar" ? "is-active" : ""}`}
-              onClick={() => {
-                toggle("editar");
-              }}
-            >
-              Editar{" "}
-              {openMenu === "editar" ? (
-                <MdOutlineKeyboardArrowDown />
-              ) : (
-                <MdOutlineKeyboardArrowRight />
-              )}
-            </button>
-            {openMenu === "editar" && (
-              <div className="rv-dropdown">
-                <button onClick={() => call("editNodePhoto")}>
-                  <MdOutlineAddPhotoAlternate /> Editar foto (nodo)
-                </button>
-                <button onClick={() => call("editNodeName")}>
-                  <CiEdit /> Editar nombre (nodo)
-                </button>
-                <button onClick={() => call("editEdgeRelation")}>
-                  <FaEdit /> Editar vínculo (arista)
-                </button>
-                <button onClick={() => call("deleteSelected")}>
-                  <AiOutlineUserDelete /> Eliminar seleccionado
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="rv-section">
-            <button
-              className={`rv-item ${
-                openMenu === "rectangular" ? "is-active" : ""
-              }`}
-              onClick={() => call("layoutRectangular")}
-            >
-              Rectangular
-            </button>
-          </div>
-        </div>
-        <div className="rv-right">
-          <button className="rv-item" onClick={() => call("undo")}>
-            ⟲ Deshacer
-          </button>
-          <button className="rv-item" onClick={() => call("redo")}>
-            ⟳ Rehacer
-          </button>
         </div>
       </div>
     </div>
