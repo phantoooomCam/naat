@@ -4,6 +4,9 @@ import { useState } from "react";
 import Header from "../../componentes/Header";
 import Sidebar from "../../componentes/Sidebar";
 import "../../paginas/SuperAdmin_Funciones/Usuarios/Gestion/Gestion.css"
+import Covid_Numeros from "./componentecovid";
+
+
 
 function NumerosCovid(){
     const[activeView,setActiveView] = useState("inicio");
@@ -20,6 +23,7 @@ function NumerosCovid(){
             <main className={`main-content ${sidebarOpen ? "" : "collapsed"}`}>
 
                 <Header/>
+                <Covid_Numeros activeView={activeView}/>
             </main>
 
         </div>
