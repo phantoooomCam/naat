@@ -1,6 +1,6 @@
 import { FiHome, FiUsers, FiSettings, FiHelpCircle } from "react-icons/fi";
 import { MdOutlineSocialDistance } from "react-icons/md";
-import { LuBookHeadphones } from "react-icons/lu";
+import { LuBookHeadphones, LuDatabase } from "react-icons/lu";
 import { SlOrganization } from "react-icons/sl";
 import { VscOrganization } from "react-icons/vsc";
 import { PiFolderUserDuotone } from "react-icons/pi";
@@ -53,6 +53,11 @@ export const menu = {
       icon: <MdOutlineSocialDistance />,
       label: "Redes Sociales",
     },
+    {
+      id:"/numeros_covid",
+      icon: <LuDatabase/>,
+      label:"BD Numeros"
+    },
   ],
   2: [
     { id: "/home_org", icon: <FiHome />, label: "Inicio" },
@@ -83,6 +88,12 @@ export const menu = {
       icon: <MdOutlineSocialDistance />,
       label: "Redes Sociales",
     },
+    {
+      id:"/numeros_covid",
+      icon: <LuDatabase/>,
+      label:"BD Numeros"
+    },
+    
   ],
   3: [
     { id: "/home_area", icon: <FiHome />, label: "Inicio" },
@@ -112,6 +123,11 @@ export const menu = {
       icon: <MdOutlineSocialDistance />,
       label: "Redes Sociales",
     },
+    {
+      id:"/numeros_covid",
+      icon: <LuDatabase/>,
+      label:"BD Numeros"
+    },
   ],
   4: [
     { id: "/home_depto", icon: <FiHome />, label: "Inicio" },
@@ -137,6 +153,11 @@ export const menu = {
       icon: <MdOutlineSocialDistance />,
       label: "Redes Sociales",
     },
+    {
+      id:"/numeros_covid",
+      icon: <LuDatabase/>,
+      label:"BD Numeros"
+    },
   ],
   5: [
     { id: "/home_analista", icon: <FiHome />, label: "Inicio" },
@@ -151,6 +172,11 @@ export const menu = {
       id: "/redes_sociales",
       icon: <MdOutlineSocialDistance />,
       label: "Redes Sociales",
+    },
+    {
+      id:"/numeros_covid",
+      icon: <LuDatabase/>,
+      label:"BD Numeros"
     },
   ],
 };

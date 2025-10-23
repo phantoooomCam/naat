@@ -51,6 +51,8 @@ import Listado from "./paginas/Analisis_Sabanas/Informacion_Sabana/ListadoSabana
 //Redes Sociales
 import RedesSociales from "./paginas/RedesSociales/redes_sociales_general";
 
+//Numeros covid
+import NumerosCovid from "./paginas/NumerosCovid/numeroscovid";
 
 
 function App() {
@@ -99,6 +101,8 @@ function App() {
         <Route path="/listado_sabanas" element={<Listado/>}/>
         <Route path="/redes_sociales" element={<RedesSociales/>}/>
 
+        {/* NumerosCovid */}
+        <Route path="/numeros_covid" element={<NumerosCovid/>}/>
 
       </Route>
     </Routes>
