@@ -114,7 +114,7 @@ const GestionSabanaView = () => {
   const [intersectionStats, setIntersectionStats] = useState({
     total: 0,
     intersecting: 0,
-    pairsCount: 0
+    pairsCount: 0,
   });
 
   // MODIFICADO: Agregar filtros específicos para Red de Vínculos
@@ -522,21 +522,21 @@ const GestionSabanaView = () => {
       // Validar sábana
       if (!idSabana) {
         Swal.fire({
-          icon: 'warning',
-          title: 'Sábana no seleccionada',
-          text: 'Debes seleccionar una sábana primero',
-          confirmButtonColor: '#667eea'
+          icon: "warning",
+          title: "Sábana no seleccionada",
+          text: "Debes seleccionar una sábana primero",
+          confirmButtonColor: "#667eea",
         });
         return;
       }
-      
+
       // Validar filtros de fecha
       if (!filtrosMapaAplicados.fromDate || !filtrosMapaAplicados.toDate) {
         Swal.fire({
-          icon: 'warning',
-          title: 'Filtros de fecha requeridos',
-          text: 'Debes aplicar filtros de fecha antes de analizar intersecciones',
-          confirmButtonColor: '#667eea',
+          icon: "warning",
+          title: "Filtros de fecha requeridos",
+          text: "Debes aplicar filtros de fecha antes de analizar intersecciones",
+          confirmButtonColor: "#667eea",
           html: `
             <p style="margin-bottom: 15px;">Para detectar azimuths coincidentes necesitas configurar:</p>
             <ul style="text-align: left; margin: 0 auto; max-width: 300px; line-height: 1.8;">
@@ -546,11 +546,11 @@ const GestionSabanaView = () => {
             <p style="margin-top: 15px; font-size: 13px; color: #6b7280;">
               Luego haz click en <strong>"Aplicar Filtros"</strong>
             </p>
-          `
+          `,
         });
         return;
       }
-      
+
       // Si pasa todas las validaciones, activar
       if (routeMode) {
         setRouteMode(false);
@@ -1321,7 +1321,7 @@ const GestionSabanaView = () => {
                       </>
                     )}
                   </div>
-                  
+
                   {/* NUEVO: Botón de Azimuth Coincidentes */}
                   {!routeMode && (
                     <div style={{ margin: "8px 0 12px" }}>
@@ -1330,13 +1330,18 @@ const GestionSabanaView = () => {
                         onToggle={toggleIntersectionMode}
                         hasIntersections={intersectionStats.intersecting > 0}
                         isLoading={loadingAntenas}
-                        disabled={!idSabana || !filtrosMapaAplicados.fromDate || !filtrosMapaAplicados.toDate}
+                        disabled={
+                          !idSabana ||
+                          !filtrosMapaAplicados.fromDate ||
+                          !filtrosMapaAplicados.toDate
+                        }
                         disabledReason={
-                          !idSabana 
+                          !idSabana
                             ? "Selecciona una sábana primero"
-                            : !filtrosMapaAplicados.fromDate || !filtrosMapaAplicados.toDate
-                              ? "Aplica filtros de fecha"
-                              : "Debes aplicar filtros"
+                            : !filtrosMapaAplicados.fromDate ||
+                              !filtrosMapaAplicados.toDate
+                            ? "Aplica filtros de fecha"
+                            : "Debes aplicar filtros"
                         }
                       />
                     </div>
@@ -1358,7 +1363,12 @@ const GestionSabanaView = () => {
                       <label>Máximo de números por sábana:</label>
                       <select
                         value={filtrosRedVinculos.maxConnectionsPerSabana}
-                        onChange={(e) => handleRedVinculosFilterChange('maxConnectionsPerSabana', parseInt(e.target.value))}
+                        onChange={(e) =>
+                          handleRedVinculosFilterChange(
+                            "maxConnectionsPerSabana",
+                            parseInt(e.target.value)
+                          )
+                        }
                         className="filter-select-red"
                       >
                         <option value={10}>10 números</option>
@@ -1374,57 +1384,72 @@ const GestionSabanaView = () => {
                         <input
                           type="checkbox"
                           checked={filtrosRedVinculos.showSharedOnly}
-                          onChange={(e) => handleRedVinculosFilterChange('showSharedOnly', e.target.checked)}
+                          onChange={(e) =>
+                            handleRedVinculosFilterChange(
+                              "showSharedOnly",
+                              e.target.checked
+                            )
+                          }
                           className="filter-checkbox-red"
                         />
-                        <span>Solo mostrar números compartidos entre sábanas</span>
+                        <span>
+                          Solo mostrar números compartidos entre sábanas
+                        </span>
                       </label>
                     </div>
 
                     <div className="filter-presets-red">
                       <h6>Vistas predefinidas:</h6>
                       <div className="preset-buttons-red">
-                        <button 
+                        <button
                           className="preset-btn-red"
-                          onClick={() => setFiltrosRedVinculos(prev => ({ 
-                            ...prev, 
-                            maxConnectionsPerSabana: 20, 
-                            showSharedOnly: false, 
-                            minConnections: 1 
-                          }))}
+                          onClick={() =>
+                            setFiltrosRedVinculos((prev) => ({
+                              ...prev,
+                              maxConnectionsPerSabana: 20,
+                              showSharedOnly: false,
+                              minConnections: 1,
+                            }))
+                          }
                         >
                           Vista Simple
                         </button>
-                        <button 
+                        <button
                           className="preset-btn-red"
-                          onClick={() => setFiltrosRedVinculos(prev => ({ 
-                            ...prev, 
-                            maxConnectionsPerSabana: 100, 
-                            showSharedOnly: false, 
-                            minConnections: 1 
-                          }))}
+                          onClick={() =>
+                            setFiltrosRedVinculos((prev) => ({
+                              ...prev,
+                              maxConnectionsPerSabana: 100,
+                              showSharedOnly: false,
+                              minConnections: 1,
+                            }))
+                          }
                         >
                           Vista Normal
                         </button>
-                        <button 
+                        <button
                           className="preset-btn-red"
-                          onClick={() => setFiltrosRedVinculos(prev => ({ 
-                            ...prev, 
-                            maxConnectionsPerSabana: 500, 
-                            showSharedOnly: false, 
-                            minConnections: 1 
-                          }))}
+                          onClick={() =>
+                            setFiltrosRedVinculos((prev) => ({
+                              ...prev,
+                              maxConnectionsPerSabana: 500,
+                              showSharedOnly: false,
+                              minConnections: 1,
+                            }))
+                          }
                         >
                           Vista Completa
                         </button>
-                        <button 
+                        <button
                           className="preset-btn-red"
-                          onClick={() => setFiltrosRedVinculos(prev => ({ 
-                            ...prev, 
-                            maxConnectionsPerSabana: 500, 
-                            showSharedOnly: true, 
-                            minConnections: 2 
-                          }))}
+                          onClick={() =>
+                            setFiltrosRedVinculos((prev) => ({
+                              ...prev,
+                              maxConnectionsPerSabana: 500,
+                              showSharedOnly: true,
+                              minConnections: 2,
+                            }))
+                          }
                         >
                           Solo Vínculos
                         </button>
@@ -1584,14 +1609,16 @@ const GestionSabanaView = () => {
           <div className="content-display-area">{renderContent()}</div>
         </div>
       </div>
-      
-      {/* Componente de Debug - TEMPORAL */}
-      <DebugFilterStatus
-        idSabana={idSabana}
-        filtrosMapaAplicados={filtrosMapaAplicados}
-        intersectionMode={intersectionMode}
-        intersectionStats={intersectionStats}
-      />
+
+      {/* Componente de Debug - TEMPORAL (desactivado) */}
+      {false && (
+        <DebugFilterStatus
+          idSabana={idSabana}
+          filtrosMapaAplicados={filtrosMapaAplicados}
+          intersectionMode={intersectionMode}
+          intersectionStats={intersectionStats}
+        />
+      )}
     </div>
   );
 };
