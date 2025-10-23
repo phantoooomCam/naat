@@ -9,6 +9,13 @@ import { CiEdit } from "react-icons/ci";
 import { FaEdit } from "react-icons/fa";
 import { AiOutlineUserDelete } from "react-icons/ai";
 import { MdOutlineKeyboardArrowRight, MdOutlineKeyboardArrowDown } from "react-icons/md";
+import { MdPersonAddAlt } from "react-icons/md";
+import { HiOutlineViewGridAdd } from "react-icons/hi";
+import { MdEdit } from "react-icons/md";
+import { CgInsertAfterO } from "react-icons/cg";
+import { TbTopologyStar3 } from "react-icons/tb";
+import { FaUndo } from "react-icons/fa";
+import { FaRedo } from "react-icons/fa";
 
 //Funcion para ActiveView
 const VinculosRedes = ({ activeView }) => {
@@ -49,6 +56,7 @@ const Redes = () => {
   const panelRef = useRef(null);
   const [graphData, setGraphData] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [insertOpen, setInsertOpen] = useState(false);
 
   const relaciones_ = {
     comentó: { color: "#15a7e6" },
@@ -86,8 +94,8 @@ const Redes = () => {
         <div className="section-right">
           <div className="details-red">
             {/*Opciones de edicion al grafo*/}
-            <div className="rv-navbar" style={{ padding: 0 }}>
-              <div className="rv-left" style={{ gap: "0.5rem" }}>
+            <div className="rv-navbar-up" style={{ padding: 0 }}>
+              <div className="rv-left-up" style={{ gap: "0.5rem" }}>
                 {/* Editar dropdown */}
                 <div className="rv-section">
                   <button
@@ -95,7 +103,7 @@ const Redes = () => {
                     onClick={() => setEditOpen((o) => !o)}
                     type="button"
                   >
-                    Editar {editOpen ? <MdOutlineKeyboardArrowDown /> : <MdOutlineKeyboardArrowRight />}
+                    <MdEdit /> {editOpen ? <MdOutlineKeyboardArrowDown /> : <MdOutlineKeyboardArrowRight />}
                   </button>
                   {editOpen && (
                     <div className="rv-dropdown">
@@ -114,19 +122,39 @@ const Redes = () => {
                     </div>
                   )}
                 </div>
+                {/* Insertar dropdown */}
+                <div className="rv-section">
+                  <button
+                    className={`rv-item ${insertOpen ? "is-active" : ""}`}
+                    onClick={() => setInsertOpen((o) => !o)}
+                    type="button"
+                  >
+                    <CgInsertAfterO /> {insertOpen ? <MdOutlineKeyboardArrowDown /> : <MdOutlineKeyboardArrowRight />}
+                  </button>
+                  {insertOpen && (
+                    <div className="rv-dropdown">
+                      <button onClick={() => netRef.current?.createNode()} type="button">
+                        <MdPersonAddAlt /> Nuevo involucrado
+                      </button>
+                      <button onClick={() => netRef.current?.createEdge()} type="button">
+                        <HiOutlineViewGridAdd /> Nuevo vínculo
+                      </button>
+                    </div>
+                  )}
+                </div>
                 {/* Rectangular layout */}
                 <div className="rv-section">
                   <button className="rv-item" onClick={() => netRef.current?.layoutRectangular()} type="button">
-                    Rectangular
+                    <TbTopologyStar3 />
                   </button>
                 </div>
               </div>
-              <div className="rv-right">
+              <div className="rv-right-up">
                 <button className="rv-item" onClick={() => netRef.current?.undo()} type="button">
-                  ⟲ Deshacer
+                  <FaUndo />
                 </button>
                 <button className="rv-item" onClick={() => netRef.current?.redo()} type="button">
-                  ⟳ Rehacer
+                  <FaRedo />
                 </button>
               </div>
             </div>

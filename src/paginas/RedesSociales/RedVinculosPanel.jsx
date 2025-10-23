@@ -3,8 +3,6 @@ import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } f
 import img from "../../assets/naat_blanco.png";
 import "./redes_sociales.css";
 import { ImSpinner } from "react-icons/im";
-import { MdPersonAddAlt } from "react-icons/md";
-import { HiOutlineViewGridAdd } from "react-icons/hi";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
 import { MdOutlineKeyboardArrowDown } from "react-icons/md";
 
@@ -346,31 +344,7 @@ const RedVinculosPanel = forwardRef(({ netRef, onGraphData }, ref) => {
               </div>
             )}
           </div>
-          <div className="rv-section">
-            <button
-              className={`rv-item ${
-                openMenu === "insertar" ? "is-active" : ""
-              }`}
-              onClick={() => toggle("insertar")}
-            >
-              Insertar{" "}
-              {openMenu === "insertar" ? (
-                <MdOutlineKeyboardArrowDown />
-              ) : (
-                <MdOutlineKeyboardArrowRight />
-              )}
-            </button>
-            {openMenu === "insertar" && (
-              <div className="rv-dropdown">
-                <button onClick={() => call("createNode")}>
-                  <MdPersonAddAlt /> Nuevo involucrado
-                </button>
-                <button onClick={() => call("createEdge")}>
-                  <HiOutlineViewGridAdd /> Nuevo vínculo
-                </button>
-              </div>
-            )}
-          </div>
+          
         </div>
       </div>
     </div>
