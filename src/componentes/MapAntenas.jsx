@@ -9,6 +9,9 @@ import {
   OverlayView,
   InfoWindow,
 } from "@react-google-maps/api";
+// NUEVO: Librerías para captura y PDF
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 import { LuRadioTower } from "react-icons/lu";
 import { useIntersectingSectors } from "../assets/hooks/useIntersectingSectors";
 import "./MapAntenas.css";
@@ -71,6 +74,9 @@ const MapAntenas = ({
   // NUEVO: Estados para InfoWindow de sectores
   const [selectedSector, setSelectedSector] = useState(null);
   const [sectorTimeInfo, setSectorTimeInfo] = useState({});
+  // NUEVO: Estados de exportación a PDF
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(null);
   
   // Referencias nativas para polylines y marcadores (ahora por sábana)
   const nativeOverlaysBySabanaRef = useRef({});
@@ -956,6 +962,62 @@ const MapAntenas = ({
     setMapRef(map);
   }, []);
 
+  // NUEVO: Exportar el mapa a PDF (capturando el contenedor del mapa)
+  const handleExportPdf = useCallback(async () => {
+    if (!mapRef) return;
+    try {
+      setExporting(true);
+      setExportError(null);
+
+      // Obtener el elemento DOM del mapa (incluye overlays, polígonos, info windows y marcadores)
+      const mapElement = mapRef.getDiv();
+
+      // Asegurar fondo blanco en la captura y mayor resolución
+      const scale = Math.max(window.devicePixelRatio || 1, 2);
+      const canvas = await html2canvas(mapElement, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        scale,
+        logging: false,
+        windowWidth: mapElement.scrollWidth,
+        windowHeight: mapElement.scrollHeight,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const imgW = canvas.width;
+      const imgH = canvas.height;
+
+      // Elegir orientación de la hoja según la imagen
+      const orientation = imgW >= imgH ? "landscape" : "portrait";
+      const pdf = new jsPDF({ orientation, unit: "mm", format: "a4" });
+
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgAspect = imgW / imgH;
+
+      // Escalar la imagen para que quepa en la página manteniendo proporción
+      let renderW = pageW;
+      let renderH = renderW / imgAspect;
+      if (renderH > pageH) {
+        renderH = pageH;
+        renderW = renderH * imgAspect;
+      }
+      const x = (pageW - renderW) / 2;
+      const y = (pageH - renderH) / 2;
+
+      pdf.addImage(imgData, "PNG", x, y, renderW, renderH, undefined, "FAST");
+
+      const sabanaIds = Array.isArray(idSabana) ? idSabana.join("-") : idSabana;
+      const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+      pdf.save(`Mapa-${sabanaIds || "sabanas"}-${ts}.pdf`);
+    } catch (e) {
+      setExportError("No se pudo exportar el mapa. " + (e?.message || ""));
+    } finally {
+      setExporting(false);
+    }
+  }, [mapRef, idSabana]);
+
   // OPTIMIZADO: Calcular polígonos solo cuando cambian los sectores
   const sectorPolygons = useMemo(() => {
     if (routeMode) return [];
@@ -1023,6 +1085,14 @@ const MapAntenas = ({
       <div className="map-controls">
         <button onClick={fitBoundsToSites} disabled={routeMode ? allRoutePoints.length === 0 : sites.length === 0}>
           Ajustar Vista
+        </button>
+        <button
+          onClick={handleExportPdf}
+          disabled={!mapRef || exporting}
+          style={{ marginLeft: 8 }}
+          title={!mapRef ? "Mapa no listo" : "Exportar vista actual a PDF"}
+        >
+          {exporting ? "Exportando…" : "Exportar PDF"}
         </button>
       </div>
 
@@ -1259,6 +1329,18 @@ const MapAntenas = ({
         <div className="map-overlay-status">
             {routeLoading && <div className="mapa-antenas-status loading">🗺️ Trazando ruta...</div>}
             {routeError && <div className="mapa-antenas-status error">{routeError}</div>}
+        </div>
+      )}
+
+      {/* NUEVO: Estado y errores de exportación */}
+      {(exporting || exportError) && (
+        <div className="map-overlay-status">
+          {exporting && (
+            <div className="mapa-antenas-status loading">📄 Generando PDF…</div>
+          )}
+          {exportError && (
+            <div className="mapa-antenas-status error">{exportError}</div>
+          )}
         </div>
       )}
     </div>
