@@ -1221,7 +1221,7 @@ const MapAntenas = ({
               
               return (
                 <OverlayView
-                  key={site.siteId}
+                  key={`${site.siteId}_${site.sabanaId}`}
                   position={{ lat: site.lat, lng: site.lng }}
                   mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
                 >
