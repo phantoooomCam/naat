@@ -1082,14 +1082,14 @@ const MapAntenas = ({
 
   return (
     <div className="mapa-antenas-wrapper">
-      <div className="map-controls">
+      <div className="map-controls" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <button onClick={fitBoundsToSites} disabled={routeMode ? allRoutePoints.length === 0 : sites.length === 0}>
           Ajustar Vista
         </button>
         <button
           onClick={handleExportPdf}
           disabled={!mapRef || exporting}
-          style={{ marginLeft: 8 }}
+          style={{ marginLeft: 'auto' }}
           title={!mapRef ? "Mapa no listo" : "Exportar vista actual a PDF"}
         >
           {exporting ? "Exportando…" : "Exportar PDF"}
