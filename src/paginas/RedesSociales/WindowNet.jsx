@@ -1097,6 +1097,7 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
       const result = await resp.json();
       if (!resp.ok) throw new Error(result?.detail || "Unprocessable entity");
       alert("Grafo guardado exitosamente.");
+      console.log("Datos enviados para guardar grafo:", payload);
     } catch (err) {
       console.error(err);
       alert("Hubo un error al guardar el grafo.");
