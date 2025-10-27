@@ -3,8 +3,7 @@ import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } f
 import img from "../../assets/naat_blanco.png";
 import "./redes_sociales.css";
 import { ImSpinner } from "react-icons/im";
-import { MdOutlineKeyboardArrowRight } from "react-icons/md";
-import { MdOutlineKeyboardArrowDown } from "react-icons/md";
+ 
 
 // Valida https://(www.)?(facebook|instagram|x).com/<segmento>
 export function validateSocialUrl(raw) {
@@ -49,8 +48,7 @@ export function validateSocialUrl(raw) {
 // Espera ref del grafo (WindowNet) via props
 const RedVinculosPanel = forwardRef(({ netRef, onGraphData }, ref) => {
   const platformOptions = ["facebook", "instagram", "x"];
-  const [openMenu, setOpenMenu] = useState(null);
-  const [openSubmenu, setOpenSubmenu] = useState(null);
+  
   const DEFAULT_FORM = {
     username: "",
     platform: "",
@@ -58,22 +56,14 @@ const RedVinculosPanel = forwardRef(({ netRef, onGraphData }, ref) => {
   const [formState, setFormState] = useState(DEFAULT_FORM);
   const [loading, setLoading] = useState(false);
   const [dataResult, setDataResult] = useState(null);
-  const [loadPlatform, setLoadPlatform] = useState("");
-  const [loadUsername, setLoadUsername] = useState("");
+  
   const [roots, setRoots] = useState([]);
 
   useEffect(() => {
     localStorage.setItem("rv_formState", JSON.stringify(formState));
   }, [formState]);
 
-  const toggle = (menu) => {
-    setOpenMenu((m) => (m === menu ? null : menu));
-    setOpenSubmenu(null);
-  };
-
-  const toggleSub = (submenu) => {
-    setOpenSubmenu((s) => (s === submenu ? null : submenu));
-  };
+  
   
 
   const handleInputChange = (name, value) => {
@@ -192,12 +182,7 @@ const RedVinculosPanel = forwardRef(({ netRef, onGraphData }, ref) => {
     },
   }));
 
-  // Navbar actions
-  const call = (fnName, ...args) => {
-    if (netRef?.current && typeof netRef.current[fnName] === "function") {
-      netRef.current[fnName](...args);
-    }
-  };
+  
 
   return (
     <div className="redvinc-panel">
@@ -255,98 +240,7 @@ const RedVinculosPanel = forwardRef(({ netRef, onGraphData }, ref) => {
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="rv-navbar">
-        <h4 className="rv-titulo-grafo">Opciones </h4>
-        <div className="rv-left">
-          <div className="rv-section">
-            <button
-              className={`rv-item ${openMenu === "archivo" ? "is-active" : ""}`}
-              onClick={() => toggle("archivo")}
-            >
-              Archivos{" "}
-              {openMenu === "archivo" ? (
-                <MdOutlineKeyboardArrowDown />
-              ) : (
-                <MdOutlineKeyboardArrowRight />
-              )}
-            </button>
-
-            {openMenu === "archivo" && (
-              <div className="rv-dropdown-submenu">
-                <div className="rv-dropdown-inner">
-                  <label
-                    className="seccion-submenu-rv"
-                  >
-                    Red de vínculos
-                  </label>
-
-                  <button
-                    className="seccion-submenu-rv-2"
-                    type="button"
-                    onClick={() => toggleSub("cargarGrafo")}
-                  >
-                    Cargar red de vínculos ▾
-                  </button>
-
-                  {/* Submenú animable */}
-                  <div className="rv-subdropdown">
-                    {openSubmenu === "cargarGrafo" && (
-                      <div className="rv-form-inline">
-                        <select
-                          value={loadPlatform}
-                          onChange={(e) => setLoadPlatform(e.target.value)}
-                        >
-                          <option value="">plataforma</option>
-                          {platformOptions.map((p) => (
-                            <option key={p} value={p}>
-                              {p}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          type="text"
-                          placeholder="usuario"
-                          value={loadUsername}
-                          onChange={(e) => setLoadUsername(e.target.value)}
-                        />
-                        <button
-                          className="btn-save"
-                          type="button"
-                          onClick={() =>
-                            call("loadGraph", loadPlatform, loadUsername)
-                          }
-                        >
-                          Cargar red de vínculos
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  <button onClick={() => call("saveGraph")} type="button">
-                    Guardar grafo
-                  </button>
-                  <button onClick={() => call("loadFromLocal")} type="button">
-                    Cargar desde archivo
-                  </button>
-                  <div className="rv-divider" />
-                  <label className="seccion-submenu-rv">Archivo</label>
-                  <button
-                    onClick={() => call("saveGraphAsLocalFile")}
-                    type="button"
-                  >
-                    Guardar archivo local
-                  </button>
-                  <button onClick={() => call("exportToExcel")} type="button">
-                    Exportar a Excel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-          
-        </div>
-      </div>
+      {/* Toolbar moved to top bar in redes_sociales.jsx */}
     </div>
   );
 });
