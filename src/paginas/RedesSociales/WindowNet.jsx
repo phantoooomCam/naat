@@ -170,11 +170,76 @@ const applyRectangularLayout = (cy, rootId, _containerRef, opts = {}) => {
   cy.fit();
 };
 
-// Construir elementos desde JSON original (para primera carga via scraping)
+// Construir elementos desde JSON (soporta esquema legacy y schema_version 2)
 function buildGraphData(data) {
   console.log("[buildGraphData] input:", data);
-  if (!data || !data["Perfil objetivo"]) {
-    console.warn("[buildGraphData] No Perfil objetivo en data");
+  if (!data) return [];
+
+  // Nuevo esquema v2: { schema_version, root_profiles, profiles[], relations[] }
+  const isV2 =
+    data.schema_version === 2 ||
+    (Array.isArray(data.root_profiles) && Array.isArray(data.profiles));
+  if (isV2) {
+    const nodesMap = new Map();
+    const edges = [];
+    const edgeSet = new Set();
+
+    const rootSet = new Set(
+      (data.root_profiles || [])
+        .filter((s) => typeof s === "string")
+        .map((s) => s.trim())
+    );
+
+    // Crear nodos
+    for (const p of data.profiles || []) {
+      if (!p || !p.username) continue;
+      const id = p.username;
+      const rootKey = `${p.platform}:${p.username}`;
+      const isRoot = rootSet.has(rootKey);
+      if (!nodesMap.has(id)) {
+        nodesMap.set(id, {
+          data: {
+            id,
+            username: p.username,
+            platform: p.platform,
+            label: p.username || p.full_name || id,
+            full_name: p.full_name || p.username || id,
+            profile_url: p.profile_url || "",
+            photo_url: p.photo_url || "",
+            tipo: isRoot ? "perfil" : "rel",
+            sources: Array.isArray(p.sources) ? p.sources : [],
+          },
+        });
+      }
+    }
+
+    // Crear aristas
+    for (const r of data.relations || []) {
+      if (!r || !r.source || !r.target) continue;
+      const rel = r.type || r.relation_type || r.rel || "relacion";
+      const id = `${r.source}_${r.target}_${rel}`;
+      if (edgeSet.has(id)) continue;
+      edges.push({
+        data: {
+          id,
+          source: r.source,
+          target: r.target,
+          relation_type: rel,
+          rel,
+          platform: r.platform || undefined,
+        },
+      });
+      edgeSet.add(id);
+    }
+
+    const result = [...nodesMap.values(), ...edges];
+    console.log("[buildGraphData] output(v2):", result);
+    return result;
+  }
+
+  // Legacy: { "Perfil objetivo": {...}, "Perfiles relacionados": [...] }
+  if (!data["Perfil objetivo"]) {
+    console.warn("[buildGraphData] Formato no reconocido");
     return [];
   }
   const nodesMap = new Map();
@@ -237,17 +302,23 @@ function buildGraphData(data) {
     }
   });
   const result = [...nodesMap.values(), ...edges];
-  console.log("[buildGraphData] output:", result);
+  console.log("[buildGraphData] output(legacy):", result);
   return result;
 }
 
-const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
+const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
   const cyRef = useRef(null);
   const containerRef = useRef(null);
   const ur = useRef(null);
   const menusRef = useRef([]);
   const [platformLoad, setPlatformLoad] = useState(null);
   const [usernameLoad, setUsernameLoad] = useState(null);
+  // UI para agregar perfiles (scraping directo desde WindowNet)
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  const [addUsername, setAddUsername] = useState("");
+  const [addPlatform, setAddPlatform] = useState("");
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState("");
 
   // Shared helper to open picker and update a node photo via undo/redo
   const attemptApplyNodeImage = (cy, nodeId, url, attempt = 1) => {
@@ -371,12 +442,12 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
       });
       menusRef.current = [];
     }
-  const nodeMenu = cy.cxtmenu({
+    const nodeMenu = cy.cxtmenu({
       selector: "node",
       commands: [
         {
           content: "Editar Foto",
-      select: (ele) => openPhotoPickerAndUpdateNode(ele.id(), cy),
+          select: (ele) => openPhotoPickerAndUpdateNode(ele.id(), cy),
         },
         {
           content: "Editar Nombre",
@@ -581,14 +652,19 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     return cy;
   };
 
-  // Rebuild graph when new raw data (from Buscar / Actualizar) arrives
+  // WindowNet ya no hace POST; delega a RedVinculosPanel vía onAddRoot
+
+  // Rebuild graph when new raw data arrives (legacy or schema v2)
   useEffect(() => {
     if (!elements) return; // nothing to do
-    const isRaw = !!(
-      elements["Perfil objetivo"] && elements["Perfiles relacionados"]
+    const isLegacy = !!(
+      elements?.["Perfil objetivo"] && elements?.["Perfiles relacionados"]
     );
+    const isV2 =
+      elements?.schema_version === 2 ||
+      (Array.isArray(elements?.profiles) && Array.isArray(elements?.root_profiles));
     // Don't interfere with graph-session loading (handled inside getGraphSession)
-    if (!isRaw) return;
+    if (!isLegacy && !isV2) return;
     const cy = ensureCy();
     if (!cy) return;
     console.log("[WindowNet] Rebuilding graph from raw data");
@@ -598,7 +674,16 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
     cy.add(built);
     cy.endBatch();
     cy.nodes().grabify();
-    const root = elements?.["Perfil objetivo"]?.username;
+    let root = null;
+    if (isLegacy) {
+      root = elements?.["Perfil objetivo"]?.username;
+    } else if (isV2) {
+      const firstRoot = (elements.root_profiles || [])[0] || null;
+      if (firstRoot && typeof firstRoot === "string") {
+        const parts = firstRoot.split(":");
+        root = parts[1] || null;
+      }
+    }
     applyRectangularLayout(cy, root, containerRef, {
       cellW: 510,
       cellH: 510,
@@ -756,10 +841,8 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
   const buildExportDataFromCy = () => {
     const cy = cyRef.current;
     if (!cy) return null;
-    const platform =
-      elements?.["Perfil objetivo"]?.["platform"] ?? platformLoad ?? "";
-    const owner_username =
-      elements?.["Perfil objetivo"]?.["username"] ?? usernameLoad ?? "";
+    const platform = platformLoad ?? elements?.["Perfil objetivo"]?.["platform"] ?? "";
+    const owner_username = usernameLoad ?? elements?.["Perfil objetivo"]?.["username"] ?? "";
     if (!owner_username) return null;
     const rootNode = cy.$id(owner_username);
     const rootData = rootNode?.data ? rootNode.data() : {};
@@ -900,6 +983,19 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
         );
         nodes = sep.nodes;
         edges = sep.edges;
+      // Formato schema v2
+      } else if (json?.schema_version === 2 || (Array.isArray(json?.profiles) && Array.isArray(json?.root_profiles))) {
+        const built = buildGraphData(json);
+        const sep = built.reduce(
+          (acc, el) => {
+            if (el.data?.source) acc.edges.push(el);
+            else acc.nodes.push(el);
+            return acc;
+          },
+          { nodes: [], edges: [] }
+        );
+        nodes = sep.nodes;
+        edges = sep.edges;
       } else {
         alert("Formato de archivo no reconocido.");
         return;
@@ -911,11 +1007,18 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
       cy.endBatch();
       cy.nodes().grabify();
 
-      const rootId =
-        json?.["Perfil objetivo"]?.username ||
-        nodes?.find?.((n) => n?.data?.tipo === "perfil")?.data?.id ||
-        nodes?.[0]?.data?.id ||
-        null;
+      let rootId = null;
+      if (json?.schema_version === 2 && Array.isArray(json?.root_profiles) && json.root_profiles[0]) {
+        const firstRoot = json.root_profiles[0];
+        if (typeof firstRoot === "string") rootId = firstRoot.split(":")[1] || null;
+      }
+      if (!rootId) {
+        rootId =
+          json?.["Perfil objetivo"]?.username ||
+          nodes?.find?.((n) => n?.data?.tipo === "perfil")?.data?.id ||
+          nodes?.[0]?.data?.id ||
+          null;
+      }
 
       const hasPreset =
         json?.layout?.name === "preset" &&
@@ -976,10 +1079,8 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
         data: { id, source, target, relation_type, rel: relation_type },
       };
     });
-    const platform =
-      elements?.["Perfil objetivo"]?.["platform"] ?? platformLoad ?? "";
-    const owner_username =
-      elements?.["Perfil objetivo"]?.["username"] ?? usernameLoad ?? "";
+    const platform = platformLoad ?? elements?.["Perfil objetivo"]?.["platform"] ?? "";
+    const owner_username = usernameLoad ?? elements?.["Perfil objetivo"]?.["username"] ?? "";
     const payload = {
       platform,
       owner_username,
@@ -1107,18 +1208,203 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
       layoutRectangular: () => {
         if (!cyRef.current) return;
         const cy = cyRef.current;
-        const root =
-          elements?.["Perfil objetivo"]?.["username"] || usernameLoad || null;
-        applyRectangularLayout(cy, root, {
-          cols: 20,
-          cellW: 310,
-          cellH: 310,
-          gapX: 50,
-          gapY: 50,
-          leftPad: 260,
-          topPad: 80,
-          rootOffsetX: 140,
+
+        // Identify parent nodes: prefer nodes explicitly marked as 'perfil'
+        let parents = cy.nodes().filter((n) => n.data("tipo") === "perfil");
+        // Fallback: nodes with no incoming edges
+        if (!parents || parents.length === 0) {
+          parents = cy
+            .nodes()
+            .filter((n) => n.incomers("edge").length === 0);
+        }
+
+        // If still nothing, fallback to previous rectangular layout for all nodes
+        if (!parents || parents.length === 0) {
+          let root = usernameLoad || null;
+          if (
+            !root &&
+            elements?.schema_version === 2 &&
+            Array.isArray(elements?.root_profiles)
+          ) {
+            const firstRoot = elements.root_profiles[0];
+            if (typeof firstRoot === "string") root = firstRoot.split(":")[1] || null;
+          } else if (!root) {
+            root = elements?.["Perfil objetivo"]?.["username"] || null;
+          }
+          applyRectangularLayout(cy, root, containerRef, {
+            cols: 20,
+            cellW: 310,
+            cellH: 310,
+            gapX: 50,
+            gapY: 50,
+            leftPad: 260,
+            topPad: 80,
+            rootOffsetX: 140,
+          });
+          return;
+        }
+
+        // We'll compute dynamic cell sizes based on the space needed to place all children around each parent
+        const pCount = parents.length;
+        const leftPad = 140;
+        const topPad = 80;
+
+        // Scale node dimensions based on total node count (apply before perimeter placement)
+        const totalNodes = cy.nodes().length;
+        let scale = 1;
+        if (totalNodes < 20) scale = 0.9; // 10% smaller
+        else if (totalNodes < 50) scale = 0.8; // 20% smaller
+        else if (totalNodes < 80) scale = 0.6; // 40% smaller
+        else scale = 0.4; // 60% smaller for 80 or more
+        const baseProfile = 400;
+        const baseRel = 395;
+        cy.nodes().forEach((n) => {
+          const isPerfil = n.data("tipo") === "perfil";
+          const base = isPerfil ? baseProfile : baseRel;
+          n.style("width", base * scale);
+          n.style("height", base * scale);
         });
+
+        // Compute dynamic cell width/height required for each parent, then position parents in a grid
+        // Spacing is defined in rems per request: 3rem from parent to first contour, and 3rem between layers
+        const rootFontPx = (() => {
+          try {
+            return parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+          } catch {
+            return 16;
+          }
+        })();
+        const padBetween = 3 * rootFontPx; // 3rem in px
+
+        let maxCellW = 480;
+        let maxCellH = 480;
+
+        const childrenByParent = new Map();
+        parents.forEach((parent) => {
+          const pId = parent.id();
+          const connected = parent.connectedEdges();
+          const childIds = new Set();
+          connected.forEach((e) => {
+            const s = e.data("source");
+            const t = e.data("target");
+            if (s && s !== pId) childIds.add(s);
+            if (t && t !== pId) childIds.add(t);
+          });
+          const children = Array.from(childIds)
+            .map((id) => cy.$id(id))
+            .filter((n) => n && n.nonempty() && n.data("tipo") !== "perfil");
+          childrenByParent.set(parent.id(), children);
+          const count = children.length;
+          const pW = parent.width();
+          const pH = parent.height();
+          const childSample = children[0];
+          const childDim = (childSample?.width?.() || baseRel * scale) || baseRel * scale;
+          const childHalf = childDim / 2;
+          const minSpacing = Math.max(40, childDim + padBetween);
+          // simulate rings to compute outermost rx/ry
+          let placed = 0;
+          let ring = 1;
+          let rx = pW / 2 + childHalf + padBetween;
+          let ry = pH / 2 + childHalf + padBetween;
+          while (placed < count) {
+            const perimeter = 2 * (2 * rx + 2 * ry);
+            const capacity = Math.max(1, Math.floor(perimeter / minSpacing));
+            placed += capacity;
+            if (placed < count) {
+              rx += childDim + padBetween;
+              ry += childDim + padBetween;
+              ring += 1;
+            }
+          }
+          const neededW = 2 * rx + childDim; // include outer child half-size
+          const neededH = 2 * ry + childDim;
+          maxCellW = Math.max(maxCellW, Math.ceil(neededW));
+          maxCellH = Math.max(maxCellH, Math.ceil(neededH));
+        });
+
+        const cols = Math.max(1, Math.ceil(Math.sqrt(pCount)));
+        const gapX = Math.max(80, padBetween);
+        const gapY = Math.max(80, padBetween);
+
+        parents.forEach((p, i) => {
+          const col = i % cols;
+          const row = Math.floor(i / cols);
+          const x = leftPad + col * (maxCellW + gapX);
+          const y = topPad + row * (maxCellH + gapY);
+          p.position({ x, y });
+          p.data("tipo", "perfil");
+        });
+
+        // For each parent, arrange its direct neighbors (non-parent nodes) along the parent's perimeter
+        // Use rectangular perimeters expanding outward as needed
+
+        parents.forEach((parent) => {
+          const children = childrenByParent.get(parent.id()) || [];
+          if (!children || children.length === 0) return;
+
+          const pPos = parent.position();
+          const pW = parent.width();
+          const pH = parent.height();
+
+          // Estimate child dimension using the first child's width, fallback to baseRel * scale
+          let childDim = children[0]?.width?.() || baseRel * scale;
+          if (!childDim || Number.isNaN(childDim)) childDim = baseRel * scale;
+          const childHalf = childDim / 2;
+          // Minimum spacing along perimeter between centers to ensure ~3rem between adjacent child edges
+          const minSpacing = Math.max(40, childDim + padBetween);
+
+          let placed = 0;
+          let ring = 1;
+          while (placed < children.length) {
+            // Distance from parent center to perimeter for this ring (centers), ensuring
+            // 3rem between parent edge and nearest child edge, and 3rem between rings
+            const rx = pW / 2 + childHalf + padBetween + (ring - 1) * (childDim + padBetween);
+            const ry = pH / 2 + childHalf + padBetween + (ring - 1) * (childDim + padBetween);
+            const perimeter = 2 * (2 * rx + 2 * ry); // rectangle perimeter length
+            const capacity = Math.max(1, Math.floor(perimeter / minSpacing));
+            const remaining = children.length - placed;
+            const perRing = Math.min(capacity, remaining);
+            for (let j = 0; j < perRing; j++) {
+              const s = (j / perRing) * perimeter; // distance along perimeter
+              let xRel = 0;
+              let yRel = 0;
+              const topLen = 2 * rx;
+              const rightLen = 2 * ry;
+              const bottomLen = 2 * rx;
+              const leftLen = 2 * ry;
+              if (s <= topLen) {
+                // Top edge: left -> right at y = -ry
+                xRel = -rx + s;
+                yRel = -ry;
+              } else if (s <= topLen + rightLen) {
+                // Right edge: top -> bottom at x = +rx
+                const ds = s - topLen;
+                xRel = rx;
+                yRel = -ry + ds;
+              } else if (s <= topLen + rightLen + bottomLen) {
+                // Bottom edge: right -> left at y = +ry
+                const ds = s - (topLen + rightLen);
+                xRel = rx - ds;
+                yRel = ry;
+              } else {
+                // Left edge: bottom -> top at x = -rx
+                const ds = s - (topLen + rightLen + bottomLen);
+                xRel = -rx;
+                yRel = ry - ds;
+              }
+              const child = children[placed + j];
+              child.position({ x: pPos.x + xRel, y: pPos.y + yRel });
+              child.data("tipo", child.data("tipo") || "rel");
+            }
+            placed += perRing;
+            ring += 1;
+          }
+        });
+
+        // Apply preset so Cytoscape honors positions, then fit with extra padding for multiple parents
+        cy.layout({ name: "preset" }).run();
+        const extraPadding = parents.length > 1 ? 250 : 100;
+        cy.fit(undefined, extraPadding);
       },
     }),
     [elements, usernameLoad]
@@ -1128,11 +1414,19 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
   useEffect(() => {
     const cy = ensureCy();
     if (!cy) return;
-    const plataforma = elements?.["Perfil objetivo"]?.["platform"];
-    const usuario = elements?.["Perfil objetivo"]?.["username"];
+    let plataforma = elements?.["Perfil objetivo"]?.["platform"]; 
+    let usuario = elements?.["Perfil objetivo"]?.["username"];
+    if (elements?.schema_version === 2) {
+      const firstRoot = (elements.root_profiles || [])[0];
+      if (typeof firstRoot === "string") {
+        const [plat, user] = firstRoot.split(":");
+        plataforma = plat || plataforma;
+        usuario = user || usuario;
+      }
+    }
     if (plataforma) setPlatformLoad(plataforma);
     if (usuario) setUsernameLoad(usuario); // Layout inicial
-    const root = usuario;
+    const root = usuario || null;
     applyRectangularLayout(cy, root, containerRef, {
       cellW: 510,
       cellH: 510,
@@ -1145,11 +1439,123 @@ const WindowNet = forwardRef(function WindowNet({ elements }, ref) {
   }, [elements]);
 
   return (
-    <div
-      ref={containerRef}
-      className="netlink-graph-container"
-      style={{ width: "100%", height: "100%" }}
-    />
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div
+        ref={containerRef}
+        className="netlink-graph-container"
+        style={{ width: "100%", height: "100%" }}
+      />
+
+      {/* Botón flotante "+" */}
+      <button
+        type="button"
+        onClick={() => setShowAddMenu((v) => !v)}
+        title="Agregar perfil (scrape)"
+        style={{
+          position: "absolute",
+          right: 16,
+          top: 10,
+          width: 48,
+          height: 48,
+          borderRadius: 24,
+          border: "none",
+          background: "#1A2D42",
+          color: "#fff",
+          fontSize: 24,
+          cursor: "pointer",
+          zIndex: 10,
+          boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+        }}
+      >
+        +
+      </button>
+
+      {showAddMenu && (
+        <div
+          style={{
+            position: "absolute",
+            right: 16,
+            top: 5,
+            zIndex: 11,
+            background: "#fff",
+            color: "#000",
+            padding: 16,
+            borderRadius: 12,
+            width: 280,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.35)",
+            border: "1px solid transparent",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <strong>Agregar perfil</strong>
+            <button
+              onClick={() => setShowAddMenu(false)}
+              style={{ background: "transparent", color: "#000", border: "2px solid transparent", fontSize: 18, cursor: "pointer" }}
+              title="Cerrar"
+            >
+              ×
+            </button>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <label style={{ fontSize: 12, opacity: 0.9 }}>Username</label>
+            <input
+              type="text"
+              placeholder="usuario"
+              value={addUsername}
+              onChange={(e) => setAddUsername(e.target.value)}
+              style={{ padding: 8, borderRadius: 8, border: "1px solid #b2afafff", background: "transparent", color: "#000" }}
+            />
+            <label style={{ fontSize: 12, opacity: 0.9 }}>Plataforma</label>
+            <select
+              value={addPlatform}
+              onChange={(e) => setAddPlatform(e.target.value)}
+              style={{ padding: 8, borderRadius: 8, border: "1px solid #b2afafff", background: "transparent", color: "#000" }}
+            >
+              <option value="">--Selecciona--</option>
+              <option value="x">X</option>
+              <option value="instagram">instagram</option>
+              <option value="facebook">facebook</option>
+            </select>
+            {addError && (
+              <small style={{ color: "#FF6B6B" }}>{addError}</small>
+            )}
+            <button
+              type="button"
+              disabled={addLoading || !addUsername || !addPlatform}
+              onClick={async () => {
+                setAddError("");
+                if (!addUsername || !addPlatform) return;
+                try {
+                  setAddLoading(true);
+                  if (typeof onAddRoot === "function") {
+                    await onAddRoot(addPlatform, addUsername);
+                  }
+                  setShowAddMenu(false);
+                  setAddUsername("");
+                  setAddPlatform("");
+                } catch (e) {
+                  console.error(e);
+                  setAddError(e.message || "No se pudo completar la solicitud");
+                } finally {
+                  setAddLoading(false);
+                }
+              }}
+              style={{
+                marginTop: 8,
+                padding: "10px 12px",
+                borderRadius: 8,
+                border: "none",
+                background: addLoading ? "#2b3e55" : "#1A2D42",
+                color: "#fff",
+                cursor: addLoading ? "not-allowed" : "pointer",
+              }}
+            >
+              {addLoading ? "Enviando..." : "Agregar"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 });
 

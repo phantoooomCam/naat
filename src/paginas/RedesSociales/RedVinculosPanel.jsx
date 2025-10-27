@@ -1,16 +1,9 @@
 // Fusion of WindowSeek + Navbar for RedesSociales module
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import img from "../../assets/naat_blanco.png";
 import "./redes_sociales.css";
 import { ImSpinner } from "react-icons/im";
-import { MdOutlineAddPhotoAlternate } from "react-icons/md";
-import { MdPersonAddAlt } from "react-icons/md";
-import { CiEdit } from "react-icons/ci";
-import { FaEdit } from "react-icons/fa";
-import { AiOutlineUserDelete } from "react-icons/ai";
-import { HiOutlineViewGridAdd } from "react-icons/hi";
-import { MdOutlineKeyboardArrowRight } from "react-icons/md";
-import { MdOutlineKeyboardArrowDown } from "react-icons/md";
+ 
 
 // Valida https://(www.)?(facebook|instagram|x).com/<segmento>
 export function validateSocialUrl(raw) {
@@ -53,89 +46,50 @@ export function validateSocialUrl(raw) {
 }
 
 // Espera ref del grafo (WindowNet) via props
-const RedVinculosPanel = ({ netRef, onGraphData }) => {
+const RedVinculosPanel = forwardRef(({ netRef, onGraphData }, ref) => {
   const platformOptions = ["facebook", "instagram", "x"];
-  const [openMenu, setOpenMenu] = useState(null);
-  const [openSubmenu, setOpenSubmenu] = useState(null);
-  const [formErrors, setFormErrors] = useState({ url: true, username: true });
-  // Mensajes de error por campo (solo se usa si formErrors[campo] === false)
-  const [errorMsg, setErrorMsg] = useState({ url: "" });
+  
   const DEFAULT_FORM = {
-    url: "",
+    username: "",
     platform: "",
-    cantidadFotos: 1,
   };
   const [formState, setFormState] = useState(DEFAULT_FORM);
   const [loading, setLoading] = useState(false);
   const [dataResult, setDataResult] = useState(null);
-  const [loadPlatform, setLoadPlatform] = useState("");
-  const [loadUsername, setLoadUsername] = useState("");
+  
+  const [roots, setRoots] = useState([]);
 
   useEffect(() => {
     localStorage.setItem("rv_formState", JSON.stringify(formState));
   }, [formState]);
 
-  const toggle = (menu) => {
-    setOpenMenu((m) => (m === menu ? null : menu));
-    setOpenSubmenu(null);
-  };
-
-  const toggleSub = (submenu) => {
-    setOpenSubmenu((s) => (s === submenu ? null : submenu));
-  };
-  const hostFrom = (raw) => {
-    try {
-      return new URL(raw).hostname.replace(/^www\./i, "").toLowerCase();
-    } catch {
-      return "";
-    }
-  };
+  
+  
 
   const handleInputChange = (name, value) => {
-    setFormState((prev) => {
-      const ns = { ...prev, [name]: value };
-
-      if (name === "url") {
-        const { ok, msg } = validateSocialUrl(value);
-        setFormErrors((e) => ({ ...e, url: ok }));
-        setErrorMsg((m) => ({ ...m, url: ok ? "" : msg }));
-
-        // ⬇️ Autocompletar username y platform
-        const extracted = extractUsernameFromUrl(value);
-        ns.username = extracted || "";
-
-        const host = hostFrom(value);
-        const map = {
-          "facebook.com": "facebook",
-          "instagram.com": "instagram",
-          "x.com": "x",
-        };
-        if (map[host]) ns.platform = map[host];
-      }
-
-      return ns;
-    });
+    setFormState((prev) => ({ ...prev, [name]: value }));
   };
 
-  function extractUsernameFromUrl(url) {
-    try {
-      const u = new URL(url);
-      const seg = u.pathname.split("/").filter(Boolean);
-      return seg.length ? seg[0] : null;
-    } catch (e) {
-      return null;
-    }
-  }
+  
 
   function fetchProfileData(platform, username) {
     return fetch(`/related/${platform}/${username}`).then((r) => r.json());
   }
 
-  function scrapeProfile(platform, url, max_photos = 5) {
-    return fetch(`/scrape`, {
+  function scrapeProfile(platform, username) {
+    const roots = [{ platform, username }];
+    return fetch(`/multi-scrape`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ platform, url, max_photos }),
+      body: JSON.stringify({ roots }),
+    }).then((r) => r.json());
+  }
+
+  async function scrapeMultipleRoots(allRoots) {
+    return fetch(`/multi-scrape`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ roots: allRoots }),
     }).then((r) => r.json());
   }
 
@@ -143,10 +97,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
     e.preventDefault();
     if (loading) return;
 
-    // Si la URL es inválida, no sigas
-    if (formErrors.url === false) return;
-
-    if (!formState.platform || !formState.username || !formState.url) return;
+    if (!formState.platform || !formState.username) return;
     setLoading(true);
     setDataResult(null);
     try {
@@ -168,13 +119,14 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
       if (useScrape) {
         data = await scrapeProfile(
           formState.platform,
-          formState.url,
-          formState.cantidadFotos || 5
+          formState.username
         );
       } else {
         data = relatedData;
       }
       setDataResult(data);
+      // Reset roots to the current searched root
+      setRoots([{ platform: formState.platform, username: formState.username }]);
       onGraphData && onGraphData(data);
     } catch (err) {
       console.error(err);
@@ -186,14 +138,20 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
   const handleForceScrape = async (e) => {
     e.preventDefault();
     if (loading) return;
-    if (!formState.platform || !formState.url) return;
+    if (!formState.platform || !formState.username) return;
     setLoading(true);
     try {
-      const data = await scrapeProfile(
-        formState.platform,
-        formState.url,
-        formState.cantidadFotos || 5
-      );
+      let data;
+      // If there are accumulated roots, refresh all; otherwise scrape current form
+      if (roots.length > 0) {
+        data = await scrapeMultipleRoots(roots);
+      } else {
+        data = await scrapeProfile(
+          formState.platform,
+          formState.username
+        );
+        setRoots([{ platform: formState.platform, username: formState.username }]);
+      }
       setDataResult(data);
       onGraphData && onGraphData(data);
     } catch (err) {
@@ -203,12 +161,28 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
     }
   };
 
-  // Navbar actions
-  const call = (fnName, ...args) => {
-    if (netRef?.current && typeof netRef.current[fnName] === "function") {
-      netRef.current[fnName](...args);
-    }
-  };
+  // Expose API to add a new root and re-scrape all
+  useImperativeHandle(ref, () => ({
+    addRootAndScrape: async (platform, username) => {
+      if (!platform || !username) return;
+      const exists = roots.some((r) => r.platform === platform && r.username === username);
+      const nextRoots = exists ? roots : [...roots, { platform, username }];
+      setRoots(nextRoots);
+      try {
+        setLoading(true);
+        const data = await scrapeMultipleRoots(nextRoots);
+        setDataResult(data);
+        onGraphData && onGraphData(data);
+      } catch (e) {
+        console.error(e);
+        throw e;
+      } finally {
+        setLoading(false);
+      }
+    },
+  }));
+
+  
 
   return (
     <div className="redvinc-panel">
@@ -217,17 +191,14 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
         <h3 className="rv-title">Red de vínculos</h3>
         <form className="rv-form" onSubmit={handleFetchOrScrape}>
           <div className="rv-field">
-            <label>Enlace del perfil (URL):</label>
+            <label>Nombre de usuario:</label>
             <input
               type="text"
-              placeholder="https://plataforma.com/usuario"
-              value={formState.url}
-              onChange={(e) => handleInputChange("url", e.target.value)}
+              placeholder="usuario"
+              value={formState.username}
+              onChange={(e) => handleInputChange("username", e.target.value)}
               required
             />
-            {formErrors.url === false && (
-              <small className="text-error">{errorMsg.url}</small>
-            )}
           </div>
           <div className="rv-field">
             <label>Plataforma:</label>
@@ -244,20 +215,7 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
               ))}
             </select>
           </div>
-          <div className="rv-field">
-            <label>Cantidad de fotos a analizar:</label>
-            <input
-              type="text"
-              min={0}
-              max={50}
-              maxLength={2}
-              value={formState.cantidadFotos}
-              onChange={(e) =>
-                handleInputChange("cantidadFotos", Number(e.target.value))
-              }
-              required
-            />
-          </div>
+          
           <div className="rv-buttons">
             <button type="submit" disabled={loading}>
               {loading ? (
@@ -282,173 +240,9 @@ const RedVinculosPanel = ({ netRef, onGraphData }) => {
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="rv-navbar">
-        <h4 className="rv-titulo-grafo">Opciones </h4>
-        <div className="rv-left">
-          <div className="rv-section">
-            <button
-              className={`rv-item ${openMenu === "archivo" ? "is-active" : ""}`}
-              onClick={() => toggle("archivo")}
-            >
-              Archivos{" "}
-              {openMenu === "archivo" ? (
-                <MdOutlineKeyboardArrowDown />
-              ) : (
-                <MdOutlineKeyboardArrowRight />
-              )}
-            </button>
-
-            {openMenu === "archivo" && (
-              <div className="rv-dropdown-submenu">
-                <div className="rv-dropdown-inner">
-                  <label
-                    className="seccion-submenu-rv"
-                  >
-                    Red de vínculos
-                  </label>
-
-                  <button
-                    className="seccion-submenu-rv-2"
-                    type="button"
-                    onClick={() => toggleSub("cargarGrafo")}
-                  >
-                    Cargar red de vínculos ▾
-                  </button>
-
-                  {/* Submenú animable */}
-                  <div className="rv-subdropdown">
-                    {openSubmenu === "cargarGrafo" && (
-                      <div className="rv-form-inline">
-                        <select
-                          value={loadPlatform}
-                          onChange={(e) => setLoadPlatform(e.target.value)}
-                        >
-                          <option value="">plataforma</option>
-                          {platformOptions.map((p) => (
-                            <option key={p} value={p}>
-                              {p}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          type="text"
-                          placeholder="usuario"
-                          value={loadUsername}
-                          onChange={(e) => setLoadUsername(e.target.value)}
-                        />
-                        <button
-                          className="btn-save"
-                          type="button"
-                          onClick={() =>
-                            call("loadGraph", loadPlatform, loadUsername)
-                          }
-                        >
-                          Cargar red de vínculos
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  <button onClick={() => call("saveGraph")} type="button">
-                    Guardar grafo
-                  </button>
-                  <button onClick={() => call("loadFromLocal")} type="button">
-                    Cargar desde archivo
-                  </button>
-                  <div className="rv-divider" />
-                  <label className="seccion-submenu-rv">Archivo</label>
-                  <button
-                    onClick={() => call("saveGraphAsLocalFile")}
-                    type="button"
-                  >
-                    Guardar archivo local
-                  </button>
-                  <button onClick={() => call("exportToExcel")} type="button">
-                    Exportar a Excel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="rv-section">
-            <button
-              className={`rv-item ${
-                openMenu === "insertar" ? "is-active" : ""
-              }`}
-              onClick={() => toggle("insertar")}
-            >
-              Insertar{" "}
-              {openMenu === "insertar" ? (
-                <MdOutlineKeyboardArrowDown />
-              ) : (
-                <MdOutlineKeyboardArrowRight />
-              )}
-            </button>
-            {openMenu === "insertar" && (
-              <div className="rv-dropdown">
-                <button onClick={() => call("createNode")}>
-                  <MdPersonAddAlt /> Nuevo involucrado
-                </button>
-                <button onClick={() => call("createEdge")}>
-                  <HiOutlineViewGridAdd /> Nuevo vínculo
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="rv-section">
-            <button
-              className={`rv-item ${openMenu === "editar" ? "is-active" : ""}`}
-              onClick={() => {
-                toggle("editar");
-              }}
-            >
-              Editar{" "}
-              {openMenu === "editar" ? (
-                <MdOutlineKeyboardArrowDown />
-              ) : (
-                <MdOutlineKeyboardArrowRight />
-              )}
-            </button>
-            {openMenu === "editar" && (
-              <div className="rv-dropdown">
-                <button onClick={() => call("editNodePhoto")}>
-                  <MdOutlineAddPhotoAlternate /> Editar foto (nodo)
-                </button>
-                <button onClick={() => call("editNodeName")}>
-                  <CiEdit /> Editar nombre (nodo)
-                </button>
-                <button onClick={() => call("editEdgeRelation")}>
-                  <FaEdit /> Editar vínculo (arista)
-                </button>
-                <button onClick={() => call("deleteSelected")}>
-                  <AiOutlineUserDelete /> Eliminar seleccionado
-                </button>
-              </div>
-            )}
-          </div>
-          <div className="rv-section">
-            <button
-              className={`rv-item ${
-                openMenu === "rectangular" ? "is-active" : ""
-              }`}
-              onClick={() => call("layoutRectangular")}
-            >
-              Rectangular
-            </button>
-          </div>
-        </div>
-        <div className="rv-right">
-          <button className="rv-item" onClick={() => call("undo")}>
-            ⟲ Deshacer
-          </button>
-          <button className="rv-item" onClick={() => call("redo")}>
-            ⟳ Rehacer
-          </button>
-        </div>
-      </div>
+      {/* Toolbar moved to top bar in redes_sociales.jsx */}
     </div>
   );
-};
+});
 
 export default RedVinculosPanel;
