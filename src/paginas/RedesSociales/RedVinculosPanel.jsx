@@ -180,6 +180,69 @@ const RedVinculosPanel = forwardRef(({ netRef, onGraphData }, ref) => {
         setLoading(false);
       }
     },
+    // Export a screenshot of the panel (.redvinc-panel) to a PDF file
+    exportToPDF: async (filename = null) => {
+      try {
+        const el = document.querySelector('.netlink-graph-container');
+        if (!el) {
+          alert('No se encontró el panel para exportar.');
+          return;
+        }
+
+        // helper to dynamically load scripts
+        const loadScript = (src) =>
+          new Promise((resolve, reject) => {
+            if (document.querySelector(`script[src="${src}"]`)) return resolve();
+            const s = document.createElement('script');
+            s.src = src;
+            s.onload = () => resolve();
+            s.onerror = (e) => reject(e);
+            document.head.appendChild(s);
+          });
+
+        // Ensure html2canvas and jsPDF are available (load from CDN if needed)
+        if (typeof window.html2canvas === 'undefined') {
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+        }
+        if (typeof window.jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
+          await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+        }
+
+        const html2canvas = window.html2canvas;
+        let jsPDFConstructor = null;
+        if (window.jspdf && window.jspdf.jsPDF) jsPDFConstructor = window.jspdf.jsPDF;
+        else if (window.jsPDF) jsPDFConstructor = window.jsPDF;
+        else if (window.jspdf) jsPDFConstructor = window.jspdf;
+
+        if (!html2canvas || !jsPDFConstructor) {
+          alert('Librerías necesarias no disponibles para exportar a PDF.');
+          return;
+        }
+
+        // Render the element to canvas (higher scale for quality)
+        const canvas = await html2canvas(el, { useCORS: true, scale: 2 });
+        const imgData = canvas.toDataURL('image/png');
+
+        // Create a PDF and fit the image preserving aspect ratio
+        const doc = new jsPDFConstructor('p', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 10; // mm
+        let imgWidth = pageWidth - margin * 2;
+        let imgHeight = (canvas.height * imgWidth) / canvas.width;
+        if (imgHeight > pageHeight - margin * 2) {
+          imgHeight = pageHeight - margin * 2;
+          imgWidth = (canvas.width * imgHeight) / canvas.height;
+        }
+
+        doc.addImage(imgData, 'PNG', (pageWidth - imgWidth) / 2, margin, imgWidth, imgHeight);
+        const name = filename || (formState.username ? `${formState.username}.pdf` : 'grafo.pdf');
+        doc.save(name);
+      } catch (e) {
+        console.error('exportToPDF error', e);
+        alert('No se pudo exportar a PDF.');
+      }
+    },
   }));
 
   

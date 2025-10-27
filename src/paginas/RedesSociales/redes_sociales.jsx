@@ -12,7 +12,7 @@ import { MdOutlineKeyboardArrowRight, MdOutlineKeyboardArrowDown } from "react-i
 import { MdPersonAddAlt } from "react-icons/md";
 import { HiOutlineViewGridAdd } from "react-icons/hi";
 import { MdEdit, MdOutlineFolderOpen } from "react-icons/md";
-import { FaFileExcel } from "react-icons/fa";
+import { FaFileExcel, FaFilePdf } from "react-icons/fa";
 import { FiUpload, FiDownload, FiSave } from "react-icons/fi";
 import { CgInsertAfterO } from "react-icons/cg";
 import { TbTopologyStar3 } from "react-icons/tb";
@@ -165,6 +165,9 @@ const Redes = () => {
                             </button>
                             <button className="btn-archivo-option" onClick={() => { netRef.current?.exportToExcel(); setArchivoOpen(false); }} type="button">
                               <FaFileExcel /> Exportar a Excel
+                            </button>
+                            <button className="btn-archivo-option" onClick={() => { panelRef.current?.exportToPDF(); setArchivoOpen(false); }} type="button">
+                              <FaFilePdf /> Exportar a PDF (captura)
                             </button>
                           </div>
                         </div>

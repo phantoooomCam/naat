@@ -217,7 +217,7 @@ function buildGraphData(data) {
     for (const r of data.relations || []) {
       if (!r || !r.source || !r.target) continue;
       const rel = r.type || r.relation_type || r.rel || "relacion";
-      const id = `${r.source}_${r.target}_${rel}`;
+      const id = `${r.source}->${r.target}->${rel}`;
       if (edgeSet.has(id)) continue;
       edges.push({
         data: {
@@ -474,7 +474,7 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
               return;
             }
             const source = ele.id();
-            const id = `${source}_${target}_${rel}`;
+            const id = `${source}->${target}->${rel}`;
             if (!cy.$id(id).empty()) return;
             if (ur.current) {
               ur.current.do("add", {
@@ -520,7 +520,7 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
               const source = ele.data("source");
               const target = ele.data("target");
               ele.data({
-                id: `${source}_${target}_${newRel}`,
+                id: `${source}->${target}->${newRel}`,
                 relation_type: newRel,
                 rel: newRel,
               });
@@ -786,7 +786,7 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
       "relacion"
     );
     if (!rel) return;
-    const id = `${source}_${target}_${rel}`;
+    const id = `${source}->${target}->${rel}`;
     if (cy.$id(id).nonempty && !cy.$id(id).empty()) return;
     if (ur.current) {
       ur.current.do("add", {
@@ -823,7 +823,7 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
         const source = e.data("source");
         const target = e.data("target");
         e.data({
-          id: `${source}_${target}_${newRel}`,
+          id: `${source}->${target}->${newRel}`,
           relation_type: newRel,
           rel: newRel,
         });
@@ -878,21 +878,80 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
   };
 
   const exportToExcel = async () => {
-    const data = buildExportDataFromCy();
-    if (!data) {
+    const cy = cyRef.current;
+    if (!cy) {
       alert("No hay datos para exportar.");
       return;
     }
+
+    // Identify root profiles: prefer nodes marked as 'perfil', fallback to nodes without incoming edges
+    let roots = cy.nodes().filter((n) => n.data("tipo") === "perfil");
+    if (!roots || roots.length === 0) {
+      roots = cy.nodes().filter((n) => n.incomers("edge").length === 0);
+    }
+
+    // If still empty, try to use platformLoad/usernameLoad as single root
+    const perfiles = [];
+    if (!roots || roots.length === 0) {
+      const owner_username = usernameLoad ?? elements?.["Perfil objetivo"]?.["username"] ?? null;
+      if (owner_username) {
+        const rootNode = cy.$id(owner_username);
+        if (rootNode && !rootNode.empty()) roots = [rootNode];
+      }
+    }
+
+    roots.forEach((rootNode) => {
+      const d = rootNode.data() || {};
+      const platform = d.platform || platformLoad || elements?.["Perfil objetivo"]?.["platform"] || "";
+      const username = d.username || rootNode.id();
+      const full_name = d.full_name || d.label || username;
+      const profile_url = d.profile_url || "";
+
+      const relacionados = [];
+
+      cy.nodes().forEach((n) => {
+        if (n.id() === username) return;
+        // find an edge between root and this node (either direction)
+        const e = cy
+          .edges(
+            `[source = "${username}"][target = "${n.id()}"] , [target = "${username}"][source = "${n.id()}"]`
+          )
+          .first();
+        if (!e || e.empty()) return;
+        const rel = e.data("relation_type") || e.data("rel") || "";
+        const nd = n.data() || {};
+        relacionados.push({
+          "tipo de relacion": rel || "relacion",
+          username: nd.username || n.id(),
+          full_name: nd.full_name || nd.label || n.id(),
+          profile_url: nd.profile_url || "",
+        });
+      });
+
+      perfiles.push({
+        "Perfil objetivo": {
+          platform,
+          username,
+          full_name,
+          profile_url,
+        },
+        "Perfiles relacionados": relacionados,
+      });
+    });
+
+    const payload = { Perfiles: perfiles };
+
     try {
       const resp = await fetch(`/export`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
+      console.log("Informacion para Excel:", payload);
       if (!resp.ok) throw new Error(`Error ${resp.status}`);
       const blob = await resp.blob();
       const url = window.URL.createObjectURL(blob);
-      const name = data?.["Perfil objetivo"]?.["username"] || "grafo";
+      const name = perfiles?.[0]?.["Perfil objetivo"]?.username || "grafo";
       const link = document.createElement("a");
       link.href = url;
       link.download = `${name}.xlsx`;
@@ -1070,9 +1129,9 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
       const source = d.source || e.source().id();
       const target = d.target || e.target().id();
       const relation_type = d.relation_type || d.rel || "relacion";
-      let id = d.id || e.id() || `${source}_${target}_${relation_type}`;
+      let id = d.id || e.id() || `${source}->${target}->${relation_type}`;
       if (edgeSeen.has(id)) {
-        id = `${id}_${Math.random().toString(36).slice(2, 8)}`;
+        id = `${id}->${Math.random().toString(36).slice(2, 8)}`;
       }
       edgeSeen.add(id);
       return {
@@ -1097,7 +1156,7 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
       const result = await resp.json();
       if (!resp.ok) throw new Error(result?.detail || "Unprocessable entity");
       alert("Grafo guardado exitosamente.");
-      console.log("Datos enviados para guardar grafo:", payload);
+      
     } catch (err) {
       console.error(err);
       alert("Hubo un error al guardar el grafo.");
@@ -1148,7 +1207,7 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
         const rel = e?.data?.relation_type || e?.data?.rel || "";
         const id =
           e?.data?.id ||
-          `${e.data.source}_${e.data.target}_${rel || "relacion"}`;
+          `${e.data.source}->${e.data.target}->${rel || "relacion"}`;
         elementsToAdd.push({
           group: "edges",
           data: {
