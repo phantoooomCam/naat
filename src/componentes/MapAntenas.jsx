@@ -963,89 +963,100 @@ const MapAntenas = ({
     setMapRef(map);
   }, []);
 
-  // NUEVO: Exportar el mapa a PDF (capturando el contenedor del mapa)
+  // NUEVO: Exportar el mapa a PDF con tamaño dinámico basado en contenido
   const handleExportPdf = useCallback(async () => {
     if (!mapRef) return;
     let hiddenEls = [];
+    
     try {
       setExporting(true);
       setExportError(null);
 
-      // 1) Obtener el elemento DOM del mapa (incluye overlays, polígonos, info windows y marcadores)
       const mapElement = mapRef.getDiv();
 
-      // Ocultar temporalmente controles de Google Maps (zoom, fullscreen, pegman) para que no salgan en el PDF.
-      // Importante: NO ocultamos la atribución de Google (gm-style-cc) para cumplir los términos de uso.
+      // PASO 1: Ocultar controles de Google Maps (zoom, fullscreen, pegman)
+      // Importante: NO ocultamos la atribución de Google (gm-style-cc)
       const selectorsToHide = [
         '.gm-fullscreen-control',
-        '.gm-bundled-control', // zoom
-        '.gm-svpc' // pegman
+        '.gm-bundled-control',
+        '.gm-svpc'
       ];
       hiddenEls = [];
-      try {
-        selectorsToHide.forEach((sel) => {
-          mapElement.querySelectorAll(sel).forEach((el) => {
-            hiddenEls.push({ el, prev: el.style.display });
-            el.style.display = 'none';
-          });
+      selectorsToHide.forEach((sel) => {
+        mapElement.querySelectorAll(sel).forEach((el) => {
+          hiddenEls.push({ el, prev: el.style.display });
+          el.style.display = 'none';
         });
-      } catch (_) {
-        // silencioso
+      });
+
+      // PASO 2: Asegurar que todo el contenido esté visible con padding
+      // El padding previene cortes en los bordes del mapa
+      if (routeMode && allRoutePoints.length > 0) {
+        const bounds = new window.google.maps.LatLngBounds();
+        allRoutePoints.forEach(p => bounds.extend({ lat: p.lat, lng: p.lng }));
+        
+        // Padding generoso (80px) para que TODO quepa sin cortes
+        // Esto hace que Google Maps haga zoom OUT dejando margen de seguridad
+        mapRef.fitBounds(bounds, {
+          top: 80,
+          right: 80,
+          bottom: 80,
+          left: 80
+        });
+        
+        // Esperar que Google Maps termine de ajustar
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
-      // 2) Capturar el mapa con buena calidad y adaptar a 1920x1080 (16:9) mediante un lienzo intermedio
-      const captureScale = Math.min(Math.max(window.devicePixelRatio || 1, 2), 4);
-      const baseCanvas = await html2canvas(mapElement, {
+      // PASO 3: Capturar el mapa en su tamaño ACTUAL (sin forzar dimensiones)
+      // html2canvas usará el tamaño real del contenedor del mapa
+      const captureScale = Math.min(Math.max(window.devicePixelRatio || 1, 2), 3);
+      const canvas = await html2canvas(mapElement, {
         useCORS: true,
         allowTaint: false,
         backgroundColor: "#ffffff",
         scale: captureScale,
         logging: false,
-        windowWidth: mapElement.scrollWidth,
-        windowHeight: mapElement.scrollHeight,
+        // NO especificamos windowWidth ni windowHeight
+        // Dejamos que html2canvas use el tamaño natural del contenedor
       });
 
-      const targetW = 1920;
-      const targetH = 1080;
-      const offscreen = document.createElement("canvas");
-      offscreen.width = targetW;
-      offscreen.height = targetH;
-      const ctx = offscreen.getContext("2d");
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, targetW, targetH);
+      // PASO 4: Crear PDF del tamaño exacto del canvas capturado
+      // Esto asegura que el PDF se ajuste perfectamente al contenido
+      const canvasWidth = canvas.width / captureScale;
+      const canvasHeight = canvas.height / captureScale;
+      
+      // Determinar orientación automáticamente basada en el contenido
+      const orientation = canvasWidth > canvasHeight ? 'landscape' : 'portrait';
+      
+      const pdf = new jsPDF({
+        orientation: orientation,
+        unit: 'px',
+        format: [canvasWidth, canvasHeight], // PDF del tamaño exacto del contenido
+        compress: true
+      });
 
-      const srcW = baseCanvas.width;
-      const srcH = baseCanvas.height;
-      const ratio = Math.min(targetW / srcW, targetH / srcH);
-      const drawW = Math.round(srcW * ratio);
-      const drawH = Math.round(srcH * ratio);
-      const dx = Math.floor((targetW - drawW) / 2);
-      const dy = Math.floor((targetH - drawH) / 2);
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = "high";
-      ctx.drawImage(baseCanvas, 0, 0, srcW, srcH, dx, dy, drawW, drawH);
+      // PASO 5: Agregar la imagen al PDF (ajuste perfecto, sin espacios vacíos)
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      pdf.addImage(imgData, 'JPEG', 0, 0, canvasWidth, canvasHeight, undefined, 'FAST');
 
-      const imgData = offscreen.toDataURL("image/jpeg", 0.95);
-
-      // 3) Crear PDF a 1920x1080 px y añadir la imagen a página completa
-      const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [targetW, targetH] });
-      pdf.addImage(imgData, "JPEG", 0, 0, targetW, targetH, undefined, "FAST");
-
+      // PASO 6: Guardar con nombre descriptivo que incluye dimensiones reales
       const sabanaIds = Array.isArray(idSabana) ? idSabana.join("-") : idSabana;
-      const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-      pdf.save(`Mapa-1080p-${sabanaIds || "sabanas"}-${ts}.pdf`);
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+      const dimensions = `${Math.round(canvasWidth)}x${Math.round(canvasHeight)}`;
+      pdf.save(`Mapa-${dimensions}-Sabana${sabanaIds}-${timestamp}.pdf`);
+      
     } catch (e) {
       setExportError("No se pudo exportar el mapa. " + (e?.message || ""));
     } finally {
-      // Restaurar los controles ocultos
-      try {
-        hiddenEls.forEach(({ el, prev }) => {
-          el.style.display = prev || '';
-        });
-      } catch (_) {}
+      // PASO 7: Restaurar controles ocultos
+      hiddenEls.forEach(({ el, prev }) => {
+        el.style.display = prev || '';
+      });
+      
       setExporting(false);
     }
-  }, [mapRef, idSabana]);
+  }, [mapRef, idSabana, routeMode, allRoutePoints]);
 
   // OPTIMIZADO: Calcular polígonos solo cuando cambian los sectores
   const sectorPolygons = useMemo(() => {
