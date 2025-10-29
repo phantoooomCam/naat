@@ -207,6 +207,26 @@ const GestionSabanaView = () => {
     setFiltrosMapaAplicados({ fromDate: from, toDate: to });
   };
 
+  // NUEVO: Limpia los filtros de fecha y hora y refleja en el mapa
+  const limpiarFiltrosMapa = () => {
+    // Vaciar inputs visibles
+    setFiltrosMapaAntenas({
+      fechaInicio: "",
+      fechaFin: "",
+      horaInicio: "",
+      horaFin: "",
+    });
+
+    // Quitar filtros aplicados para que el mapa muestre todo el rango
+    setFiltrosMapaAplicados({ fromDate: null, toDate: null });
+
+    // Si estaba activo el modo intersección (requiere fechas), desactivarlo
+    if (intersectionMode) {
+      setIntersectionMode(false);
+      setIntersectionStats({ total: 0, intersecting: 0, pairsCount: 0 });
+    }
+  };
+
   // NUEVO: Fetch de catálogo de antenas para popular el selector
   useEffect(() => {
     if (!idSabana || activeButton !== "map" || routeMode) return;
@@ -1053,12 +1073,12 @@ const GestionSabanaView = () => {
                       </div>
                     </div>
 
-                    <div style={{ marginTop: "16px" }}>
+                    <div style={{ marginTop: "16px", display: "flex", gap: 8 }}>
                       <button
                         className="info-action-btn"
                         onClick={aplicarFiltrosMapa}
                         style={{
-                          width: "100%",
+                          flex: 1,
                           backgroundColor: "#10b981",
                           padding: "10px",
                         }}
@@ -1068,6 +1088,18 @@ const GestionSabanaView = () => {
                           style={{ marginRight: "8px" }}
                         />
                         Aplicar Filtros
+                      </button>
+                      <button
+                        className="info-action-btn"
+                        onClick={limpiarFiltrosMapa}
+                        style={{
+                          flex: 1,
+                          backgroundColor: "#6b7280",
+                          padding: "10px",
+                        }}
+                        title="Quitar filtros de fecha y hora"
+                      >
+                        Limpiar filtro
                       </button>
                     </div>
                   </div>

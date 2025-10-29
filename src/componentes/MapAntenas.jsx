@@ -13,6 +13,7 @@ import {
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { LuRadioTower } from "react-icons/lu";
+import { FiBarChart2, FiLoader, FiMap, FiFileText, FiZap, FiClock } from "react-icons/fi";
 import { useIntersectingSectors } from "../assets/hooks/useIntersectingSectors";
 import "./MapAntenas.css";
 
@@ -962,61 +963,100 @@ const MapAntenas = ({
     setMapRef(map);
   }, []);
 
-  // NUEVO: Exportar el mapa a PDF (capturando el contenedor del mapa)
+  // NUEVO: Exportar el mapa a PDF con tamaño dinámico basado en contenido
   const handleExportPdf = useCallback(async () => {
     if (!mapRef) return;
+    let hiddenEls = [];
+    
     try {
       setExporting(true);
       setExportError(null);
 
-      // Obtener el elemento DOM del mapa (incluye overlays, polígonos, info windows y marcadores)
       const mapElement = mapRef.getDiv();
 
-      // Asegurar fondo blanco en la captura y mayor resolución
-      const scale = Math.max(window.devicePixelRatio || 1, 2);
-      const canvas = await html2canvas(mapElement, {
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        scale,
-        logging: false,
-        windowWidth: mapElement.scrollWidth,
-        windowHeight: mapElement.scrollHeight,
+      // PASO 1: Ocultar controles de Google Maps (zoom, fullscreen, pegman)
+      // Importante: NO ocultamos la atribución de Google (gm-style-cc)
+      const selectorsToHide = [
+        '.gm-fullscreen-control',
+        '.gm-bundled-control',
+        '.gm-svpc'
+      ];
+      hiddenEls = [];
+      selectorsToHide.forEach((sel) => {
+        mapElement.querySelectorAll(sel).forEach((el) => {
+          hiddenEls.push({ el, prev: el.style.display });
+          el.style.display = 'none';
+        });
       });
 
-      const imgData = canvas.toDataURL("image/png");
-      const imgW = canvas.width;
-      const imgH = canvas.height;
-
-      // Elegir orientación de la hoja según la imagen
-      const orientation = imgW >= imgH ? "landscape" : "portrait";
-      const pdf = new jsPDF({ orientation, unit: "mm", format: "a4" });
-
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const imgAspect = imgW / imgH;
-
-      // Escalar la imagen para que quepa en la página manteniendo proporción
-      let renderW = pageW;
-      let renderH = renderW / imgAspect;
-      if (renderH > pageH) {
-        renderH = pageH;
-        renderW = renderH * imgAspect;
+      // PASO 2: Asegurar que todo el contenido esté visible con padding
+      // El padding previene cortes en los bordes del mapa
+      if (routeMode && allRoutePoints.length > 0) {
+        const bounds = new window.google.maps.LatLngBounds();
+        allRoutePoints.forEach(p => bounds.extend({ lat: p.lat, lng: p.lng }));
+        
+        // Padding generoso (80px) para que TODO quepa sin cortes
+        // Esto hace que Google Maps haga zoom OUT dejando margen de seguridad
+        mapRef.fitBounds(bounds, {
+          top: 80,
+          right: 80,
+          bottom: 80,
+          left: 80
+        });
+        
+        // Esperar que Google Maps termine de ajustar
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
-      const x = (pageW - renderW) / 2;
-      const y = (pageH - renderH) / 2;
 
-      pdf.addImage(imgData, "PNG", x, y, renderW, renderH, undefined, "FAST");
+      // PASO 3: Capturar el mapa en su tamaño ACTUAL (sin forzar dimensiones)
+      // html2canvas usará el tamaño real del contenedor del mapa
+      const captureScale = Math.min(Math.max(window.devicePixelRatio || 1, 2), 3);
+      const canvas = await html2canvas(mapElement, {
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: "#ffffff",
+        scale: captureScale,
+        logging: false,
+        // NO especificamos windowWidth ni windowHeight
+        // Dejamos que html2canvas use el tamaño natural del contenedor
+      });
 
+      // PASO 4: Crear PDF del tamaño exacto del canvas capturado
+      // Esto asegura que el PDF se ajuste perfectamente al contenido
+      const canvasWidth = canvas.width / captureScale;
+      const canvasHeight = canvas.height / captureScale;
+      
+      // Determinar orientación automáticamente basada en el contenido
+      const orientation = canvasWidth > canvasHeight ? 'landscape' : 'portrait';
+      
+      const pdf = new jsPDF({
+        orientation: orientation,
+        unit: 'px',
+        format: [canvasWidth, canvasHeight], // PDF del tamaño exacto del contenido
+        compress: true
+      });
+
+      // PASO 5: Agregar la imagen al PDF (ajuste perfecto, sin espacios vacíos)
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      pdf.addImage(imgData, 'JPEG', 0, 0, canvasWidth, canvasHeight, undefined, 'FAST');
+
+      // PASO 6: Guardar con nombre descriptivo que incluye dimensiones reales
       const sabanaIds = Array.isArray(idSabana) ? idSabana.join("-") : idSabana;
-      const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-      pdf.save(`Mapa-${sabanaIds || "sabanas"}-${ts}.pdf`);
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
+      const dimensions = `${Math.round(canvasWidth)}x${Math.round(canvasHeight)}`;
+      pdf.save(`Mapa-${dimensions}-Sabana${sabanaIds}-${timestamp}.pdf`);
+      
     } catch (e) {
       setExportError("No se pudo exportar el mapa. " + (e?.message || ""));
     } finally {
+      // PASO 7: Restaurar controles ocultos
+      hiddenEls.forEach(({ el, prev }) => {
+        el.style.display = prev || '';
+      });
+      
       setExporting(false);
     }
-  }, [mapRef, idSabana]);
+  }, [mapRef, idSabana, routeMode, allRoutePoints]);
 
   // OPTIMIZADO: Calcular polígonos solo cuando cambian los sectores
   const sectorPolygons = useMemo(() => {
@@ -1110,8 +1150,9 @@ const MapAntenas = ({
               <span style={{ fontWeight: 'bold' }}>Sectores Coincidentes</span>
             </div>
             <div className="legend-item">
-              <span style={{ fontSize: '12px', color: '#6b7280' }}>
-                📊 Total: {stats.total} | Coinciden: {stats.intersecting} | Pares: {stats.pairsCount}
+              <span style={{ fontSize: '12px', color: '#6b7280', display: 'flex', alignItems: 'center' }}>
+                <FiBarChart2 style={{ marginRight: 6 }} />
+                Total: {stats.total} | Coinciden: {stats.intersecting} | Pares: {stats.pairsCount}
               </span>
             </div>
             <div className="legend-item" style={{ fontSize: '11px', marginTop: '8px' }}>
@@ -1119,7 +1160,9 @@ const MapAntenas = ({
             </div>
             {loadingIntersections && (
               <div className="legend-item" style={{ color: '#f59e0b', fontSize: '11px' }}>
-                <span>⏳ Analizando intersecciones...</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <FiLoader style={{ marginRight: 6 }} /> Analizando intersecciones...
+                </span>
               </div>
             )}
           </>
@@ -1161,7 +1204,9 @@ const MapAntenas = ({
             {/* NUEVO: Indicador de carga de sectores */}
             {loadingSectors && (
               <div className="legend-item" style={{ marginTop: '8px', fontSize: '11px', color: '#6b7280' }}>
-                <span>⏳ Cargando sectores...</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <FiLoader style={{ marginRight: 6 }} /> Cargando sectores...
+                </span>
               </div>
             )}
           </>
@@ -1243,7 +1288,10 @@ const MapAntenas = ({
                         borderBottom: '2px solid #ff00ff',
                         paddingBottom: '6px'
                       }}>
-                        ⚡ Sector Coincidente
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <FiZap style={{ color: '#f59e0b' }} />
+                          Sector Coincidente
+                        </span>
                       </h3>
                       <div style={{ fontSize: '14px', color: '#475569', lineHeight: '1.6' }}>
                         <p style={{ margin: '6px 0' }}>
@@ -1260,7 +1308,9 @@ const MapAntenas = ({
                           <>
                             <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #e2e8f0' }} />
                             <p style={{ margin: '6px 0', fontWeight: 'bold', color: '#ff00ff' }}>
-                              🕐 Horas de Uso:
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                <FiClock /> Horas de Uso:
+                              </span>
                             </p>
                             <ul style={{ 
                               margin: '4px 0', 
@@ -1314,7 +1364,11 @@ const MapAntenas = ({
 
       {(!routeMode && !intersectionMode && (loading || error)) && (
         <div className="map-overlay-status">
-            {loading && <div className="mapa-antenas-status loading">⏳ Cargando sitios...</div>}
+            {loading && (
+              <div className="mapa-antenas-status loading" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <FiLoader /> Cargando sitios...
+              </div>
+            )}
             {error && <div className="mapa-antenas-status error">{error}</div>}
         </div>
       )}
@@ -1327,7 +1381,11 @@ const MapAntenas = ({
       
       {(routeMode && (routeLoading || routeError)) && (
         <div className="map-overlay-status">
-            {routeLoading && <div className="mapa-antenas-status loading">🗺️ Trazando ruta...</div>}
+            {routeLoading && (
+              <div className="mapa-antenas-status loading" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <FiMap /> Trazando ruta...
+              </div>
+            )}
             {routeError && <div className="mapa-antenas-status error">{routeError}</div>}
         </div>
       )}
@@ -1336,7 +1394,9 @@ const MapAntenas = ({
       {(exporting || exportError) && (
         <div className="map-overlay-status">
           {exporting && (
-            <div className="mapa-antenas-status loading">📄 Generando PDF…</div>
+            <div className="mapa-antenas-status loading" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <FiFileText /> Generando PDF…
+            </div>
           )}
           {exportError && (
             <div className="mapa-antenas-status error">{exportError}</div>

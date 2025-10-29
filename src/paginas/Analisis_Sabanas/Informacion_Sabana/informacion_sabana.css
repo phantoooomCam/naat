@@ -23,9 +23,7 @@
   /* Removed margin-left properties from nested container to avoid conflicts */
 }
 
-.sabana-main-container.collapsed {
-  /* Removed margin-left properties from nested container to avoid conflicts */
-}
+/* Removed empty ruleset to satisfy linter */
 
 .sabana-title-section {
   display: flex;
@@ -56,6 +54,12 @@
   flex-direction: column;
 }
 
+/* Ensure the left column uses full available height so inner card can scroll */
+.section-left-sabana {
+  height: 100%;
+  min-height: 0; /* critical for nested flex scrolling */
+}
+
 /* Headers de sección - SIN color azul, manteniendo el original */
 .section-header {
   background: white;
@@ -80,6 +84,11 @@
   overflow: hidden;
   transition: box-shadow 0.3s ease;
   width: 100%;
+  /* Make the filter card fill the column and allow its body to scroll */
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0; /* enables child overflow in flex container */
 }
 
 .filtros-wrapper-card:hover {
@@ -104,6 +113,10 @@
 
 .filtros-body {
   padding: 20px;
+  /* Scroll only the body content when it overflows */
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 /* Checkboxes - estilo original */
