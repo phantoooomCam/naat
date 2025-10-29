@@ -966,55 +966,83 @@ const MapAntenas = ({
   // NUEVO: Exportar el mapa a PDF (capturando el contenedor del mapa)
   const handleExportPdf = useCallback(async () => {
     if (!mapRef) return;
+    let hiddenEls = [];
     try {
       setExporting(true);
       setExportError(null);
 
-      // Obtener el elemento DOM del mapa (incluye overlays, polígonos, info windows y marcadores)
+      // 1) Obtener el elemento DOM del mapa (incluye overlays, polígonos, info windows y marcadores)
       const mapElement = mapRef.getDiv();
 
-      // Asegurar fondo blanco en la captura y mayor resolución
-      const scale = Math.max(window.devicePixelRatio || 1, 2);
-      const canvas = await html2canvas(mapElement, {
+      // Ocultar temporalmente controles de Google Maps (zoom, fullscreen, pegman) para que no salgan en el PDF.
+      // Importante: NO ocultamos la atribución de Google (gm-style-cc) para cumplir los términos de uso.
+      const selectorsToHide = [
+        '.gm-fullscreen-control',
+        '.gm-bundled-control', // zoom
+        '.gm-svpc' // pegman
+      ];
+      hiddenEls = [];
+      try {
+        selectorsToHide.forEach((sel) => {
+          mapElement.querySelectorAll(sel).forEach((el) => {
+            hiddenEls.push({ el, prev: el.style.display });
+            el.style.display = 'none';
+          });
+        });
+      } catch (_) {
+        // silencioso
+      }
+
+      // 2) Capturar el mapa con buena calidad y adaptar a 1920x1080 (16:9) mediante un lienzo intermedio
+      const captureScale = Math.min(Math.max(window.devicePixelRatio || 1, 2), 4);
+      const baseCanvas = await html2canvas(mapElement, {
         useCORS: true,
-        allowTaint: true,
+        allowTaint: false,
         backgroundColor: "#ffffff",
-        scale,
+        scale: captureScale,
         logging: false,
         windowWidth: mapElement.scrollWidth,
         windowHeight: mapElement.scrollHeight,
       });
 
-      const imgData = canvas.toDataURL("image/png");
-      const imgW = canvas.width;
-      const imgH = canvas.height;
+      const targetW = 1920;
+      const targetH = 1080;
+      const offscreen = document.createElement("canvas");
+      offscreen.width = targetW;
+      offscreen.height = targetH;
+      const ctx = offscreen.getContext("2d");
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, targetW, targetH);
 
-      // Elegir orientación de la hoja según la imagen
-      const orientation = imgW >= imgH ? "landscape" : "portrait";
-      const pdf = new jsPDF({ orientation, unit: "mm", format: "a4" });
+      const srcW = baseCanvas.width;
+      const srcH = baseCanvas.height;
+      const ratio = Math.min(targetW / srcW, targetH / srcH);
+      const drawW = Math.round(srcW * ratio);
+      const drawH = Math.round(srcH * ratio);
+      const dx = Math.floor((targetW - drawW) / 2);
+      const dy = Math.floor((targetH - drawH) / 2);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(baseCanvas, 0, 0, srcW, srcH, dx, dy, drawW, drawH);
 
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const imgAspect = imgW / imgH;
+      const imgData = offscreen.toDataURL("image/jpeg", 0.95);
 
-      // Escalar la imagen para que quepa en la página manteniendo proporción
-      let renderW = pageW;
-      let renderH = renderW / imgAspect;
-      if (renderH > pageH) {
-        renderH = pageH;
-        renderW = renderH * imgAspect;
-      }
-      const x = (pageW - renderW) / 2;
-      const y = (pageH - renderH) / 2;
-
-      pdf.addImage(imgData, "PNG", x, y, renderW, renderH, undefined, "FAST");
+      // 3) Crear PDF a 1920x1080 px y añadir la imagen a página completa
+      const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [targetW, targetH] });
+      pdf.addImage(imgData, "JPEG", 0, 0, targetW, targetH, undefined, "FAST");
 
       const sabanaIds = Array.isArray(idSabana) ? idSabana.join("-") : idSabana;
       const ts = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-      pdf.save(`Mapa-${sabanaIds || "sabanas"}-${ts}.pdf`);
+      pdf.save(`Mapa-1080p-${sabanaIds || "sabanas"}-${ts}.pdf`);
     } catch (e) {
       setExportError("No se pudo exportar el mapa. " + (e?.message || ""));
     } finally {
+      // Restaurar los controles ocultos
+      try {
+        hiddenEls.forEach(({ el, prev }) => {
+          el.style.display = prev || '';
+        });
+      } catch (_) {}
       setExporting(false);
     }
   }, [mapRef, idSabana]);
