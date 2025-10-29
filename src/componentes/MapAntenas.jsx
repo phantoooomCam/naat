@@ -13,6 +13,7 @@ import {
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 import { LuRadioTower } from "react-icons/lu";
+import { FiBarChart2, FiLoader, FiMap, FiFileText, FiZap, FiClock } from "react-icons/fi";
 import { useIntersectingSectors } from "../assets/hooks/useIntersectingSectors";
 import "./MapAntenas.css";
 
@@ -1110,8 +1111,9 @@ const MapAntenas = ({
               <span style={{ fontWeight: 'bold' }}>Sectores Coincidentes</span>
             </div>
             <div className="legend-item">
-              <span style={{ fontSize: '12px', color: '#6b7280' }}>
-                📊 Total: {stats.total} | Coinciden: {stats.intersecting} | Pares: {stats.pairsCount}
+              <span style={{ fontSize: '12px', color: '#6b7280', display: 'flex', alignItems: 'center' }}>
+                <FiBarChart2 style={{ marginRight: 6 }} />
+                Total: {stats.total} | Coinciden: {stats.intersecting} | Pares: {stats.pairsCount}
               </span>
             </div>
             <div className="legend-item" style={{ fontSize: '11px', marginTop: '8px' }}>
@@ -1119,7 +1121,9 @@ const MapAntenas = ({
             </div>
             {loadingIntersections && (
               <div className="legend-item" style={{ color: '#f59e0b', fontSize: '11px' }}>
-                <span>⏳ Analizando intersecciones...</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <FiLoader style={{ marginRight: 6 }} /> Analizando intersecciones...
+                </span>
               </div>
             )}
           </>
@@ -1161,7 +1165,9 @@ const MapAntenas = ({
             {/* NUEVO: Indicador de carga de sectores */}
             {loadingSectors && (
               <div className="legend-item" style={{ marginTop: '8px', fontSize: '11px', color: '#6b7280' }}>
-                <span>⏳ Cargando sectores...</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <FiLoader style={{ marginRight: 6 }} /> Cargando sectores...
+                </span>
               </div>
             )}
           </>
@@ -1243,7 +1249,10 @@ const MapAntenas = ({
                         borderBottom: '2px solid #ff00ff',
                         paddingBottom: '6px'
                       }}>
-                        ⚡ Sector Coincidente
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <FiZap style={{ color: '#f59e0b' }} />
+                          Sector Coincidente
+                        </span>
                       </h3>
                       <div style={{ fontSize: '14px', color: '#475569', lineHeight: '1.6' }}>
                         <p style={{ margin: '6px 0' }}>
@@ -1260,7 +1269,9 @@ const MapAntenas = ({
                           <>
                             <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #e2e8f0' }} />
                             <p style={{ margin: '6px 0', fontWeight: 'bold', color: '#ff00ff' }}>
-                              🕐 Horas de Uso:
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                <FiClock /> Horas de Uso:
+                              </span>
                             </p>
                             <ul style={{ 
                               margin: '4px 0', 
@@ -1314,7 +1325,11 @@ const MapAntenas = ({
 
       {(!routeMode && !intersectionMode && (loading || error)) && (
         <div className="map-overlay-status">
-            {loading && <div className="mapa-antenas-status loading">⏳ Cargando sitios...</div>}
+            {loading && (
+              <div className="mapa-antenas-status loading" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <FiLoader /> Cargando sitios...
+              </div>
+            )}
             {error && <div className="mapa-antenas-status error">{error}</div>}
         </div>
       )}
@@ -1327,7 +1342,11 @@ const MapAntenas = ({
       
       {(routeMode && (routeLoading || routeError)) && (
         <div className="map-overlay-status">
-            {routeLoading && <div className="mapa-antenas-status loading">🗺️ Trazando ruta...</div>}
+            {routeLoading && (
+              <div className="mapa-antenas-status loading" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <FiMap /> Trazando ruta...
+              </div>
+            )}
             {routeError && <div className="mapa-antenas-status error">{routeError}</div>}
         </div>
       )}
@@ -1336,7 +1355,9 @@ const MapAntenas = ({
       {(exporting || exportError) && (
         <div className="map-overlay-status">
           {exporting && (
-            <div className="mapa-antenas-status loading">📄 Generando PDF…</div>
+            <div className="mapa-antenas-status loading" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <FiFileText /> Generando PDF…
+            </div>
           )}
           {exportError && (
             <div className="mapa-antenas-status error">{exportError}</div>
