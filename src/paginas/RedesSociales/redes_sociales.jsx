@@ -64,9 +64,9 @@ const Redes = () => {
   const [loadUsername, setLoadUsername] = useState("");
 
   const relaciones_ = {
-    comentó: { color: "#15a7e6" },
+    comentó: { color: "#0f8e20ff" },
     seguido: { color: "#FF4E45" },
-    seguidor: { color: "#075056" },
+    seguidor: { color: "#2885B0" },
     reaccionó: { color: "#e6de0b" },
     default: { color: "#1A2D42" },
   };
@@ -77,8 +77,8 @@ const Redes = () => {
   const relaciones = {
     seguidor: {color: "#2885B0"},
     seguido: {color: "#FF4E45"},
-    comentó: {color: "#32B028"},
-    reaccionó: {color: "#F538CC"},
+    comentó: {color: "#0f8e20ff"},
+    reaccionó: {color: "#e6de0b"},
     default: {color: "#1A2D42"},
   };
   return (

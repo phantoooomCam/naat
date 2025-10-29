@@ -69,12 +69,78 @@ function removePersistedNodeImage(nodeId) {
   } catch {}
 }
 
+// Mover imagen persistida bajo un nuevo id (tras renombrar id del nodo)
+function movePersistedNodeImage(oldId, newId) {
+  try {
+    if (!oldId || !newId || oldId === newId) return;
+    const current = loadPersistedNodeImages();
+    const url = current[oldId];
+    if (!url) return;
+    current[newId] = url;
+    delete current[oldId];
+    localStorage.setItem(LS_KEY_NODE_IMAGES, JSON.stringify(current));
+  } catch {}
+}
+
 function resolveStoredUrl(raw) {
   // Alias aceptados actualmente: /data/storage/... y /storage/...
   if (typeof raw !== "string") return raw;
   if (raw.startsWith("/data/storage/images/")) return raw;
   if (raw.startsWith("/storage/images/")) return raw; // alias backend
   return raw; // fallback (posible CDN futuro)
+}
+
+// Normalizador básico para claves de búsqueda
+function normalizeKey(v) {
+  try {
+    return String(v)
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+  } catch {
+    return String(v || "").trim().toLowerCase();
+  }
+}
+
+// Buscar un nodo por id, username, label, full_name o aliases (case-insensitive, exact o match único por contains)
+function findNodeByAny(cy, key) {
+  try {
+    if (!cy || !key) return null;
+    const term = String(key).trim();
+    if (!term) return null;
+    // Intento directo por id exacto
+    const byId = cy.$id(term);
+    if (byId && !byId.empty()) return byId;
+
+    const low = normalizeKey(term);
+    const allNodes = cy.nodes();
+
+    // 1) Match exacto normalizado en: id, username, label, full_name, aliases
+    const exact = allNodes.filter((n) => {
+      const d = n.data() || {};
+      const values = [n.id(), d.username, d.label, d.full_name];
+      const aliases = Array.isArray(d.aliases) ? d.aliases : [];
+      return values.concat(aliases).some((v) => normalizeKey(v) === low);
+    });
+    if (exact && exact.length) return exact.first();
+
+    // 2) Si no hay exacto: buscar contains y devolver si hay un único candidato
+    const contains = allNodes.filter((n) => {
+      const d = n.data() || {};
+      const values = [n.id(), d.username, d.label, d.full_name];
+      const aliases = Array.isArray(d.aliases) ? d.aliases : [];
+      return values
+        .concat(aliases)
+        .some((v) => normalizeKey(v).includes(low));
+    });
+    if (contains.length === 1) return contains.first();
+
+    return null;
+  } catch (e) {
+    console.warn("findNodeByAny error:", e);
+    return null;
+  }
 }
 
 // Validar imagen antes de subir
@@ -169,6 +235,26 @@ const applyRectangularLayout = (cy, rootId, _containerRef, opts = {}) => {
   cy.layout({ name: "preset" }).run();
   cy.fit();
 };
+
+// Normalize node sizes based on total node count to avoid oversized nodes after load
+function normalizeNodeSizesByCount(cy) {
+  if (!cy) return;
+  const totalNodes = cy.nodes().length;
+  let scale = 1;
+  if (totalNodes < 20) scale = 0.9; // 10% smaller
+  else if (totalNodes < 50) scale = 0.8; // 20% smaller
+  else if (totalNodes < 80) scale = 0.6; // 40% smaller
+  else scale = 0.4; // 60% smaller for 80 or more
+
+  const baseProfile = 400; // px
+  const baseRel = 395; // px
+  cy.nodes().forEach((n) => {
+    const isPerfil = n.data("tipo") === "perfil";
+    const base = isPerfil ? baseProfile : baseRel;
+    n.style("width", base * scale);
+    n.style("height", base * scale);
+  });
+}
 
 // Construir elementos desde JSON (soporta esquema legacy y schema_version 2)
 function buildGraphData(data) {
@@ -320,6 +406,27 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState("");
 
+  // Modals state for replacing prompt-based flows
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [renameTargetId, setRenameTargetId] = useState("");
+  const [renameName, setRenameName] = useState("");
+
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkSource, setLinkSource] = useState("");
+  const [linkTarget, setLinkTarget] = useState("");
+  const [linkRel, setLinkRel] = useState("");
+  const [linkError, setLinkError] = useState("");
+
+  const [showEditEdgeModal, setShowEditEdgeModal] = useState(false);
+  const [editEdgeId, setEditEdgeId] = useState("");
+  const [editEdgeSource, setEditEdgeSource] = useState("");
+  const [editEdgeTarget, setEditEdgeTarget] = useState("");
+  const [editEdgeRel, setEditEdgeRel] = useState("");
+
+  const [showCreateNodeModal, setShowCreateNodeModal] = useState(false);
+  const [createNodeName, setCreateNodeName] = useState("");
+  const [createNodePhoto, setCreateNodePhoto] = useState("");
+
   // Shared helper to open picker and update a node photo via undo/redo
   const attemptApplyNodeImage = (cy, nodeId, url, attempt = 1) => {
     const img = new Image();
@@ -372,6 +479,116 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
     if (typeof cy.undoRedo === "function") {
       ur.current = cy.undoRedo({});
       const urInst = ur.current;
+      // Renombrar id del nodo y sus datos, re cableando aristas; soporta undo/redo
+      urInst.action(
+        "renameNodeId",
+        ({ id, newId, newName }) => {
+          const node = cy.$id(id);
+          if (!node || node.empty()) return { id, newId: id, newName: node.data("label") || id };
+          const trimmed = (newId || "").toString().trim();
+          const nameForData = (newName || trimmed || id).toString().trim();
+          if (!trimmed) return { id, newId: id, newName: node.data("label") || id };
+          if (trimmed !== id && !cy.$id(trimmed).empty()) {
+            alert(`Ya existe un nodo con id "${trimmed}".`);
+            return { id, newId: id, newName: node.data("label") || id };
+          }
+
+          const oldId = node.id();
+          const oldLabel = node.data("label") || "";
+          const oldFull = node.data("full_name") || "";
+          const oldUsername = node.data("username") || "";
+          const oldImg = loadPersistedNodeImages()?.[oldId];
+          const oldAliases = Array.isArray(node.data("aliases")) ? node.data("aliases") : [];
+          // Guardar snapshot de aristas conectadas
+          const connected = node.connectedEdges().map((e) => ({ id: e.id(), data: { ...e.data() } }));
+
+          cy.startBatch();
+          // Actualizar id del nodo
+          node.data("id", trimmed);
+          // Actualizar datos visibles/buscables
+          const nextAliases = Array.from(new Set([...
+            oldAliases,
+            oldId,
+            oldLabel,
+            oldFull,
+            oldUsername,
+          ].filter((v) => v && String(v).trim())));
+          node.data({ label: nameForData, full_name: nameForData, username: nameForData, aliases: nextAliases });
+
+          // Re cablear aristas y normalizar sus ids
+          const seen = new Set();
+          node.connectedEdges().forEach((e) => {
+            const d = { ...e.data() };
+            const source = d.source === oldId ? trimmed : d.source;
+            const target = d.target === oldId ? trimmed : d.target;
+            const rel = d.relation_type || d.rel || "relacion";
+            let edgeId = `${source}->${target}->${rel}`;
+            if (!cy.$id(edgeId).empty() && edgeId !== e.id()) {
+              // evitar colisiones
+              let suffix = 1;
+              while (!cy.$id(`${edgeId}#${suffix}`).empty()) suffix += 1;
+              edgeId = `${edgeId}#${suffix}`;
+            }
+            e.data({ id: edgeId, source, target, relation_type: rel, rel });
+            seen.add(edgeId);
+          });
+          cy.endBatch();
+          cy.style().update();
+
+          // Mover imagen persistida (si aplica)
+          if (oldImg) {
+            movePersistedNodeImage(oldId, trimmed);
+          }
+
+          return {
+            id: trimmed,
+            newId: oldId,
+            newName: oldLabel || oldId,
+            oldFull,
+            oldUsername,
+            prevEdges: connected,
+          };
+        },
+        ({ id, newId, newName, oldFull, oldUsername, prevEdges }) => {
+          // id = id actual; newId = id anterior
+          const node = cy.$id(id);
+          if (!node || node.empty()) return { id, newId: id, newName };
+          const oldId = node.id();
+          const targetId = (newId || "").toString().trim() || oldId;
+
+          cy.startBatch();
+          node.data("id", targetId);
+          const curAliases = Array.isArray(node.data("aliases")) ? node.data("aliases") : [];
+          const backAliases = Array.from(new Set([...curAliases, oldId].filter((v) => v && String(v).trim())));
+          node.data({ label: newName, full_name: oldFull || newName, username: oldUsername || newName, aliases: backAliases });
+          // Restaurar datos de aristas según snapshot
+          if (Array.isArray(prevEdges)) {
+            prevEdges.forEach((snap) => {
+              const { id: prevId, data } = snap || {};
+              if (!data) return;
+              // Encontrar la arista que conecta a node con endpoints data.source/target actuales
+              // Intentamos por id primero; si no, por endpoints
+              let e = cy.$id(prevId);
+              if (!e || e.empty()) {
+                e = cy.edges().filter((ed) => {
+                  const dd = ed.data();
+                  return dd.source === data.source || dd.target === data.target;
+                }).first();
+              }
+              if (e && !e.empty()) {
+                e.data({ id: data.id || prevId, source: data.source, target: data.target, relation_type: data.relation_type || data.rel, rel: data.relation_type || data.rel });
+              }
+            });
+          }
+          cy.endBatch();
+          cy.style().update();
+
+          // Mover imagen persistida de vuelta
+          movePersistedNodeImage(oldId, targetId);
+
+          return { id: targetId, newId: oldId, newName: node.data("label") || targetId };
+        }
+      );
       urInst.action(
         "updateNodePhoto",
         ({ id, newUrl }) => {
@@ -395,17 +612,20 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
           const ele = cy.$id(id);
           const oldLabel = ele.data("label") || "";
           const oldFull = ele.data("full_name") || "";
-          ele.data({ label: newName, full_name: newName });
+          const oldUsername = ele.data("username") || "";
+          ele.data({ label: newName, full_name: newName, username: newName });
           cy.style().update();
-          return { id, newName: oldLabel, oldFull };
+          return { id, newName: oldLabel, oldFull, oldUsername };
         },
-        ({ id, newName }) => {
+        ({ id, newName, oldFull, oldUsername }) => {
           const ele = cy.$id(id);
-          const oldLabel = ele.data("label") || "";
-          const oldFull = ele.data("full_name") || "";
-          ele.data({ label: newName, full_name: newName });
+          const prevLabel = ele.data("label") || "";
+          const prevFull = ele.data("full_name") || "";
+          const prevUsername = ele.data("username") || "";
+          ele.data({ label: newName, full_name: newName, username: newName });
           cy.style().update();
-          return { id, newName: oldLabel, oldFull };
+          // Return current values as inverse for next undo/redo
+          return { id, newName: prevLabel, oldFull: prevFull, oldUsername: prevUsername };
         }
       );
       urInst.action(
@@ -452,41 +672,20 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
         {
           content: "Editar Nombre",
           select: (ele) => {
-            const newName = prompt(
-              "Nuevo nombre:",
-              ele.data("label") || ele.data("username") || ele.id()
-            );
-            if (newName && ur.current) {
-              ur.current.do("updateNodeName", { id: ele.id(), newName });
-            }
+            const currentName = ele.data("label") || ele.data("username") || ele.id();
+            setRenameTargetId(ele.id());
+            setRenameName(currentName);
+            setShowRenameModal(true);
           },
         },
         {
           content: "Crear Vínculo",
           select: (ele) => {
-            const target = prompt("Username destino:");
-            const rel = prompt(
-              "Relación (seguidor, seguido, comentó, reaccionó, etc.):"
-            );
-            if (!target || !rel) return;
-            if (cy.$id(target).empty()) {
-              alert(`El nodo destino "${target}" no existe.`);
-              return;
-            }
-            const source = ele.id();
-            const id = `${source}->${target}->${rel}`;
-            if (!cy.$id(id).empty()) return;
-            if (ur.current) {
-              ur.current.do("add", {
-                group: "edges",
-                data: { id, source, target, relation_type: rel, rel },
-              });
-            } else {
-              cy.add({
-                group: "edges",
-                data: { id, source, target, relation_type: rel, rel },
-              });
-            }
+            setLinkError("");
+            setLinkSource(ele.id());
+            setLinkTarget("");
+            setLinkRel("");
+            setShowLinkModal(true);
           },
         },
         {
@@ -515,17 +714,11 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
           content: "Editar Relación",
           select: (ele) => {
             const current = ele.data("relation_type") || ele.data("rel") || "";
-            const newRel = prompt("Nueva relación:", current);
-            if (newRel) {
-              const source = ele.data("source");
-              const target = ele.data("target");
-              ele.data({
-                id: `${source}->${target}->${newRel}`,
-                relation_type: newRel,
-                rel: newRel,
-              });
-              cy.style().update();
-            }
+            setEditEdgeId(ele.id());
+            setEditEdgeSource(ele.data("source"));
+            setEditEdgeTarget(ele.data("target"));
+            setEditEdgeRel(current);
+            setShowEditEdgeModal(true);
           },
         },
       ],
@@ -578,7 +771,7 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
               const t = ele.data("relation_type") || ele.data("rel");
               switch (t) {
                 case "comentó":
-                  return "#15a7e6";
+                  return "#0f8e20ff";
                 case "seguido":
                   return "#FF4E45";
                 case "seguidor":
@@ -594,8 +787,7 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
               const t = ele.data("relation_type") || ele.data("rel");
               switch (t) {
                 case "comentó":
-                  return "#15a7e6";
-
+                  return "#0f8e20ff";
                 case "seguido":
                   return "#FF4E45";
                 case "seguidor":
@@ -755,10 +947,9 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
     const n = cy.$("node:selected").first();
     if (n && n.length) {
       const current = n.data("label") || n.data("username") || n.id();
-      const newName = prompt("Nuevo nombre:", current);
-      if (newName && ur.current) {
-        ur.current.do("updateNodeName", { id: n.id(), newName });
-      }
+      setRenameTargetId(n.id());
+      setRenameName(current);
+      setShowRenameModal(true);
     } else alert("Selecciona un nodo para editar su nombre.");
   };
   const createEdge = () => {
@@ -769,35 +960,24 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
     if (selNodes.length >= 2) {
       source = selNodes[0].id();
       target = selNodes[1].id();
+      setLinkSource(source);
+      setLinkTarget(target);
+      setLinkRel("");
+      setLinkError("");
+      setShowLinkModal(true);
     } else if (selNodes.length === 1) {
       source = selNodes[0].id();
-      target = prompt("Username destino:");
+      setLinkSource(source);
+      setLinkTarget("");
+      setLinkRel("");
+      setLinkError("");
+      setShowLinkModal(true);
     } else {
-      source = prompt("Username source:");
-      target = prompt("Username destino:");
-    }
-    if (!source || !target) return;
-    if (cy.$id(target).empty() || cy.$id(source).empty()) {
-      alert("El nodo source/target no existe.");
-      return;
-    }
-    const rel = prompt(
-      "Relación (seguidor, seguido, comentó, reaccionó, etc.):",
-      "relacion"
-    );
-    if (!rel) return;
-    const id = `${source}->${target}->${rel}`;
-    if (cy.$id(id).nonempty && !cy.$id(id).empty()) return;
-    if (ur.current) {
-      ur.current.do("add", {
-        group: "edges",
-        data: { id, source, target, relation_type: rel, rel },
-      });
-    } else {
-      cy.add({
-        group: "edges",
-        data: { id, source, target, relation_type: rel, rel },
-      });
+      setLinkSource("");
+      setLinkTarget("");
+      setLinkRel("");
+      setLinkError("");
+      setShowLinkModal(true);
     }
   };
   const deleteSelectedEdge = () => {
@@ -818,17 +998,11 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
     const e = cy.$("edge:selected").first();
     if (e && e.length) {
       const current = e.data("relation_type") || e.data("rel") || "";
-      const newRel = prompt("Nueva relación:", current);
-      if (newRel) {
-        const source = e.data("source");
-        const target = e.data("target");
-        e.data({
-          id: `${source}->${target}->${newRel}`,
-          relation_type: newRel,
-          rel: newRel,
-        });
-        cy.style().update();
-      }
+      setEditEdgeId(e.id());
+      setEditEdgeSource(e.data("source"));
+      setEditEdgeTarget(e.data("target"));
+      setEditEdgeRel(current);
+      setShowEditEdgeModal(true);
     } else alert("Selecciona una arista para editar.");
   };
   const undo = () => {
@@ -1096,6 +1270,8 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
           rootOffsetX: 140,
         });
       }
+      // Ensure node sizes are normalized after loading
+      normalizeNodeSizesByCount(cy);
       cy.fit();
       attachPluginsAndMenus(cy);
     } catch (e) {
@@ -1240,6 +1416,8 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
           rootOffsetX: 140,
         });
       }
+      // Normalize node sizes to avoid oversized rendering after session load
+      normalizeNodeSizesByCount(cy);
       cy.fit();
       attachPluginsAndMenus(cy);
     } catch (error) {
@@ -1496,6 +1674,9 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
       leftPad: 140,
       rootOffsetX: 140,
     });
+    // After initial layout from scrape, normalize node sizes for consistency
+    normalizeNodeSizesByCount(cy);
+    cy.fit();
   }, [elements]);
 
   return (
@@ -1612,6 +1793,221 @@ const WindowNet = forwardRef(function WindowNet({ elements, onAddRoot }, ref) {
             >
               {addLoading ? "Enviando..." : "Agregar"}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Renombrar nodo */}
+      {showRenameModal && (
+        <div className="rv-modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="rv-modal" style={{ maxWidth: 420 }}>
+            <h3 style={{ marginTop: 0 }}>Renombrar nodo</h3>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Nuevo nombre (se usará como ID)</label>
+              <input
+                type="text"
+                value={renameName}
+                onChange={(e) => setRenameName(e.target.value)}
+                style={{ width: "100%", padding: 8, borderRadius: 8, border: "1px solid #b2afaf" }}
+              />
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button className="btn-archivo-option" onClick={() => setShowRenameModal(false)}>Cancelar</button>
+              <button
+                className="rv-modal-action-btn"
+                onClick={() => {
+                  const cy = ensureCy();
+                  if (!cy) return;
+                  const trimmed = (renameName || "").trim();
+                  if (!trimmed) return;
+                  if (trimmed !== renameTargetId && !cy.$id(trimmed).empty()) {
+                    alert(`Ya existe un nodo con id "${trimmed}".`);
+                    return;
+                  }
+                  if (ur.current) {
+                    ur.current.do("renameNodeId", { id: renameTargetId, newId: trimmed, newName: trimmed });
+                  }
+                  setShowRenameModal(false);
+                }}
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Crear vínculo */}
+      {showLinkModal && (
+        <div className="rv-modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="rv-modal" style={{ maxWidth: 520 }}>
+            <h3 style={{ marginTop: 0 }}>Crear vínculo</h3>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Source</label>
+                <input type="text" value={linkSource} onChange={(e) => setLinkSource(e.target.value)} style={{ width: "100%", padding: 8, borderRadius: 8, border: "1px solid #b2afaf" }} />
+              </div>
+              <div>
+                <label style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Destino</label>
+                <input type="text" value={linkTarget} onChange={(e) => setLinkTarget(e.target.value)} style={{ width: "100%", padding: 8, borderRadius: 8, border: "1px solid #b2afaf" }} />
+              </div>
+            </div>
+            <div style={{ marginTop: 12 }}>
+              <label style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Relación</label>
+              <select
+                value={linkRel}
+                onChange={(e) => setLinkRel(e.target.value)}
+                style={{ width: "100%", padding: 8, borderRadius: 8, border: "1px solid #b2afaf", background: "#fff", color: "#000" }}
+              >
+                <option value="">--Selecciona--</option>
+                <option value="seguidor">seguidor</option>
+                <option value="seguido">seguido</option>
+                <option value="comentó">comentó</option>
+                <option value="reaccionó">reaccionó</option>
+              </select>
+            </div>
+            {linkError && <small style={{ color: "#FF6B6B" }}>{linkError}</small>}
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
+              <button className="btn-archivo-option" onClick={() => setShowLinkModal(false)}>Cancelar</button>
+              <button
+                className="rv-modal-action-btn"
+                onClick={() => {
+                  const cy = ensureCy();
+                  if (!cy) return;
+                  setLinkError("");
+                  const srcNode = findNodeByAny(cy, linkSource);
+                  const tgtNode = findNodeByAny(cy, linkTarget);
+                  if (!srcNode) {
+                    setLinkError(`No existe el nodo source "${linkSource}".`);
+                    return;
+                  }
+                  if (!tgtNode) {
+                    setLinkError(`No existe el nodo destino "${linkTarget}".`);
+                    return;
+                  }
+                  const src = srcNode.id();
+                  const tgt = tgtNode.id();
+                  const rel = (linkRel || "relacion").trim();
+                  if (!rel) {
+                    setLinkError("Debes especificar la relación.");
+                    return;
+                  }
+                  const id = `${src}->${tgt}->${rel}`;
+                  if (!cy.$id(id).empty()) {
+                    setLinkError("Ya existe un vínculo con esa relación entre los nodos.");
+                    return;
+                  }
+                  if (ur.current) {
+                    ur.current.do("add", { group: "edges", data: { id, source: src, target: tgt, relation_type: rel, rel } });
+                  } else {
+                    cy.add({ group: "edges", data: { id, source: src, target: tgt, relation_type: rel, rel } });
+                  }
+                  setShowLinkModal(false);
+                }}
+              >
+                Crear
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Editar relación de arista */}
+      {showEditEdgeModal && (
+        <div className="rv-modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="rv-modal" style={{ maxWidth: 420 }}>
+            <h3 style={{ marginTop: 0 }}>Editar relación</h3>
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 8 }}>
+                <div>
+                  <label style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Source</label>
+                  <input type="text" value={editEdgeSource} readOnly style={{ width: "100%", padding: 8, borderRadius: 8, border: "1px solid #b2afaf", background: "#f5f5f5" }} />
+                </div>
+                <div>
+                  <label style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Destino</label>
+                  <input type="text" value={editEdgeTarget} readOnly style={{ width: "100%", padding: 8, borderRadius: 8, border: "1px solid #b2afaf", background: "#f5f5f5" }} />
+                </div>
+              </div>
+              <label style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Relación</label>
+              <select
+                value={editEdgeRel}
+                onChange={(e) => setEditEdgeRel(e.target.value)}
+                style={{ width: "100%", padding: 8, borderRadius: 8, border: "1px solid #b2afaf", background: "#fff", color: "#000" }}
+              >
+                <option value="">--Selecciona--</option>
+                <option value="seguidor">seguidor</option>
+                <option value="seguido">seguido</option>
+                <option value="comentó">comentó</option>
+                <option value="reaccionó">reaccionó</option>
+              </select>
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button className="btn-archivo-option" onClick={() => setShowEditEdgeModal(false)}>Cancelar</button>
+              <button
+                className="rv-modal-action-btn"
+                onClick={() => {
+                  const cy = ensureCy();
+                  if (!cy) return;
+                  const e = cy.$id(editEdgeId);
+                  if (!e || e.empty()) { setShowEditEdgeModal(false); return; }
+                  const newRel = (editEdgeRel || "").trim();
+                  if (!newRel) return;
+                  const source = e.data("source");
+                  const target = e.data("target");
+                  e.data({ id: `${source}->${target}->${newRel}` , relation_type: newRel, rel: newRel });
+                  cy.style().update();
+                  setShowEditEdgeModal(false);
+                }}
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Crear nodo */}
+      {showCreateNodeModal && (
+        <div className="rv-modal-overlay" style={{ zIndex: 9999 }}>
+          <div className="rv-modal" style={{ maxWidth: 420 }}>
+            <h3 style={{ marginTop: 0 }}>Crear nuevo involucrado</h3>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Username / ID</label>
+              <input type="text" value={createNodeName} onChange={(e) => setCreateNodeName(e.target.value)} style={{ width: "100%", padding: 8, borderRadius: 8, border: "1px solid #b2afaf" }} />
+            </div>
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: "block", fontSize: 12, opacity: 0.9 }}>Foto (URL opcional)</label>
+              <input type="text" value={createNodePhoto} onChange={(e) => setCreateNodePhoto(e.target.value)} style={{ width: "100%", padding: 8, borderRadius: 8, border: "1px solid #b2afaf" }} />
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button className="btn-archivo-option" onClick={() => setShowCreateNodeModal(false)}>Cancelar</button>
+              <button
+                className="rv-modal-action-btn"
+                onClick={() => {
+                  const cy = ensureCy();
+                  if (!cy) return;
+                  const name = (createNodeName || "").trim();
+                  if (!name) return;
+                  if (!cy.$id(name).empty()) {
+                    alert(`Ya existe un nodo con id "${name}".`);
+                    return;
+                  }
+                  const photo = (createNodePhoto || "").trim();
+                  const center = { x: cy.width() / 2, y: cy.height() / 2 };
+                  const nodeJson = {
+                    group: "nodes",
+                    data: { id: name, username: name, label: name, full_name: name, photo_url: photo || "", tipo: "perfil", updated_at: new Date().toISOString() },
+                    position: center,
+                  };
+                  if (ur.current) ur.current.do("add", nodeJson); else cy.add(nodeJson);
+                  setShowCreateNodeModal(false);
+                  setCreateNodeName("");
+                  setCreateNodePhoto("");
+                }}
+              >
+                Crear
+              </button>
+            </div>
           </div>
         </div>
       )}
