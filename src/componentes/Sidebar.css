@@ -12,11 +12,9 @@
   --sidebar-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
   
   /* Variables específicas para laptops/MacBooks */
-  --sidebar-width-laptop: 220px;
-  --menu-item-gap-laptop: 8px;
-  --menu-item-padding-laptop: 8px 10px;
-  --icon-size-laptop: 1.25rem;
-  --font-size-laptop: 0.813rem;
+  --sidebar-width-laptop: 240px;
+  --menu-item-gap-laptop: 6px;
+  --menu-item-padding-laptop: 12px 10px;
 }
 
 /* Media query para laptops y MacBooks (típicamente 1024px - 1440px) */
@@ -61,8 +59,7 @@
 /* Ajustes para laptops/MacBooks */
 @media (min-width: 769px) and (max-width: 1440px) {
   .sidebar-header {
-    margin-bottom: 30px;
-    padding: 15px 8px;
+    padding: 20px 8px;
   }
 }
 
@@ -99,13 +96,6 @@
   transition: var(--sidebar-transition);
 }
 
-/* Ajustes para laptops/MacBooks */
-@media (min-width: 769px) and (max-width: 1440px) {
-  .dashboard-title {
-    font-size: 1.2rem;
-  }
-}
-
 /* Cuando el sidebar está colapsado */
 .sidebar.closed .top-logo {
   width: 35px;
@@ -128,8 +118,7 @@
 /* Ajustes para laptops/MacBooks */
 @media (min-width: 769px) and (max-width: 1440px) {
   .menu-items {
-    gap: 6px;
-    padding: 0 10px;
+    padding: 0 12px;
   }
 }
 
@@ -162,12 +151,11 @@
   position: relative;
 }
 
-/* Ajustes para laptops/MacBooks - Botones más compactos */
+/* Ajustes para laptops/MacBooks - Solo reducimos el gap entre icono y texto */
 @media (min-width: 769px) and (max-width: 1440px) {
   .menu-item {
     gap: var(--menu-item-gap-laptop);
     padding: var(--menu-item-padding-laptop);
-    border-radius: 6px;
   }
 }
 
