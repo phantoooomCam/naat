@@ -1,7 +1,7 @@
 /* Variables */
 :root {
-  --sidebar-width: 280px;
-  --sidebar-width-collapsed: 80px;
+  --sidebar-width: 190px;
+  --sidebar-width-collapsed: 65px;
   /* --sidebar-bg: linear-gradient(195deg, #42424a, #222a35); */
   --sidebar-bg: linear-gradient(195deg, #222a35, #222a35);
   --sidebar-color: #fff;
@@ -40,8 +40,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 40px;
-  padding: 20px 10px;
+  margin-bottom: 30px;
+  padding: 15px 8px;
 }
 
 .logo-wrapper {
@@ -49,7 +49,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.3rem;
   width: 100%;
   padding: 0;
   background: none;
@@ -62,7 +62,7 @@
 }
 
 .top-logo {
-  width: 80px;
+  width: 60px;
   height: auto;
   object-fit: contain;
   background: none;
@@ -71,7 +71,7 @@
 
 .dashboard-title {
   color: white;
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   margin: 0;
   text-align: center;
   transition: var(--sidebar-transition);
@@ -92,8 +92,8 @@
 .menu-items {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 0 15px;
+  gap: 5px;
+  padding: 0 8px;
 }
 
 .menu-container {
@@ -109,10 +109,10 @@
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px;
+  gap: 4px;
   width: 100%;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 7px 8px;
+  border-radius: 6px;
   border: none;
   background: transparent;
   color: #fff;
@@ -127,7 +127,7 @@
 
 .menu-item:hover {
   background: var(--sidebar-hover);
-  transform: translateX(5px);
+  transform: translateX(3px);
 }
 
 .menu-item.active {
@@ -137,16 +137,16 @@
 }
 
 .sidebar.closed .menu-item {
-  padding: 12px 8px;
+  padding: 8px 6px;
   justify-content: center;
 }
 
 .menu-item .icon {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 30px;
+  width: 20px;
   flex-shrink: 0;
   transition: transform 0.3s ease;
 }
@@ -156,15 +156,16 @@
 }
 
 .sidebar.closed .menu-item .icon {
-  width: 24px;
-  font-size: 1.25rem;
+  width: 20px;
+  font-size: 1.1rem;
 }
 
 .menu-item .label {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
   flex: 1;
   transition: opacity 0.3s ease;
+  line-height: 1.2;
 }
 
 .menu-arrow {
@@ -180,8 +181,8 @@
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease, opacity 0.3s ease;
-  padding-left: 20px;
-  margin-left: 0.5rem;
+  padding-left: 10px;
+  margin-left: 0.3rem;
   border-left: 1px solid var(--sidebar-border);
   opacity: 0;
 }
@@ -199,22 +200,28 @@
   background: none;
   border: none;
   color: #787878;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
+  padding: 4px 4px;
   cursor: pointer;
   transition: all 0.3s ease;
-  border-radius: 8px;
-  width: 100%;
+  border-radius: 4px;
+  width: auto;
+  max-width: calc(100% - 4px);
   text-align: left;
-  font-size: 0.875rem;
-  margin-top: 4px;
+  font-size: 0.75rem;
+  margin-top: 2px;
+  margin-right: 4px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sub-menu-item:hover {
   background-color: var(--sidebar-hover);
   color: white;
-  transform: translateX(5px);
+  transform: translateX(2px);
 }
 
 .sub-menu .sub-menu-item.active {
