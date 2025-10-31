@@ -112,22 +112,27 @@ export default function SignIn() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
-  
+
     const requestBody = {
       correo: usuario,
       contraseña: clave,
     };
-  
+
     try {
       const response = await fetchWithAuth("/api/usuarios/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-      
         body: JSON.stringify(requestBody),
       });
-  
+
+      // Validar que response no sea null
+      if (!response) {
+        setError("Error de conexión. Por favor, intenta nuevamente.");
+        return;
+      }
+
       const data = await response.json();
-  
+
       if (!response.ok) {
         if (data.requiereCambio) {
           navigate("/reset-password", {

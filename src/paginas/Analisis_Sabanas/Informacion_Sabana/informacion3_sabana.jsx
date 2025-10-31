@@ -461,7 +461,6 @@ const GestionSabanaView = () => {
         : sites;
 
     return sitesFiltrados.slice().sort((a, b) => {
-      // MODIFICADO: Usar clave compuesta siteId_sabanaId
       const keyA = `${a.siteId}_${a.sabanaId}`;
       const keyB = `${b.siteId}_${b.sabanaId}`;
       const ra = rankPorSitio[keyA];
@@ -475,7 +474,6 @@ const GestionSabanaView = () => {
   }, [catalogoAntenas.sites, rankPorSitio, idSabana, sabanaSeleccionadaFiltro]);
 
   const marcarTodosSitios = () => {
-    // Si hay múltiples sabanas y hay una seleccionada, marcar solo los de esa sabana
     if (
       Array.isArray(idSabana) &&
       idSabana.length > 1 &&
