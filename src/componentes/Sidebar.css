@@ -223,6 +223,7 @@
 .sub-menu.expanded {
   max-height: 500px; /* Valor alto para asegurar que se muestre todo */
   opacity: 1;
+  overflow: visible; /* Permite que la animación del hover se vea completa */
 }
 
 .sidebar.closed .sub-menu {
