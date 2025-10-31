@@ -1,7 +1,7 @@
 /* Variables */
 :root {
-  --sidebar-width: 190px;
-  --sidebar-width-collapsed: 65px;
+  --sidebar-width: 280px;
+  --sidebar-width-collapsed: 80px;
   /* --sidebar-bg: linear-gradient(195deg, #42424a, #222a35); */
   --sidebar-bg: linear-gradient(195deg, #222a35, #222a35);
   --sidebar-color: #fff;
@@ -10,6 +10,20 @@
   --sidebar-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  
+  /* Variables específicas para laptops/MacBooks */
+  --sidebar-width-laptop: 220px;
+  --menu-item-gap-laptop: 8px;
+  --menu-item-padding-laptop: 8px 10px;
+  --icon-size-laptop: 1.25rem;
+  --font-size-laptop: 0.813rem;
+}
+
+/* Media query para laptops y MacBooks (típicamente 1024px - 1440px) */
+@media (min-width: 769px) and (max-width: 1440px) {
+  :root {
+    --sidebar-width: var(--sidebar-width-laptop);
+  }
 }
 
 /* Sidebar Base */
@@ -40,8 +54,16 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 30px;
-  padding: 15px 8px;
+  margin-bottom: 40px;
+  padding: 20px 10px;
+}
+
+/* Ajustes para laptops/MacBooks */
+@media (min-width: 769px) and (max-width: 1440px) {
+  .sidebar-header {
+    margin-bottom: 30px;
+    padding: 15px 8px;
+  }
 }
 
 .logo-wrapper {
@@ -49,7 +71,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
+  gap: 0.5rem;
   width: 100%;
   padding: 0;
   background: none;
@@ -62,7 +84,7 @@
 }
 
 .top-logo {
-  width: 60px;
+  width: 80px;
   height: auto;
   object-fit: contain;
   background: none;
@@ -71,10 +93,17 @@
 
 .dashboard-title {
   color: white;
-  font-size: 1.1rem;
+  font-size: 1.4rem;
   margin: 0;
   text-align: center;
   transition: var(--sidebar-transition);
+}
+
+/* Ajustes para laptops/MacBooks */
+@media (min-width: 769px) and (max-width: 1440px) {
+  .dashboard-title {
+    font-size: 1.2rem;
+  }
 }
 
 /* Cuando el sidebar está colapsado */
@@ -92,8 +121,16 @@
 .menu-items {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  padding: 0 8px;
+  gap: 8px;
+  padding: 0 15px;
+}
+
+/* Ajustes para laptops/MacBooks */
+@media (min-width: 769px) and (max-width: 1440px) {
+  .menu-items {
+    gap: 6px;
+    padding: 0 10px;
+  }
 }
 
 .menu-container {
@@ -109,10 +146,10 @@
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  gap: 4px;
+  gap: 12px;
   width: 100%;
-  padding: 7px 8px;
-  border-radius: 6px;
+  padding: 12px;
+  border-radius: 8px;
   border: none;
   background: transparent;
   color: #fff;
@@ -125,9 +162,18 @@
   position: relative;
 }
 
+/* Ajustes para laptops/MacBooks - Botones más compactos */
+@media (min-width: 769px) and (max-width: 1440px) {
+  .menu-item {
+    gap: var(--menu-item-gap-laptop);
+    padding: var(--menu-item-padding-laptop);
+    border-radius: 6px;
+  }
+}
+
 .menu-item:hover {
   background: var(--sidebar-hover);
-  transform: translateX(3px);
+  transform: translateX(5px);
 }
 
 .menu-item.active {
@@ -137,16 +183,16 @@
 }
 
 .sidebar.closed .menu-item {
-  padding: 8px 6px;
+  padding: 12px 8px;
   justify-content: center;
 }
 
 .menu-item .icon {
-  font-size: 1.2rem;
+  font-size: 1.5rem;
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 20px;
+  width: 30px;
   flex-shrink: 0;
   transition: transform 0.3s ease;
 }
@@ -156,16 +202,15 @@
 }
 
 .sidebar.closed .menu-item .icon {
-  width: 20px;
-  font-size: 1.1rem;
+  width: 24px;
+  font-size: 1.25rem;
 }
 
 .menu-item .label {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   font-weight: 500;
   flex: 1;
   transition: opacity 0.3s ease;
-  line-height: 1.2;
 }
 
 .menu-arrow {
@@ -181,8 +226,8 @@
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease, opacity 0.3s ease;
-  padding-left: 10px;
-  margin-left: 0.3rem;
+  padding-left: 20px;
+  margin-left: 0.5rem;
   border-left: 1px solid var(--sidebar-border);
   opacity: 0;
 }
@@ -200,28 +245,22 @@
   background: none;
   border: none;
   color: #787878;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  padding: 4px 4px;
+  padding: 6px 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  border-radius: 4px;
-  width: auto;
-  max-width: calc(100% - 4px);
+  border-radius: 8px;
+  width: 100%;
   text-align: left;
-  font-size: 0.75rem;
-  margin-top: 2px;
-  margin-right: 4px;
-  line-height: 1.2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 0.875rem;
+  margin-top: 4px;
 }
 
 .sub-menu-item:hover {
   background-color: var(--sidebar-hover);
   color: white;
-  transform: translateX(2px);
+  transform: translateX(5px);
 }
 
 .sub-menu .sub-menu-item.active {
